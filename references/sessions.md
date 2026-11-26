@@ -12,11 +12,11 @@ Run each from the `scripts/` folder of your ohflow clone as `PYTHONPATH=. python
 
 | Verb | What it does |
 |---|---|
-| `open NAME --cwd C (--brief F \| --message T)` | starts a session and its first turn; refuses a fourth open session and a name used before |
-| `send NAME (TEXT \| --file F)` | starts the next turn; a message to a running session waits in the record and starts when that turn ends |
-| `wait [--timeout S]` | blocks until a turn finishes and prints it once: `reply`, `error`, `interrupted`, `lost`, `tokens`, `cost`, `next_turn`. Exit 3 on timeout, exit 4 when no turn runs and every finished turn is delivered |
-| `status [NAME]` | each session's state, turn, undelivered and queued counts, age and cost; with a name, its last finished turn, not marked delivered |
-| `interrupt NAME` | ends the running turn's process tree; `wait` then delivers the turn with `interrupted: true`. A turn takes no message while it runs, so interrupt, then send |
+| `open NAME --cwd C (--brief F \| --message T) [--model M] [--thinking L]` | starts a session and its first turn; refuses a fourth open session and a name used before |
+| `send NAME (TEXT \| --file F)` | starts the next turn; a message to a running session, or to one that already holds queued messages, waits in the record. When the session is idle again, the oldest queued message starts the next turn, one turn per message |
+| `wait [--timeout S]` | blocks until a turn finishes and prints it once, the earliest finished first: `reply`, `error`, `interrupted`, `lost`, `tokens`, `cost`, `next_turn`. Exit 3 on timeout, exit 4 when no turn runs and every finished turn is delivered |
+| `status [NAME]` | each session's state (idle, running or closed), turn, undelivered and queued counts, age and cost; with a name, its last finished turn, not marked delivered |
+| `interrupt NAME` | ends the running turn's process tree, waits up to 30 s for it to end and records `interrupted` with whether it stopped; `wait` then delivers the turn with `interrupted: true`. A turn takes no message while it runs, so interrupt, then send |
 | `close NAME [--force]` | closes the session for good; `--force` interrupts a running turn first. `wait` still delivers a finished turn of a closed session |
 
 ## Be woken, do not poll

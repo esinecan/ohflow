@@ -54,6 +54,7 @@ A campaign is its own git repository, in a folder the operator chooses, such as 
 `ohflow campaign` writes the `.gitignore` entries itself. They also cover `campaign.log`,
 `campaign.pid`, `campaign.log.launch.*` and `__pycache__/`.
 
+The judge's own run holds one agent step with no worktree, so the judge works in this repository.
 Every judge revision is one git commit in this repository. The campaign log names the commit, the
 round and the decision. One commit has no campaign log event: when `campaign run` starts on a
 dirty tree, it first commits that tree as `campaign <name>: inputs before the run`. To find
@@ -98,7 +99,8 @@ that reports a contract unworkable is a `spec` finding and an ESCALATE.
 
 The judge may not edit the file. After every judge run, whatever the decision, the controller
 restores it and keeps the judge's edit in a git stash entry named `judge edit to <path> on
-<id> rNN`. ESCALATION.md names the edit, and a REVISE that made it escalates.
+<id> rNN`. ESCALATION.md names the edit, and a REVISE that made it escalates. A PASS lands
+with the file restored, although the judge packet says that an edit escalates.
 
 ## Write a milestone
 
@@ -188,15 +190,18 @@ documents pass or a parity milestone only when the operator asks.
 ## The judge
 
 `Campaign.judge` defaults to `default_judge()`: the claude harness executor, the judge model, effort
-high, the signed-in harness's usual setup. The judge model is the operator setting
+high, `max_iterations=400`, the signed-in harness's usual setup. The judge model is the operator setting
 `campaign.judge_model`; its base value is the tier `heavy`, which the claude harness executor
 resolves through the setting `tiers.heavy.claude`. It also takes the tier `light` or a model id. A value that is not a non-empty
 string is refused when the campaign file is loaded, before any milestone runs. The usual setup gives the
 judge the operator's skills and MCP servers; the judge needs none of them to write its handover. A milestone may name its own judge in `Milestone.judge`; a codex or
 pi judge is an `AgentSpec` with that harness executor, and it does not read the setting.
 
+Each round's judge runs in a workflow run of its own, under `Campaign.judge_execution_timeout_s`.
+
 The judge's instructions are `JUDGE_ROLE` in `campaign.py`. They set the price of a REVISE
-(one more round, the minutes of the round's estimate, so a REVISE is for a finding that would
+(one more round, the p50 wall time plus the p50 check time of the run's estimate, or "an
+unknown number of minutes" without an estimate (`round_minutes`), so a REVISE is for a finding that would
 cost the operator more than that, and the rest are notes), the evidence rule (read the check
 logs and the diff, and rerun no check that passed), the rubric
 rule (grade each `- rubric:` line of the milestone spec, and PASS only when each is met), the write
@@ -218,6 +223,12 @@ round: the text between the title line and the next line that starts with `#`. A
 without one prints `the handover has no lead paragraph`. The `summary` of the decision JSON
 is never shown in its place.
 
+The cause word of a finding is one of six: `brief` (the agent was not told), `distribution`
+(ownership or order was wrong), `tool_policy` (wrong tools or model), `gate` (the check held the
+wrong thing), `product` (the code is wrong and the brief was right, so a fix step follows) or
+`spec` (the spec or the milestone spec is wrong). A `spec` cause is an ESCALATE, because the
+spec is not the judge's to change.
+
 The decision JSON follows `DECISION_SCHEMA`: `decision` (PASS, REVISE or ESCALATE),
 `summary`, `findings`, `revisions` and `question_for_operator`. The findings are fields of
 that JSON, each with a severity, a cause word and evidence; the judge writes no findings
@@ -234,7 +245,8 @@ upper rank may stop or change work in flight. An upper rank is the orchestrator 
 or the operator. The operator names the kind with one sentence on why in the bill at hand-over
 ([monitor-a-run](monitor-a-run.md#at-hand-over-write-the-bill)), and in a campaign also in the
 charter under `## Decisions already made`, so that every judge reads both at each check-in. A
-kind is a delivery or an empirical procedure.
+kind is a delivery or an empirical procedure. The kind changes as the work moves on: a
+calibration that found its design is committed as an empirical procedure.
 
 **A delivery is open to revision at any time.** Its wanted effect is known and fairly
 deterministic: a feature, a fix, a document. Search, research and producing a specific output
@@ -242,7 +254,8 @@ count as delivery.
 
 - A deviation or a design flaw aborts the run at once for a fix. A deviation is work that left
   its plan, such as a step that ignored its brief; a design flaw is a wrong plan, such as a
-  workflow that checks the wrong thing.
+  workflow that checks the wrong thing, a gate that tests the wrong file or an experiment that
+  measures the wrong quantity.
 - After a miss, where the plan was right and followed and the result still misses the goal, an
   upper rank may replan, pause, continue, or propose a restart of the whole run to the operator.
 - In a campaign, the judge's REVISE replans the milestone's inputs and its ESCALATE pauses for
@@ -328,7 +341,8 @@ python3 -m ohflow.cli campaign grant --campaign <root>/campaign.py --milestone <
 `validate` builds every milestone's workflow with first-round arguments, so a workflow error
 shows before anything runs. `run` continues from the first milestone that has not passed;
 a milestone that was mid-run resumes its run directory. After an escalation, act on
-`ESCALATION.md`, then `grant` one revision and `run` again.
+`ESCALATION.md`, then `grant` one revision and `run` again. A grant adds to the milestone's
+revision budget and reopens it; it resets no spent revision and no step's execution allowance.
 
 `run --hold` holds the campaign's first fresh round for `ohflow go --run <run-dir>`. The first
 round of a later milestone, and a round that a judge's revision starts, go ahead unless the

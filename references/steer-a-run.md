@@ -23,6 +23,8 @@ How an agent runs decides its moves; its role does not.
 
 ## Recorded failures and the move for each
 
+Read this table before you brief or steer a step.
+
 | Box and role | Recorded failure | Your move |
 |---|---|---|
 | Implementer, this machine | Running the full suite itself: 429 minutes over 12 runs, before the gate ran it again. Starting tests in the background and ending with nothing committed (30.09.2026). A test timing out under the load of another suite run, which failed an 18.4 M-token step (26.10.2026). A session that piped `run_tests.py --changed` into `tail` ran it twice more to read the lines the pipe cut: three runs of about 5.5 minutes where its brief said one (24.11.2026). | Send or brief the `--changed` test command and the rule that the gate runs the tests, with its output written to a file the agent reads afterwards. A session has no tool policy or write limit, so its brief names its worktree. |

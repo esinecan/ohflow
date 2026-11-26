@@ -222,7 +222,7 @@ Every string passes the same redaction as the other routes and a cap of 32,000 c
 
 - It binds to `127.0.0.1` on port `0` by default, so two runs never collide. `--dashboard-port N` fixes the port.
 - It writes `dashboard.json` (`url`, `port`, `pid`, `started`, `supervisor`) into the run directory.
-- The page polls `/api/workflow` every 2 s. The reader caches each file by `(mtime, size)`.
+- The page polls `/api/workflow` every 2 s. That route builds its own view in `dashboard_data.py`, not from the read-out. The reader caches each file by `(mtime, size)`.
 - The browser does not open unless `--open-dashboard` is set.
 - A detached run waits for the dashboard before it prints line one. The wait and the line are in [ohflow](ohflow.md#run-it).
 

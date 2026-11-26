@@ -56,7 +56,9 @@ It fails closed on missing or malformed usage. A mismatch prints the run, coordi
 |---|---|
 | `pi-catalog` | exact Z.AI provider and model pairs, priced from pi's discovered catalog chunks |
 | `claude-cli` | Claude Code's own figure, which is notional on a subscription |
-| `subscription` | `codex`, `claude-cloud` and `codex-cloud`: a subscription bills no tokens, so `cost` is a known `0.0` |
+| `durable-host` | the `durable` harness executor's figure, from the pi session on the host |
+| `pi-cloud-worker` | the `pi-cloud` harness executor's figure, from the pi events the Worker streams |
+| `subscription` | `codex`, `claude-cloud` and `codex-cloud`: a subscription bills no tokens, so `cost` is a known `0.0`, which the estimate counts as a measurement |
 | `unpriced` | a model with no known price; `cost` is `0.0` |
 
 A pi model behind a custom `base_url` reads `unpriced`, because `ModelConfig` carries no price. Token counts stay real. This costs nothing on the Z.AI flat quota. It matters on DeepSeek, which bills per token.

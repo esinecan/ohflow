@@ -122,6 +122,8 @@ The three fan-out patterns declare each part as a unit on the unit path `piece`,
 three patterns have one unit of work, so a pilot would run the whole milestone twice; they hold
 instead.
 
+A writing step gets `max_iterations=150` and a reviewer 80; the judge that `construct` writes gets 400.
+
 A change across repositories is `fan-out-under-contracts` with one part per repository: each part
 names its workspace, `contracts.md` fixes the interface between them, and a mechanical check that
 names the other worktrees runs the tests across them.
@@ -149,7 +151,7 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
   the milestone's first written workspace; `- command in <workspace>: <cmd>` names another. In
   `single-agent`, `relay` and `implement-and-review` the command gates the step that writes last
   in its workspace, and the reviewer. In the three fan-out patterns it runs as a `check-` step after
-  the merges. The campaign runs it as an acceptance check before the judge. The command runs
+  the merges. The campaign runs it as an acceptance check before the judge. Any command counts, such as `grep`, a linter or a grading script, so prose work has mechanical checks too. The command runs
   once per tree: the reviewer's gate and the acceptance check reuse a pass on the same clean
   tree in the same folder, so a reviewer who commits makes it run again. The implementer runs
   only the tests of the files it changes, and the reviewer and the judge read the logs.
@@ -161,7 +163,8 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
 - **`{<workspace>}` in a command is that workspace's output worktree.** `construct` writes it as a
   Git Bash path built from `$PWD`, so the same command finds the sibling worktree in the pilot.
 - **A rubric check is graded by the judge.** `- rubric: <text>` stays in the milestone spec, and the judge
-  passes the milestone only when each rubric check is met. No gate agent exists.
+  passes the milestone only when each rubric check is met. No gate agent exists. Judgment lives in
+  rubric checks and reviewer steps, and a step needs neither, because many steps are chores.
 
 ## What construct writes
 

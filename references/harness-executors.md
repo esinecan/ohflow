@@ -4,6 +4,10 @@ A harness executor launches, monitors, collects results from and stops one kind 
 
 Every agent step names its harness executor in `AgentSpec.harness_executor`. ohflow has no default: `validate` refuses an agent step that names none.
 
+## Capabilities
+
+`harness_executors.py` declares each harness executor's capabilities: `stall_timeout`, `carry_context`, `signed_in`, `profile`, `box`, `tools_only` and `reattach`. `validate` refuses a step that needs a capability its harness executor lacks, except `tools_only`: only `claude` declares it, and `pi` and `durable` honour `tools.only` without it. The engine reattaches only a harness executor that declares `reattach`.
+
 | Harness executor | Starts | Setup the agent sees | Pick it for |
 |---|---|---|---|
 | `pi` | a hermetic pi CLI child | only what the workflow names | new workflows |
@@ -74,7 +78,7 @@ AgentSpec(role="rollcall", brief="...", harness_executor="codex",
                            params={"reasoning_effort": "low"}))
 ```
 
-The signed-in harnesses (`claude` and `codex`) sign in with their own login, so `api_key_env` is empty. In the usual setup, validation refuses every field that would claim a tool policy the signed-in harness controls: `tools.only`, `tools.allow`, `tools.block`, `skills`, `mcp_config`, `enable_browser`, `enable_sub_agents`. With `agent_profile="hermetic"`, `claude` accepts `tools.only`; `codex` refuses it, because only `claude`'s registry row carries `CAP_TOOLS_ONLY`.
+The signed-in harnesses (`claude` and `codex`) sign in with their own login, so `api_key_env` is empty. In the usual setup, validation refuses every field that would claim a tool policy the signed-in harness controls: `tools.only`, `tools.allow`, `tools.block`, `skills`, `skills_dir`, `mcp_config`, `enable_browser`, `enable_sub_agents`. With `agent_profile="hermetic"`, `claude` accepts `tools.only`; `codex` refuses it, because only `claude`'s registry row carries `CAP_TOOLS_ONLY`.
 
 | | pi | claude | codex | durable | pi-cloud |
 |---|---|---|---|---|---|
@@ -108,11 +112,11 @@ Install the pi CLI with `npm install -g @earendil-works/pi-coding-agent`; the bi
 
 `thinking` takes `off`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`. Browser and sub-agent tool policies are refused. `task_tracker` has no pi equivalent; validation drops it with a warning.
 
-Each attempt gets its own `pi-agent/` and `session/`. The runner turns off ambient extensions, skills, prompts, context files and themes. It loads only what the workflow names. It pins Git Bash through `OHFLOW_BASH` and leaves stdin closed.
+Each attempt gets its own `pi-agent/` and `session/`. The runner turns off ambient extensions, skills, prompts, context files and themes. It loads only what the workflow names: the `skills` it names come from `AgentSpec.skills_dir`, which validation requires then. It pins Git Bash through `OHFLOW_BASH` and leaves stdin closed.
 
 MCP servers run on pi's built-in MCP support, which needs pi 1.4 or later. The runner writes the step's `mcp_config` servers to `pi-agent/mcp.json` and loads `-e builtin:mcp`. `--no-extensions` keeps `codemode` and `tool_search` off. Before the first model turn, `pi mcp list --json` connects each server and lists its tools. The listing goes to `logs/mcp-list.json`. A server that does not connect fails the attempt. The runner expands the `allow` globs and the block globs over the listed `server.tool` addresses. The block globs are the step's own `tools.block`. An `allow` glob that matches no tool fails the attempt, and so does a canonical-name collision. Each selected tool gets `direct` exposure through `toolExposure`. Every other tool stays `hidden`, and a server with no selected tool gets `enabled: false`. `--tools` names the selected tools in pi's spelling, such as `mcp__note_store__memory_search`, and `--exclude-tools` names the blocked ones. A blocked tool is therefore unreachable.
 
-The in-flight guard applies the step's `write_scope` globs to `edit` and `write`, caps each bash timeout, and sets `GIT_PAGER=cat`. It narrows cooperative pi tools. It is not a shell sandbox.
+The in-flight guard (`ohflow-guard.ts`) applies the step's `write_scope` globs to `edit` and `write`, caps each bash timeout, and sets `GIT_PAGER=cat`. It narrows cooperative pi tools. It is not a shell sandbox.
 
 `max_iterations` caps assistant tool-use turns. Provider and agent retries are off inside pi, so ohflow owns the retry budget and the execution-start budget. `RetryPolicy(carry_context=True)` forks the previous attempt's session, which the harness executor module names through `resume_target`.
 
@@ -120,13 +124,13 @@ The in-flight guard applies the step's `write_scope` globs to `edit` and `write`
 
 `-p --output-format stream-json --verbose --permission-mode bypassPermissions --session-id <uuid> --model <m>`. Without `bypassPermissions` a headless MCP call blocks.
 
-The `init` event and the model name some things differently. `Task` is `Agent`. Connector `claude.ai Gmail` is server `claude_ai_Gmail`. The harness executor records both forms. The last `result` event carries the final text, usage and `total_cost_usd`. A failed login arrives as a `<synthetic>` assistant reply, and the harness executor records that text as the error.
+The `init` event and the model name some things differently. `Task` is `Agent`. Connector `claude.ai Gmail` is server `claude_ai_Gmail`. The harness executor records both forms. The last `result` event carries the final text, usage and `total_cost_usd`. A step with a `schema` takes its structured output from the latest `StructuredOutput` call, whatever prose follows it, and otherwise from the final message. A failed login arrives as a `<synthetic>` assistant reply, and the harness executor records that text as the error. The runner stops the attempt with `max iterations N exceeded` once its assistant tool-use messages pass `max_iterations`.
 
 Hermetic: `--tools <mapped list> --strict-mcp-config --mcp-config <file> --setting-sources project,local`, and the environment variable `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1`, which drops every `CLAUDE.md` instruction file. `tools.only` maps `terminal` to `Bash`, `file_editor` to `Read,Edit,Write,Glob,Grep`, `task_tracker` to `TodoWrite`. Preflight runs `claude auth status` and refuses a logged-out CLI.
 
 ## codex
 
-`python -m ohflow.codex_appserver --codex <argv> --cwd <worktree> --final <out>/final.md --model <m> [--effort <e>] [--schema <file>] --prompt <bootstrap prompt>`. The bridge starts `codex app-server --listen stdio://` in the worktree and speaks JSON-RPC on its stdin. It opens one thread with `approvalPolicy` `never` and `sandbox` `danger-full-access`, and sends the bootstrap prompt as one `turn/start`. It passes the step's model to `thread/start` and `turn/start`, so the agent runs the workflow's model and not the `config.toml` default. It writes the `final_answer` message, else the last agent message, to `final.md`. The base `tiers.heavy.codex` model at `reasoning_effort` `high` runs on the signed-in ChatGPT account with codex-cli 0.160.0; 0.157.1 gets a `model_not_found` 400 for it (both tried 2026-11-04). The result's `codex_version` is the `--version` of the CLI that the [launch rules](#launch-rules-for-the-cli-harness-executors) resolve.
+`python -m ohflow.codex_appserver --codex <argv> --cwd <worktree> --final <out>/final.md --model <m> [--effort <e>] [--schema <file>] --prompt <bootstrap prompt>`. The bridge starts `codex app-server --listen stdio://` in the worktree and speaks JSON-RPC on its stdin. It opens one thread with `approvalPolicy` `never` and `sandbox` `danger-full-access`, and sends the bootstrap prompt as one `turn/start`. It passes the step's model to `thread/start` and `turn/start`, so the agent runs the workflow's model and not the `config.toml` default. It writes the `final_answer` message, else the last agent message, to `final.md`. The runner stops the attempt with `max iterations N exceeded` once its tool calls pass `max_iterations`. The base `tiers.heavy.codex` model at `reasoning_effort` `high` runs on the signed-in ChatGPT account with codex-cli 0.160.0; 0.157.1 gets a `model_not_found` 400 for it (both tried 2026-11-04). The result's `codex_version` is the `--version` of the CLI that the [launch rules](#launch-rules-for-the-cli-harness-executors) resolve.
 
 A step `schema` reaches Codex as a strict `outputSchema`. The API refuses it with `invalid_json_schema` unless every object in it sets `additionalProperties: false` and lists all its properties as required. For open-ended report objects, leave `schema` off and gate the report file with a `command_exit` check.
 
@@ -197,7 +201,8 @@ the branch back into the run's worktree with a fast-forward from the start
 commit, then deletes the branch from origin (`branch_deleted` in the result's
 `durable` block says whether origin accepted; a refused delete is no error,
 and a reattach after the fetch pushes the branch again). A fault in the
-fetch is the `fetch_back` error. A repository without `origin`
+fetch is the `fetch_back` error. Of the cloud end errors, a `durable` step records only
+`host_lost`, `fetch_back` and the `durable_error` form. A repository without `origin`
 refuses to launch. A step on `local` has no transport: it needs no remote, and
 its commits are in the worktree when it ends. The `pi-cloud` harness executor uses the same transport
 and the same `attempt_key`, and every transport branch sits under `ohflow/`.
@@ -230,7 +235,7 @@ of the skills tree, lists the skills in a prompt section, and a name with no
 `durable_error`. The box's copy of the skills tree is a clone that nothing
 pulls by itself, so a skill change reaches a step after a pull on the box. An empty `api_key_env`
 is right: the host holds its keys on its own box, for the providers the `durable.providers` setting lists. `write_scope`
-guards `edit` and `write`, and `durable.command_cap_s` applies the command time
+guards `edit` and `write` (`host/src/tools.mjs`), and `durable.command_cap_s` applies the command time
 cap to every command on the box.
 
 **Reattach.** A supervisor death or a host reboot reattaches the attempt: the
@@ -257,8 +262,8 @@ runner's kill-on-close job (a process group elsewhere), so a kill or the
 supervisor's death ends it with its commands. On an ssh box, the execution timeout,
 a phase abort and `ohflow kill` kill the local ssh client, so the connection drops. The
 host's tether (`host/src/tether.mjs`) writes one byte to stderr every 2 s and
-exits when the write fails, so the host and the command it runs end within
-seconds. Live check, 19.11.2026: the engine killed a roll-call step in the
+exits with code 70 when the write fails, so the host and the command it runs end within
+seconds. On `local` the tether writes nothing, and the host exits only when its stdout or stderr fails. Live check, 19.11.2026: the engine killed a roll-call step in the
 middle of a 20-minute `python -c "time.sleep(1210)"` command. `Get-Process
 python*,node*,bash*` on the box, 40 s after the kill, listed no process that
 started after the step began, and the step's `session.sqlite-wal` was last
@@ -348,12 +353,13 @@ that arrives while a tool call is still running ends the replay with a
 `tool_execution_start` for that call (Worker `4bf4a32`), without an
 `entryId`, so the stall clock waits on the open command instead of firing at
 the silence. A stall or the command time cap ends the attempt - the runner posts
-`abort` for the attempt's key - and the
+`abort` for the attempt's key and keeps the answer in `runner-abort.json` - and the
 retry is a fresh attempt with a new number, key, object and branch, so a
 retry never meets the old object's 409. The execution timeout, a phase
 abort and `ohflow kill` kill the runner instead, and the executor's `kill` posts the same
 `abort` and keeps the answer in `kill-abort.json`, so no container runs on
-for an attempt that is over. This holds for `pi-cloud`, `claude-cloud` and
+for an attempt that is over. When the event stream carried no token count, the
+attempt's tokens come from the newest abort answer. This holds for `pi-cloud`, `claude-cloud` and
 `codex-cloud`. A supervisor death never calls `kill`, so its reattach still
 finds the object.
 
@@ -424,7 +430,8 @@ timeout. `pi_cloud_end` and the abort answer carry the container's meter:
 `durable_object_id`, `instance`, `seconds` over every launch, and `launches`.
 The result's `infra` block holds that meter, and `infra_cost` prices it at the
 list rates in `cloud_spend.py`, memory and disk only; `table` shows it as
-`Infra cost` beside `Cost`. At run end the supervisor compares it with
+`Infra cost` beside `Cost`. `infra_cost` is None when the attempt held no
+priced machine or its container time was never reported, as after `host_lost`. At run end the supervisor compares it with
 Cloudflare's own meters per object (`cloudflare.json`, see
 [ohflow](ohflow.md)).
 

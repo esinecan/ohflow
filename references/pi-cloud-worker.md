@@ -3,7 +3,7 @@
 The `pi-cloud`, `claude-cloud` and `codex-cloud` harness executors drive one Cloudflare Worker,
 named `pi-cloud` unless the setting `name` says otherwise, which runs each step in a container in
 your own Cloudflare account. Its source is `worker/` in this skill. Its code mode scripts run in a
-second Worker, `<name>-codemode` (`worker/sandbox/`). The executors are described in [harness executors](harness-executors.md#pi-cloud);
+second Worker, `<name>-codemode` (`worker/sandbox/`), which keeps pi-codemode's class name `CodemodeSandbox`. The executors are described in [harness executors](harness-executors.md#pi-cloud);
 this page deploys the Worker and describes its side.
 
 ## Deploy it to your Cloudflare account
@@ -128,7 +128,7 @@ names its own.
   request replays from the start.
 - `POST abort` with `{operationId}`: stops the operation, which then settles `unanswered`, `aborted`,
   and stops the object's container. The answer carries `container` and `last_look`: the box as it
-  was just before the stop, `{at, took_ms, exit, text, truncated}` (`worker/src/last-look.mjs`).
+  was just before the stop, `{at, took_ms, exit, text, truncated}` (`worker/src/last-look.mjs`), with `text` cut at 8000 characters.
   `text` reads without a second sample: the uptime, the load, the cores and the box's first
   process; whether a lookup of the box's own hostname answers within 2 s, and whether the hosts
   file names it; the machine's CPU shares since boot and over the look's own second, with the steal
@@ -167,7 +167,7 @@ Every step's container starts from one default snapshot, with `computerd` as its
 step installs nothing. The recipe is `worker/snapshot/recipe.mjs`: setup steps run on the managed
 image `cloudflare/debian-trixie` (Node 24). The CLIs, the npm MCP servers and the repo commits
 are pinned; the image and the APT packages are not. The snapshot key is the first 16 bytes of
-the SHA-256 of the image name and the steps, so the same recipe gives the same key. The box's rules file is `worker/snapshot/AGENTS.md` with your
+the SHA-256 of the image name and the steps, so the same recipe gives the same key, and a new snapshot pin or CLI version gives a new one. The box's rules file is `worker/snapshot/AGENTS.md` with your
 `AGENTS.local.md` appended: the snapshot links it into `~/.pi/agent`, `~/.codex` and
 `~/.claude/CLAUDE.md`, and `StepAgent` renders it as a system prompt section. `box-versions` prints
 the version of each program in the box, and `box-chromium` renders a `data:` URL with headless
@@ -287,7 +287,7 @@ the skills pin `skills: {sha, names}`.
 the tool calls and aborts the operation at the first call past the limit. Either way the end line
 says `unanswered`, `turn_limit`, and the answer and the `pi_cloud_start` line carry the limit.
 The events are pi's shapes: a `tool_execution_start` and a `tool_execution_end` per tool call while
-the CLI runs, the transcript as `message_end` lines when the operation settles, the token counts the
+the CLI runs, the transcript as `message_end` lines without `replayed` when the operation settles, the token counts the
 CLI reports on the last one, then `pi_cloud_end`. The object announces no tool list, because the
 CLIs keep their own tools, and it announces the MCP servers of the box.
 
@@ -322,7 +322,8 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
   `push_error: skills_failed: ...`, which the runner records as the error `skills_failed: ...`.
   The mirror keeps three commits, and the route answers 404 for
   a commit it has dropped. A step that names no skill gets no URL and reads the snapshot's own
-  copy, which `snapshot.skills` clones. An attempt that started from a snapshot of an earlier
+  copy, which `snapshot.skills` clones, and which is an empty folder while `snapshot.skills` is `null`,
+  its shipped value. An attempt that started from a snapshot of an earlier
   recipe, whose boot wrapper fetches nothing, keeps its skills pin in the step record and reads that
   snapshot's copy.
 - **Credentials.** The CLI signs in with the operator's subscription, and the box holds only

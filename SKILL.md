@@ -7,13 +7,13 @@ description: Deliver a feature, or a whole design document milestone by mileston
 
 **IF A PART OF THIS TEXT APPLIES TO YOUR PROCEDURE, READ THE REFERENCE IT POINTS TO BEFORE YOU ACT. OTHERWISE THE REFERENCE IS OPTIONAL.**
 
-Write briefs, set tool policies, fire the command and read the result. **Tool policy is the gate**: an agent calls only the tools it was built with. **The agent's final message is a claim; the artifact is the evidence.** Terms: [CONTEXT](CONTEXT.md). Developers: [CONTRIBUTING](CONTRIBUTING.md).
+Write briefs, set tool policies, fire the command and read the result. **Tool policy is the gate**: an agent calls only the tools it was built with. **The agent's final message is a claim; the artifact is the evidence.** Terms: grep [CONTEXT](CONTEXT.md) after its core table.
 
 ## The attitude
 
 Own the result. Check artifacts, tools and documentation; explain failed runs. Wire for the transcript first. Read [orchestrator guidance](references/orchestrator.md) before constructing or revising a run.
 
-**Pilot first, whatever the pattern.** Send one small representative subset through every phase before the full run, and change the workflow on what it shows; `run --pilot` does this for a workflow that declares units.
+**Pilot first, whatever the pattern.** Send one small representative subset through every phase first, and change the workflow on what it shows; `run --pilot` does this for a workflow that declares units.
 
 **You stay in charge during the run.** Give each step one change, a stop rule and a gate that tests only that change ([ohflow](references/ohflow.md#gate-checks)), judge its result before the next step starts, and in a delivery kill a step the moment it stops producing value. A workflow that can run unattended does not make you unattended: packing the remaining work into a few multi-task steps and waiting for the run to end is the failure.
 
@@ -54,7 +54,7 @@ ohflow has no default harness executor. Facts, tool policies and launch rules: [
 
 ## Verbs
 
-Run each from `scripts/` as `PYTHONPATH=. python3 -m ohflow.cli <verb>`. Flags: `<verb> --help`. Verdict lines, `--json` and exit codes: [ohflow](references/ohflow.md#run-it).
+Run each from `scripts/` as `PYTHONPATH=. python3 -m ohflow.cli <verb>`. Verdict lines, `--json` and exit codes: [ohflow](references/ohflow.md#run-it).
 
 | Verb | What it does |
 |---|---|
