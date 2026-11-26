@@ -1,0 +1,45 @@
+{
+  "operator": {
+    "escalation_marker": "ACTION NEEDED FROM THE OPERATOR",
+    "on_escalate": null
+  },
+  "tiers": {
+    "heavy": {
+      "pi": "zai/glm-5.3",
+      "claude": "opus",
+      "codex": "gpt-6.1-sol",
+      "durable": "zai/glm-5.3",
+      "pi-cloud": "zai/glm-5.3",
+      "claude-cloud": "opus",
+      "codex-cloud": "gpt-6.1-sol"
+    },
+    "light": {
+      "pi": "zai/glm-5.3-flash",
+      "claude": "sonnet",
+      "codex": "gpt-5.6-luna",
+      "durable": "zai/glm-5.3-flash",
+      "pi-cloud": "zai/glm-5.3-flash",
+      "claude-cloud": "sonnet",
+      "codex-cloud": "gpt-5.6-luna"
+    }
+  },
+  "campaign": {
+    "judge_model": "heavy"
+  },
+  "pi": {
+    "api_key_env": {},
+    "base_url": {}
+  },
+  "commit_checks": {
+    "no_ai_attribution": false
+  },
+  "durable": {
+    "box": null,
+    "providers": []
+  },
+  "pi_cloud": {
+    "url": null,
+    "providers": [],
+    "mcp_servers": []
+  }
+}

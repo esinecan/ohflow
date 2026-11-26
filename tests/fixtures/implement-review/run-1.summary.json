@@ -1,0 +1,51 @@
+{
+  "repo": "C:\\Users\\<user>\\dev\\memory-daemon",
+  "branch": "feat/bm25f",
+  "worktree": "C:\\Users\\<user>\\dev\\memory-daemon-bm25",
+  "phases": {
+    "implement": {
+      "resumed": "phase 1 taken from the existing worktree",
+      "gate": {
+        "E1a_commits_past_base": 1,
+        "E1b_npm_test_exit": 0,
+        "E1c_tree_clean": true,
+        "passed": true
+      }
+    },
+    "review": {
+      "conversation_id": "e45dbc4c-333b-4766-8950-a82471e5c29a",
+      "transcript_dir": "C:\\Users\\<user>\\AppData\\Local\\Temp\\claude\\C--Users-user\\0bae1142-ded7-4352-8541-6f3cdef1bbb8\\scratchpad\\oh-run\\run-1\\conversations\\e45dbc4c333b47668950a82471e5c29a",
+      "execution_status": "ConversationExecutionStatus.FINISHED",
+      "tools": [
+        "finish",
+        "terminal",
+        "think"
+      ],
+      "skills": [],
+      "max_iterations": 80,
+      "tool_calls": 15,
+      "observation_errors": 0,
+      "wall_seconds": 559.5,
+      "tokens": {
+        "model": "openai/glm-5.3-flash",
+        "prompt_tokens": 140399,
+        "completion_tokens": 20371,
+        "cache_read_tokens": 120960,
+        "cache_write_tokens": 0,
+        "reasoning_tokens": 17538,
+        "context_window": 0,
+        "per_turn_token": 22576,
+        "response_id": ""
+      },
+      "gate": {
+        "E2a_verdict": null,
+        "E2b_tree_clean": true,
+        "E2c_npm_test_exit": 0,
+        "passed": false
+      }
+    }
+  },
+  "base_sha": "fa8ea3d13989c9f36b68a271308f72becc795602",
+  "diff_stat": " AGENTS.md              |  17 +++++++++\n src/ambient-recall.mjs |   7 ++--\n src/capture.mjs        |   9 +++--\n src/search.mjs         | 102 ++++++++++++++++++++++++++++++++++++++++---------\n test/scratch.test.mjs  |  29 ++++++++++++++\n 5 files changed, 140 insertions(+), 24 deletions(-)\n",
+  "log": "9e9008d search: BM25F scorer with per-field counts and idf weighting\n"
+}

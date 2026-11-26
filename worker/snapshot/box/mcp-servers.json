@@ -1,0 +1,18 @@
+{
+	"mcpServers": {
+		"sequential-thinking": { "command": "mcp-server-sequential-thinking" },
+		"brave-search": {
+			"command": "brave-search-mcp-server",
+			"args": ["--transport", "stdio"],
+			"env": { "BRAVE_API_KEY": "pi-cloud-placeholder-BRAVE_API_KEY" }
+		},
+		"playwright": { "command": "playwright-mcp", "args": ["--browser", "chromium", "--headless", "--isolated"] }
+	},
+	"secrets": {
+		"BRAVE_API_KEY": {
+			"placeholder": "pi-cloud-placeholder-BRAVE_API_KEY",
+			"hosts": ["api.search.brave.com"],
+			"header": "x-subscription-token"
+		}
+	}
+}

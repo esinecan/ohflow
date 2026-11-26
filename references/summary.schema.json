@@ -1,0 +1,129 @@
+{
+  "type": "object",
+  "required": ["repo", "branch", "base_sha", "phases", "diff_stat", "log"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "workflow": {"type": "string"},
+    "status": {"type": "string", "enum": ["finished", "failed", "paused", "running", "orphaned"]},
+    "started": {"type": ["string", "null"]},
+    "finished": {"type": ["string", "null"]},
+    "repo": {"type": "string"},
+    "branch": {"type": "string"},
+    "base_sha": {"type": ["string", "null"]},
+    "args": {"type": ["object", "null"]},
+    "max_parallel": {"type": ["integer", "null"]},
+    "baseline": {"type": ["object", "null"]},
+    "worktrees": {"type": ["object", "null"]},
+    "worktree": {"type": ["string", "null"]},
+    "quarantined": {"type": "array", "items": {"type": "string"}},
+    "deferred": {"type": "array", "items": {"type": "string"}},
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fingerprint", "reason"],
+        "properties": {
+          "coord": {"type": "string"},
+          "fingerprint": {"type": ["string", "null"]},
+          "reason": {"type": "string"},
+          "failures": {"type": "integer"},
+          "judged_failures": {"type": "integer"},
+          "transient_deferrals": {"type": "integer"}
+        }
+      }
+    },
+    "auto_resume": {"type": "integer"},
+    "phases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": {"type": ["string", "null"]},
+          "status": {"type": "string", "enum": ["running", "passed", "failed", "deferred"]},
+          "started": {"type": ["string", "null"]},
+          "settled_at": {"type": ["string", "null"]},
+          "policy": {"type": ["string", "null"]},
+          "min_success": {"type": ["string", "integer", "null"]},
+          "max_parallel": {"type": ["integer", "null"]},
+          "good": {"type": "integer"},
+          "total": {"type": "integer"},
+          "deferred": {"type": "array", "items": {"type": "string"}},
+          "auto_resumes": {"type": "integer"},
+          "steps": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["step_id", "kind", "role", "status", "attempt", "wall_seconds", "fingerprint", "head_sha", "write_scope", "gate", "retry_decision", "attempts", "executions", "result", "dir"],
+              "properties": {
+                "step_id": {"type": "string"},
+                "kind": {"type": "string", "enum": ["agent", "command", "gate", "merge"]},
+                "role": {"type": "string"},
+                "handover": {"type": ["string", "null"]},
+                "status": {"type": "string", "enum": ["pending", "running", "passed", "failed", "timeout", "quarantined", "skipped", "cached", "deferred", "dry-run"]},
+                "attempt": {"type": "integer"},
+                "wall_seconds": {"type": ["number", "null"]},
+                "fingerprint": {"type": ["string", "null"]},
+                "head_sha": {"type": ["string", "null"]},
+                "write_scope": {"type": "array", "items": {"type": "string"}},
+                "gate": {
+                  "type": ["object", "null"],
+                  "properties": {
+                    "coord": {"type": "string"},
+                    "passed": {"type": "boolean"},
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["name", "passed"],
+                        "properties": {
+                          "name": {"type": "string"},
+                          "passed": {"type": "boolean"}
+                        }
+                      }
+                    }
+                  }
+                },
+                "retry_decision": {"type": ["string", "null"]},
+                "attempts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["attempt", "kind", "status", "gate_passed", "tokens", "cost", "dir"],
+                    "properties": {
+                      "attempt": {"type": ["integer", "null"]},
+                      "kind": {"type": "string", "enum": ["agent", "command", "gate", "merge"]},
+                      "start_kind": {"type": ["string", "null"]},
+                      "status": {"type": ["string", "null"]},
+                      "fingerprint": {"type": ["string", "null"]},
+                      "started": {"type": ["string", "null"]},
+                      "ended": {"type": ["string", "null"]},
+                      "failure_class": {"type": ["string", "null"]},
+                      "abort_victim": {"type": ["boolean", "null"]},
+                      "continued": {"type": ["boolean", "null"]},
+                      "retry_decision": {"type": ["string", "null"]},
+                      "gate_passed": {"type": ["boolean", "null"]},
+                      "tool_calls": {"type": ["integer", "null"]},
+                      "llm_calls": {"type": ["integer", "null"]},
+                      "observation_errors": {"type": ["integer", "null"]},
+                      "wall_seconds": {"type": ["number", "null"]},
+                      "tokens": {"type": ["object", "null"]},
+                      "cost": {"type": ["object", "number", "null"]},
+                      "cost_source": {"type": ["string", "null"]},
+                      "error": {"type": ["string", "null"]},
+                      "dir": {"type": "string"}
+                    }
+                  }
+                },
+                "executions": {"type": "integer"},
+                "result": {"type": ["object", "null"]},
+                "dir": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "diff_stat": {"type": ["object", "string"], "additionalProperties": {"type": "string"}},
+    "log": {"type": ["object", "string"], "additionalProperties": {"type": "string"}}
+  }
+}

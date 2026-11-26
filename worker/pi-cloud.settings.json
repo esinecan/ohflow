@@ -1,0 +1,14 @@
+{
+	"name": "pi-cloud",
+	"account_id": null,
+	"url": null,
+	"git_owner": null,
+	"git_identity": null,
+	"skills_repo": null,
+	"skills_root_skill": null,
+	"snapshot": {
+		"skills": null,
+		"repos": [],
+		"mcp_servers": {}
+	}
+}

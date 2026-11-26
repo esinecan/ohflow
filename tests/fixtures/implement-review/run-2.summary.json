@@ -1,0 +1,79 @@
+{
+  "repo": "C:\\Users\\<user>\\dev\\memory-daemon",
+  "branch": "feat/bm25f",
+  "worktree": "C:\\Users\\<user>\\dev\\memory-daemon-bm25",
+  "phases": {
+    "implement": {
+      "conversation_id": "eed3c38d-556d-481a-9671-362852eee96d",
+      "transcript_dir": "C:\\Users\\<user>\\AppData\\Local\\Temp\\claude\\C--Users-user\\0bae1142-ded7-4352-8541-6f3cdef1bbb8\\scratchpad\\oh-run\\run-2\\conversations\\eed3c38d556d481a9671362852eee96d",
+      "execution_status": "ConversationExecutionStatus.FINISHED",
+      "tools": [
+        "file_editor",
+        "finish",
+        "invoke_skill",
+        "task_tracker",
+        "terminal",
+        "think"
+      ],
+      "skills": [
+        "codebase-design"
+      ],
+      "max_iterations": 150,
+      "tool_calls": 31,
+      "observation_errors": 0,
+      "wall_seconds": 234.2,
+      "tokens": {
+        "model": "openai/glm-5.3-flash",
+        "prompt_tokens": 443926,
+        "completion_tokens": 6316,
+        "cache_read_tokens": 413952,
+        "cache_write_tokens": 0,
+        "reasoning_tokens": 550,
+        "context_window": 0,
+        "per_turn_token": 29884,
+        "response_id": ""
+      },
+      "gate": {
+        "E1a_commits_past_base": 2,
+        "E1b_npm_test_exit": 0,
+        "E1c_tree_clean": true,
+        "passed": true
+      }
+    },
+    "review": {
+      "conversation_id": "defddfb2-19f2-4bd3-8b31-4edb358c9d25",
+      "transcript_dir": "C:\\Users\\<user>\\AppData\\Local\\Temp\\claude\\C--Users-user\\0bae1142-ded7-4352-8541-6f3cdef1bbb8\\scratchpad\\oh-run\\run-2\\conversations\\defddfb219f24bd38b314edb358c9d25",
+      "execution_status": "ConversationExecutionStatus.FINISHED",
+      "tools": [
+        "finish",
+        "terminal",
+        "think"
+      ],
+      "skills": [],
+      "max_iterations": 80,
+      "tool_calls": 26,
+      "observation_errors": 0,
+      "wall_seconds": 653.1,
+      "tokens": {
+        "model": "openai/glm-5.3-flash",
+        "prompt_tokens": 428707,
+        "completion_tokens": 13327,
+        "cache_read_tokens": 397632,
+        "cache_write_tokens": 0,
+        "reasoning_tokens": 8991,
+        "context_window": 0,
+        "per_turn_token": 27074,
+        "response_id": ""
+      },
+      "gate": {
+        "E2a_verdict": "MERGEABLE",
+        "E2b_tree_clean": true,
+        "E2c_npm_test_exit": 0,
+        "passed": true
+      }
+    }
+  },
+  "base_sha": "fa8ea3d13989c9f36b68a271308f72becc795602",
+  "diff_stat": " AGENTS.md              |  17 ++++++++\n src/ambient-recall.mjs |   7 ++--\n src/capture.mjs        |   9 ++--\n src/search.mjs         | 110 +++++++++++++++++++++++++++++++++++++++++--------\n test/scratch.test.mjs  |  56 +++++++++++++++++++++++--\n 5 files changed, 172 insertions(+), 27 deletions(-)\n",
+  "log": "c667cf5 search: review fixes for the BM25F scorer\n9e9008d search: BM25F scorer with per-field counts and idf weighting\n"
+}

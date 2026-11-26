@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "required": [
+    "harness_executor",
+    "status",
+    "harness",
+    "model",
+    "tools",
+    "mcp_servers",
+    "cannot"
+  ],
+  "properties": {
+    "harness_executor": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PRESENT"
+      ]
+    },
+    "harness": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mcp_servers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cannot": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

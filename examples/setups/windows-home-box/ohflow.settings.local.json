@@ -1,0 +1,19 @@
+{
+  "operator": {
+    "escalation_marker": "CRUCIAL INFORMATION FOR ALEX",
+    "on_escalate": "python C:/Users/<user>/bin/post_to_board.py {file}"
+  },
+  "commit_checks": {
+    "no_ai_attribution": true
+  },
+  "durable": {
+    "box": "buildbox",
+    "providers": ["zai", "deepseek"]
+  },
+  "pi_cloud": {
+    "url": "https://pi-cloud.example.workers.dev",
+    "providers": ["zai", "deepseek"],
+    "mcp_servers": ["deepthink", "sequential-thinking", "isession",
+                    "mcp-inspector", "brave-search", "playwright"]
+  }
+}

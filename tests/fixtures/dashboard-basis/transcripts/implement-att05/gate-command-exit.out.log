@@ -1,0 +1,17 @@
+oh-dispatch suite   python 3.14.0
+  tests:  C:\Users\<user>\dev\_wt\oh-dispatch-deepening\m7-smoke-fixes\oh-dispatch\tests
+  ohflow: C:\Users\<user>\dev\_wt\oh-dispatch-deepening\m7-smoke-fixes\oh-dispatch\scripts\ohflow
+  e2e:    off (pass --e2e to include it)
+
+...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s...........................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 911 tests in 815.955s
+
+OK (skipped=1)
+
+SKIPPED (1) - each with its reason:
+  - test_the_smoke_matrix_passes (tests.test_e2e_real_model.TheSmokeMatrixOnRealLanes.test_the_smoke_matrix_passes)
+      the end-to-end test is opt-in. Pass --e2e to run_tests.py (it sets OHFLOW_E2E=1). It runs the smoke matrix of `ohflow rollcall` against real models and takes one to three minutes.
+
+summary schema checks: 248   unexpected rejections: 0
+ran 911 tests in 816.0s   failures=0 errors=0 skipped=1

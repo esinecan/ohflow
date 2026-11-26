@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ohflow run</title>
+<link rel="stylesheet" href="/dashboard.css" data-ohflow-asset="style">
+</head>
+<body>
+<a class="skip-link" href="#workspace">Skip to run workspace</a>
+<header class="app-header">
+  <a class="brand" href="#workspace" aria-label="ohflow run dashboard"><span>oh</span><span>flow</span></a>
+  <div class="run-crumb" aria-label="Current run"><span>Runs</span><span aria-hidden="true">/</span><strong id="run-title">Loading run</strong></div>
+  <span class="status-chip tone-neutral" id="run-status"><span class="status-icon" aria-hidden="true"></span><span>Loading</span></span>
+  <p class="run-counts" id="run-counts">Reading recorded workflow…</p>
+  <p class="run-counts run-eta" id="run-eta" hidden></p>
+  <div class="header-actions">
+    <span class="read-only"><svg aria-hidden="true"><use href="#i-lock"></use></svg>Local read-only</span>
+    <button class="icon-button" id="appearance-button" type="button" aria-label="Toggle higher contrast" aria-pressed="false" title="Toggle higher contrast"><svg aria-hidden="true"><use href="#i-moon"></use></svg></button>
+    <button class="icon-button" id="density-button" type="button" aria-label="Use comfortable spacing" aria-pressed="false" title="Toggle compact spacing"><svg aria-hidden="true"><use href="#i-settings"></use></svg></button>
+  </div>
+</header>
+
+<nav class="view-toolbar" aria-label="Dashboard views">
+  <div class="workflow-identity">
+    <span class="workflow-mark"><svg aria-hidden="true"><use href="#i-workflow"></use></svg></span>
+    <span><strong id="workflow-title">Workflow</strong><small id="workflow-summary">Reading planned work…</small></span>
+  </div>
+  <div class="view-switch" role="group" aria-label="Choose dashboard view">
+    <button class="view-button is-active" type="button" data-view="order" aria-pressed="true"><svg aria-hidden="true"><use href="#i-order"></use></svg>Start order</button>
+    <button class="view-button" type="button" data-view="workflow" aria-pressed="false"><svg aria-hidden="true"><use href="#i-workflow"></use></svg>Workflow</button>
+    <button class="view-button" type="button" data-view="plan" aria-pressed="false"><svg aria-hidden="true"><use href="#i-plan"></use></svg>Plan</button>
+    <button class="view-button" type="button" data-view="compare" aria-pressed="false"><svg aria-hidden="true"><use href="#i-compare"></use></svg>Compare</button>
+  </div>
+  <label class="search-control global-search"><svg aria-hidden="true"><use href="#i-search"></use></svg><span class="sr-only">Search steps, nodes and evidence</span><input id="global-search" type="search" placeholder="Search steps, nodes or evidence…" autocomplete="off"></label>
+  <button class="fit-button" id="fit-graph" type="button"><svg aria-hidden="true"><use href="#i-fit"></use></svg>Fit graph</button>
+</nav>
+
+<main id="workspace" tabindex="-1">
+  <section class="offline-banner" id="offline-banner" aria-live="polite" hidden></section>
+  <section class="attention-strip" id="attention-strip" aria-label="Attention: what needs a person, what recovers by itself, what is a signal" hidden></section>
+  <div class="overview-layout" id="overview-layout">
+    <div class="overview-main">
+      <section class="graph-panel" id="graph-panel" aria-labelledby="graph-heading">
+        <div class="panel-heading graph-heading-row">
+          <div><h1 id="graph-heading">Earlier starts <span aria-hidden="true">→</span> later starts</h1><p>Equal-width nodes. Spacing shows order, not elapsed time.</p></div>
+          <div class="graph-legend" aria-label="Graph legend">
+            <span><i class="legend-dot passed" aria-hidden="true"></i>passed</span><span><i class="legend-dot failed" aria-hidden="true"></i>failed</span><span><i class="legend-line dependency" aria-hidden="true"></i>dependency</span><span><i class="legend-line phase" aria-hidden="true"></i>phase barrier</span><span><i class="legend-line context" aria-hidden="true"></i>changed inputs</span><span><i class="legend-line retry" aria-hidden="true"></i>automatic retry</span>
+          </div>
+        </div>
+        <div class="phase-lanes" id="phase-lanes" aria-label="Who runs and who waits, per phase"></div>
+        <div class="graph-scroll" id="graph-scroll" tabindex="0" aria-label="Invocation graph, scroll horizontally">
+          <div class="graph-canvas" id="graph-canvas"><svg class="graph-edges" id="graph-edges" aria-hidden="true"></svg><div class="graph-grid" id="graph-grid"></div></div>
+        </div>
+        <div class="peek" id="node-peek" role="tooltip" hidden></div>
+        <p class="empty-search" id="graph-empty" role="status" hidden>No invocation matches this search.</p>
+        <section class="live-peek" id="live-peek" aria-label="Running invocations and their output tail" hidden></section>
+      </section>
+      <section class="digest-panel" id="digest-panel" aria-labelledby="digest-heading"></section>
+      <section class="campaign-panel" id="campaign-panel" aria-labelledby="campaign-heading"></section>
+    </div>
+
+    <aside class="inspector" id="inspector" aria-labelledby="inspector-title">
+      <div class="inspector-head"><div><h2 id="inspector-title">Select an invocation</h2><p id="inspector-subtitle">Choose a recorded start to inspect its evidence.</p></div><span class="status-chip tone-neutral" id="inspector-status"><span class="status-icon" aria-hidden="true"></span><span>Unknown</span></span></div>
+      <details class="invocation-meta-disclosure" id="invocation-meta-disclosure" open>
+        <summary>Invocation details</summary>
+        <dl class="invocation-meta" id="invocation-meta"></dl>
+      </details>
+      <div class="tab-list" role="tablist" aria-label="Invocation evidence">
+        <button role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="false" tabindex="-1" data-tab="overview">Overview</button>
+        <button role="tab" id="tab-checks" aria-controls="panel-checks" aria-selected="false" tabindex="-1" data-tab="checks">Checks</button>
+        <button role="tab" id="tab-transcript" aria-controls="panel-transcript" aria-selected="true" tabindex="0" data-tab="transcript">Transcript</button>
+        <button role="tab" id="tab-artifacts" aria-controls="panel-artifacts" aria-selected="false" tabindex="-1" data-tab="artifacts">Artifacts</button>
+      </div>
+      <div class="inspector-controls" id="transcript-controls">
+        <label class="search-control"><svg aria-hidden="true"><use href="#i-search"></use></svg><span class="sr-only">Search loaded transcript records</span><input id="transcript-search" type="search" placeholder="Search this transcript…" autocomplete="off"></label>
+        <span class="follow-control"><button class="follow-button" id="follow-latest" type="button" aria-pressed="false"><span class="switch" aria-hidden="true"></span><span>Follow latest</span></button></span>
+        <button class="text-button reader-button" id="reader-mode" type="button" aria-pressed="false" aria-label="Expand all long record bodies (reader mode)">Full text</button>
+        <div class="transcript-status-row"><span class="follow-explanation" id="follow-explanation">Available while an invocation is running</span><span class="loaded-count" id="loaded-count">No records loaded</span></div>
+      </div>
+      <section class="tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" hidden></section>
+      <section class="tab-panel" id="panel-checks" role="tabpanel" aria-labelledby="tab-checks" hidden></section>
+      <section class="tab-panel transcript-panel" id="panel-transcript" role="tabpanel" aria-labelledby="tab-transcript"></section>
+      <section class="tab-panel" id="panel-artifacts" role="tabpanel" aria-labelledby="tab-artifacts" hidden></section>
+      <section class="tab-panel planned-panel" id="panel-planned" role="region" aria-label="Planned step" hidden></section>
+    </aside>
+  </div>
+  <div id="inspector-parking" hidden></div>
+  <section class="compare-view" id="compare-view" hidden aria-labelledby="compare-heading"></section>
+  <section class="workflow-view" id="workflow-view" hidden aria-labelledby="workflow-view-heading"></section>
+  <section class="plan-view" id="plan-view" hidden aria-labelledby="plan-view-heading"></section>
+  <section class="legacy-timeline" id="legacy-timeline" hidden aria-label="Recorded timeline"><!--OHFLOW:TIMELINE--></section>
+</main>
+<div class="visually-live" id="live-status" aria-live="polite" aria-atomic="true"></div>
+<script id="ohflow-data" type="application/json">null</script>
+<svg class="icon-defs" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"></path></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.05.05-2.83 2.83-.05-.05a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1.1 1.65V21h-4v-.08a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-2 .36l-.05.05-2.83-2.83.05-.05a1.8 1.8 0 0 0 .36-2A1.8 1.8 0 0 0 2.6 13.7H2.5v-4h.08a1.8 1.8 0 0 0 1.65-1.1 1.8 1.8 0 0 0-.36-2l-.05-.05 2.83-2.83.05.05a1.8 1.8 0 0 0 2 .36 1.8 1.8 0 0 0 1.1-1.65V2.4h4v.08a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 2-.36l.05-.05 2.83 2.83-.05.05a1.8 1.8 0 0 0-.36 2 1.8 1.8 0 0 0 1.65 1.1h.08v4h-.08A1.8 1.8 0 0 0 19.4 15Z"></path></symbol>
+  <symbol id="i-workflow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="5" r="2.5"></circle><circle cx="17" cy="18" r="2.5"></circle><path d="M8.5 6h7M7.5 8l7.8 7.7"></path></symbol>
+  <symbol id="i-plan" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"></path></symbol>
+  <symbol id="i-order" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><path d="M5 20V10h4v10H5ZM15 20V4h4v16h-4Z"></path></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"></path></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6V3Z"></path><path d="M14 3v5h5M9 13h6M9 17h6"></path></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14 6a4 4 0 0 0-5 5L3 17l4 4 6-6a4 4 0 0 0 5-5l-3 3-3-3 2-4Z"></path></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m6 12 4 4 8-9"></path></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"></path></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"></circle></symbol>
+</svg>
+<script src="/dashboard_records.js" data-ohflow-asset="records"></script>
+<script src="/dashboard.js" data-ohflow-asset="script"></script>
+</body>
+</html>

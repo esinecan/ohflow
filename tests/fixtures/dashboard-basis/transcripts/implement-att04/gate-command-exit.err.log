@@ -1,0 +1,6 @@
+C:\Users\<user>\dev\_wt\oh-dispatch-deepening\m7-smoke-fixes\oh-dispatch\scripts\ohflow\rollcall.py:483: UserWarning: 01.report/01.dsh-1: dsh takes its model from the dsh profile; model 'fake/deterministic' is recorded, not applied
+  plan = validate(load_plan(PLAN, args))
+C:\Users\<user>\dev\_wt\oh-dispatch-deepening\m7-smoke-fixes\oh-dispatch\scripts\ohflow\rollcall.py:483: UserWarning: 01.report/04.dsh-1: dsh takes its model from the dsh profile; model 'fake/deterministic' is recorded, not applied
+  plan = validate(load_plan(PLAN, args))
+C:\Users\<user>\dev\_wt\oh-dispatch-deepening\m7-smoke-fixes\oh-dispatch\scripts\ohflow\rollcall.py:483: UserWarning: 04.relay-4-dsh-1/01.dsh-1: dsh takes its model from the dsh profile; model 'fake/deterministic' is recorded, not applied
+  plan = validate(load_plan(PLAN, args))

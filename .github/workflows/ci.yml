@@ -1,0 +1,62 @@
+name: suite
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: suite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suite:
+    name: suite (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Worker tests
+        run: node --test worker/test/*.test.mjs
+
+      - name: Shard 1/3
+        run: python tests/run_tests.py --shard 1/3
+
+      - name: Shard 2/3
+        if: ${{ !cancelled() }}
+        run: python tests/run_tests.py --shard 2/3
+
+      - name: Shard 3/3
+        if: ${{ !cancelled() }}
+        run: python tests/run_tests.py --shard 3/3
+
+      - name: Real-process tests
+        if: ${{ !cancelled() }}
+        run: python tests/run_tests.py --real-process

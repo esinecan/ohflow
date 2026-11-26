@@ -1,0 +1,10 @@
+/ohflow.settings.local.json
+/references/local.md
+/host/bin/
+/scripts/pi-worker-run/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+node_modules/

@@ -1,0 +1,3 @@
+{"type":"pi_cloud_start","operationId":"01.probe-01.sleep-a01-d049e778","harness":"codex","branch":"ohflow/codex-cloud/01.probe-01.sleep-a01-d049e778","start":"f1362c7ff1ddea011be61d744932c9ffdd73c56b","model":"gpt-5.6-luna","max_iterations":5,"snapshot":"59accdb28ac7802bf0c11e06c99ab4c0","skills":{"sha":null,"names":[]},"tools":[],"mcp_servers":["sequential-thinking","brave-search","playwright","deepthink","isession","mcp-inspector"],"durable_object_id":"b2628937439ae43655e6e1a8956604a9e938b69db0c982d8f3a9f7bdaec9d932","instance":"standard-1","t":1795339458157}
+{"type":"pi_cloud_container","status":"ready","t":1795339461966}
+{"type":"tool_execution_start","toolCallId":"item_0","toolName":"shell","args":{"command":"/bin/sh -lc 'sleep 900'"},"t":1795339470997}

@@ -1,0 +1,72 @@
+{
+  "coord": "01.sweep/01.flaky",
+  "attempt": 2,
+  "conversation_id": "2026-09-29T00-11-41-705Z_01a0ea80-c108-77e0-943d-f45dde73c424",
+  "transcript_dir": "C:\\fixture\\g1\\work\\real\\out\\r-20260929-021128-7974ff3a\\phases\\01.sweep\\01.flaky\\attempts\\02\\session",
+  "execution_status": "finished",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "skills": [],
+  "tool_calls": 5,
+  "observation_errors": 0,
+  "llm_calls": 4,
+  "wall_seconds": 34.7,
+  "tokens": {
+    "prompt_tokens": 12806,
+    "completion_tokens": 1350,
+    "cache_read_tokens": 7744,
+    "cache_write_tokens": 0,
+    "reasoning_tokens": 727
+  },
+  "cost": 0.0,
+  "cost_source": "unpriced",
+  "final_text_path": "final.md",
+  "structured": null,
+  "schema_error": null,
+  "error": null,
+  "pi_version": "0.85.1",
+  "settings": {
+    "requested": {
+      "model": {
+        "model": "zai/glm-5.3-flash",
+        "base_url": "http://127.0.0.1:64349",
+        "api_key_env": "ZAI_CODING_CN_API_KEY",
+        "params": {
+          "thinking": "low"
+        },
+        "extra_body": {}
+      },
+      "tools": {
+        "preset": "default",
+        "enable_browser": false,
+        "enable_sub_agents": false,
+        "only": [],
+        "allow": [],
+        "mcp_profile": null,
+        "mcp_profile_resolved": null
+      },
+      "max_command_s": null
+    },
+    "effective": {
+      "model": "zai/glm-5.3-flash",
+      "thinking": "low",
+      "tools": [
+        "read",
+        "bash",
+        "edit",
+        "write",
+        "grep",
+        "find",
+        "ls"
+      ],
+      "max_command_s": 780
+    }
+  }
+}

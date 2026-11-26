@@ -1,0 +1,8 @@
+/pi-cloud.settings.local.json
+/snapshot/AGENTS.local.md
+/.dev.vars
+/.wrangler/
+dist/
+/node_modules/
+/.pi-cloud-urls.json
+wrangler.generated.json

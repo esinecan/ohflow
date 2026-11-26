@@ -1,0 +1,891 @@
+{
+ "schema": "ohflow.dashboard-case/1",
+ "generated_at": "2026-10-06T21:14:48Z",
+ "canonical_run": {
+  "id": "m7-smoke-fixes",
+  "plan": "deepening-m7-smoke-fixes",
+  "plan_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\plan.py",
+  "repo": "C:\\Users\\<user>\\.agents\\skills",
+  "base_sha": "7426973c700a9264ef51eeb85bd69192763ff3b0",
+  "worktree_branch": "arch/m7-smoke-fixes",
+  "worktree_path": "C:\\Users\\<user>\\dev\\_wt\\oh-dispatch-deepening\\m7-smoke-fixes",
+  "max_parallel": 1,
+  "auto_resume": 2,
+  "started": "2026-10-01T21:48:35Z",
+  "finished": "2026-10-02T04:32:28Z",
+  "status": "finished",
+  "journal": {
+   "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+   "records": 65
+  },
+  "run_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes"
+ },
+ "phases": [
+  {
+   "id": "01.implement",
+   "name": "Implement",
+   "policy": "abort",
+   "min_success": "all",
+   "max_parallel": 1,
+   "depends_on": [],
+   "steps": [
+    "01.implement/01.implement"
+   ],
+   "final_status": "passed"
+  },
+  {
+   "id": "02.review",
+   "name": "Review",
+   "policy": "continue",
+   "min_success": "all",
+   "max_parallel": 1,
+   "depends_on": [
+    "01.implement"
+   ],
+   "steps": [
+    "02.review/01.review"
+   ],
+   "final_status": "passed"
+  }
+ ],
+ "steps": [
+  {
+   "coord": "01.implement/01.implement",
+   "phase": "01.implement",
+   "id": "implement",
+   "kind": "worker",
+   "role": "implement",
+   "lane": "claude",
+   "model": "claude-sonnet-5-5",
+   "depends_on": [],
+   "owns": [
+    "oh-dispatch/**"
+   ],
+   "retry_policy": {
+    "max": 1,
+    "on": [
+     "gate:command_exit",
+     "gate:tree_clean",
+     "gate:commits_past_base"
+    ],
+    "carry_context": false
+   },
+   "wall_timeout_s": 14400,
+   "stall_timeout_s": 2400,
+   "gate_checks": [
+    "commits_past_base>=1",
+    "tree_clean",
+    "ownership oh-dispatch/**",
+    "no_ai_attribution",
+    "command_exit: python oh-dispatch/tests/run_tests.py"
+   ],
+   "plan_source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\plan.json"
+  },
+  {
+   "coord": "02.review/01.review",
+   "phase": "02.review",
+   "id": "review",
+   "kind": "worker",
+   "role": "review",
+   "lane": "pi",
+   "model": "zai/glm-5.3",
+   "depends_on": [
+    "implement"
+   ],
+   "owns": [],
+   "retry_policy": {
+    "max": 0,
+    "on": [],
+    "carry_context": false
+   },
+   "wall_timeout_s": 7200,
+   "stall_timeout_s": 2400,
+   "gate_checks": [
+    "final_message_matches /VERDICT:\\s*(MERGEABLE|BLOCKED)/",
+    "tree_clean"
+   ],
+   "plan_source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\plan.json"
+  }
+ ],
+ "attempts": [
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 0,
+   "status": "cached",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 60,
+    "type": "step_finished",
+    "ts": "2026-10-02T04:32:27Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 0.0,
+   "cached": true,
+   "wall_seconds_basis": "Engine-reported default; no new invocation duration was measured."
+  },
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 1,
+   "start_kind": "initial",
+   "fingerprint": "678337a3cd16900a7fefa33138bf3427cf54d4a9f47f8617914bd27ea9c24e49",
+   "previous_fingerprint": null,
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 4,
+    "type": "step_started",
+    "ts": "2026-10-01T21:48:37Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 6,
+    "type": "step_finished",
+    "ts": "2026-10-01T22:40:31Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 3114.0,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 7,
+    "type": "retry_decided",
+    "ts": "2026-10-01T22:40:31Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/implement-att01/transcript.jsonl",
+    "md": "packet:transcripts/implement-att01/transcript.md",
+    "records": 499,
+    "tool_calls": 109,
+    "tool_results": 109,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\01\\logs\\claude-events.jsonl"
+   },
+   "usage": {
+    "actions": 109,
+    "llm_calls": 65,
+    "wall_seconds": 2265.7,
+    "prompt_tokens": 8352995,
+    "completion_tokens": 45070,
+    "cost": 4.995272800000002,
+    "cost_source": "claude-cli",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\01\\result.json"
+  },
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 2,
+   "start_kind": "initial",
+   "fingerprint": "14440773f7fe9268b8c25dd7925b51b1270b27b3d1799d1626ce64621c868a0d",
+   "previous_fingerprint": "678337a3cd16900a7fefa33138bf3427cf54d4a9f47f8617914bd27ea9c24e49",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 17,
+    "type": "step_started",
+    "ts": "2026-10-01T23:29:37Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 19,
+    "type": "step_finished",
+    "ts": "2026-10-02T00:16:06Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 2789.1,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 20,
+    "type": "retry_decided",
+    "ts": "2026-10-02T00:16:06Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/implement-att02/transcript.jsonl",
+    "md": "packet:transcripts/implement-att02/transcript.md",
+    "records": 317,
+    "tool_calls": 74,
+    "tool_results": 74,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\02\\logs\\claude-events.jsonl"
+   },
+   "usage": {
+    "actions": 74,
+    "llm_calls": 44,
+    "wall_seconds": 1970.5,
+    "prompt_tokens": 5086297,
+    "completion_tokens": 23136,
+    "cost": 2.4254008000000002,
+    "cost_source": "claude-cli",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\02\\result.json"
+  },
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 3,
+   "start_kind": "initial",
+   "fingerprint": "047e841da5a329e0b6da5ad06925ad4c4fc914b8c884d4712f6e13c134a79897",
+   "previous_fingerprint": "14440773f7fe9268b8c25dd7925b51b1270b27b3d1799d1626ce64621c868a0d",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 30,
+    "type": "step_started",
+    "ts": "2026-10-02T01:05:06Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 32,
+    "type": "step_finished",
+    "ts": "2026-10-02T01:50:56Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 2750.6,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 33,
+    "type": "retry_decided",
+    "ts": "2026-10-02T01:50:56Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/implement-att03/transcript.jsonl",
+    "md": "packet:transcripts/implement-att03/transcript.md",
+    "records": 341,
+    "tool_calls": 64,
+    "tool_results": 64,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\03\\logs\\claude-events.jsonl"
+   },
+   "usage": {
+    "actions": 64,
+    "llm_calls": 39,
+    "wall_seconds": 1945.4,
+    "prompt_tokens": 4837507,
+    "completion_tokens": 24958,
+    "cost": 3.1175234000000005,
+    "cost_source": "claude-cli",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\03\\result.json"
+  },
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 4,
+   "start_kind": "initial",
+   "fingerprint": "f977df559d104a19353a63376e1c65d86be0508c8a09fbffc199afe2af36142b",
+   "previous_fingerprint": "047e841da5a329e0b6da5ad06925ad4c4fc914b8c884d4712f6e13c134a79897",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 43,
+    "type": "step_started",
+    "ts": "2026-10-02T02:39:21Z"
+   },
+   "status": "failed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 45,
+    "type": "step_finished",
+    "ts": "2026-10-02T03:08:51Z"
+   },
+   "gate_passed": false,
+   "failed_checks": [
+    "command_exit"
+   ],
+   "failure_class": "structural",
+   "error": null,
+   "wall_seconds": 1769.8,
+   "retry_decision": "retry start, execution 2 of 5, attempt 5",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 46,
+    "type": "retry_decided",
+    "ts": "2026-10-02T03:08:51Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/implement-att04/transcript.jsonl",
+    "md": "packet:transcripts/implement-att04/transcript.md",
+    "records": 100,
+    "tool_calls": 21,
+    "tool_results": 21,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\04\\logs\\claude-events.jsonl"
+   },
+   "usage": {
+    "actions": 21,
+    "llm_calls": 12,
+    "wall_seconds": 925.6,
+    "prompt_tokens": 967657,
+    "completion_tokens": 6379,
+    "cost": 0.8158318,
+    "cost_source": "claude-cli",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\04\\result.json"
+  },
+  {
+   "coord": "01.implement/01.implement",
+   "attempt": 5,
+   "start_kind": "retry",
+   "fingerprint": "f977df559d104a19353a63376e1c65d86be0508c8a09fbffc199afe2af36142b",
+   "previous_fingerprint": null,
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 47,
+    "type": "step_started",
+    "ts": "2026-10-02T03:08:51Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 49,
+    "type": "step_finished",
+    "ts": "2026-10-02T03:37:53Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 1741.6,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 50,
+    "type": "retry_decided",
+    "ts": "2026-10-02T03:37:53Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/implement-att05/transcript.jsonl",
+    "md": "packet:transcripts/implement-att05/transcript.md",
+    "records": 95,
+    "tool_calls": 13,
+    "tool_results": 13,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\claude-events.jsonl"
+   },
+   "usage": {
+    "actions": 13,
+    "llm_calls": 12,
+    "wall_seconds": 921.5,
+    "prompt_tokens": 983472,
+    "completion_tokens": 4503,
+    "cost": 0.7629186,
+    "cost_source": "claude-cli",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\result.json"
+  },
+  {
+   "coord": "02.review/01.review",
+   "attempt": 0,
+   "status": "cached",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 63,
+    "type": "step_finished",
+    "ts": "2026-10-02T04:32:27Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 0.0,
+   "cached": true,
+   "wall_seconds_basis": "Engine-reported default; no new invocation duration was measured."
+  },
+  {
+   "coord": "02.review/01.review",
+   "attempt": 1,
+   "start_kind": "initial",
+   "fingerprint": "05e41a7eef6c4541432ecb92995b3e4bca8546e744682f43cce7c6686ee5f5cd",
+   "previous_fingerprint": null,
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 10,
+    "type": "step_started",
+    "ts": "2026-10-01T22:40:32Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 12,
+    "type": "step_finished",
+    "ts": "2026-10-01T23:10:32Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 1800.1,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 13,
+    "type": "retry_decided",
+    "ts": "2026-10-01T23:10:32Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/review-att01/transcript.jsonl",
+    "md": "packet:transcripts/review-att01/transcript.md",
+    "records": 90,
+    "tool_calls": 48,
+    "tool_results": 48,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\01\\session\\2026-10-01T22-40-32-979Z_01a0f9a0-62d3-7653-8777-13476dce6917.jsonl"
+   },
+   "usage": {
+    "actions": 48,
+    "llm_calls": 38,
+    "wall_seconds": 1797.4,
+    "prompt_tokens": 1448852,
+    "completion_tokens": 22046,
+    "cost": 0.5390988799999998,
+    "cost_source": "pi-catalog",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\01\\result.json"
+  },
+  {
+   "coord": "02.review/01.review",
+   "attempt": 2,
+   "start_kind": "initial",
+   "fingerprint": "127bfb407526b5e169671ec70f37a3af7c084ed0c48d68d6e44ee57dc0c24b8b",
+   "previous_fingerprint": "05e41a7eef6c4541432ecb92995b3e4bca8546e744682f43cce7c6686ee5f5cd",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 23,
+    "type": "step_started",
+    "ts": "2026-10-02T00:16:06Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 25,
+    "type": "step_finished",
+    "ts": "2026-10-02T00:49:54Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 2028.4,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 26,
+    "type": "retry_decided",
+    "ts": "2026-10-02T00:49:54Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/review-att02/transcript.jsonl",
+    "md": "packet:transcripts/review-att02/transcript.md",
+    "records": 92,
+    "tool_calls": 50,
+    "tool_results": 50,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\02\\session\\2026-10-02T00-16-07-356Z_01a0f9f7-e2ba-7441-bf0b-7cea9d89d4a3.jsonl"
+   },
+   "usage": {
+    "actions": 50,
+    "llm_calls": 38,
+    "wall_seconds": 2025.5,
+    "prompt_tokens": 1448569,
+    "completion_tokens": 23776,
+    "cost": 0.5460958,
+    "cost_source": "pi-catalog",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\02\\result.json"
+  },
+  {
+   "coord": "02.review/01.review",
+   "attempt": 3,
+   "start_kind": "initial",
+   "fingerprint": "b0e20b37fd4366e9895890e3ce1eaa14281f6d37d8ea173e77dc9be8c0c3ff9d",
+   "previous_fingerprint": "127bfb407526b5e169671ec70f37a3af7c084ed0c48d68d6e44ee57dc0c24b8b",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 36,
+    "type": "step_started",
+    "ts": "2026-10-02T01:50:56Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 38,
+    "type": "step_finished",
+    "ts": "2026-10-02T02:24:49Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 2032.3,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 39,
+    "type": "retry_decided",
+    "ts": "2026-10-02T02:24:49Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/review-att03/transcript.jsonl",
+    "md": "packet:transcripts/review-att03/transcript.md",
+    "records": 110,
+    "tool_calls": 61,
+    "tool_results": 61,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\03\\session\\2026-10-02T01-50-58-129Z_01a0fa4e-b84f-7599-859e-9f853b8b9d2b.jsonl"
+   },
+   "usage": {
+    "actions": 61,
+    "llm_calls": 45,
+    "wall_seconds": 2028.7,
+    "prompt_tokens": 2157126,
+    "completion_tokens": 31595,
+    "cost": 0.7815198399999999,
+    "cost_source": "pi-catalog",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\03\\result.json"
+  },
+  {
+   "coord": "02.review/01.review",
+   "attempt": 4,
+   "start_kind": "initial",
+   "fingerprint": "496343c476319fb5d2d9e4695abf7c0f854e86289ccca6e970222d83e513a1df",
+   "previous_fingerprint": "b0e20b37fd4366e9895890e3ce1eaa14281f6d37d8ea173e77dc9be8c0c3ff9d",
+   "started": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 53,
+    "type": "step_started",
+    "ts": "2026-10-02T03:37:53Z"
+   },
+   "status": "passed",
+   "finished": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 55,
+    "type": "step_finished",
+    "ts": "2026-10-02T04:13:53Z"
+   },
+   "gate_passed": true,
+   "failed_checks": [],
+   "failure_class": null,
+   "error": null,
+   "wall_seconds": 2160.2,
+   "retry_decision": "no retry: status 'passed' is not a failure",
+   "retry_decision_ref": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 56,
+    "type": "retry_decided",
+    "ts": "2026-10-02T04:13:53Z"
+   },
+   "transcript": {
+    "jsonl": "packet:transcripts/review-att04/transcript.jsonl",
+    "md": "packet:transcripts/review-att04/transcript.md",
+    "records": 151,
+    "tool_calls": 76,
+    "tool_results": 76,
+    "source": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\04\\session\\2026-10-02T03-37-54-063Z_01a0fab0-9e8e-7554-9bea-018937195dad.jsonl"
+   },
+   "usage": {
+    "actions": 76,
+    "llm_calls": 71,
+    "wall_seconds": 2155.8,
+    "prompt_tokens": 3366588,
+    "completion_tokens": 30312,
+    "cost": 1.09616016,
+    "cost_source": "pi-catalog",
+    "execution_status": "finished"
+   },
+   "result_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\04\\result.json"
+  }
+ ],
+ "counts": {
+  "planned_steps": 2,
+  "attempt_records_including_cached": 11,
+  "launched_attempts": 9,
+  "confirmed_agent_launches": 9,
+  "cached_evaluations": 2,
+  "failed_attempts": 1,
+  "automatic_retries": 1,
+  "preparation_failures_without_launch": 0,
+  "run_segments": 5,
+  "judge_rounds": 5
+ },
+ "totals": {
+  "wall": "2026-10-01T21:48:35Z .. 2026-10-02T04:32:27Z (6 h 44 min, 5 segments)",
+  "prompt_tokens": 28649063,
+  "completion_tokens": 211775,
+  "cost_notional": 15.079822080000003,
+  "usage_basis": "Sum of result.json usage for the nine launched attempts; cache evaluations excluded.",
+  "cost_note": "implement lane claude = seat subscription (cost via claude-cli, notional); review lane pi = Z.AI flat rate. Cost is not a bill.",
+  "diff_stat": "28 files changed, 796 insertions(+), 76 deletions(-) (feature worktree)",
+  "head_commit": "7bb6f78"
+ },
+ "retry_proof": {
+  "coord": "01.implement/01.implement",
+  "failed_attempt": {
+   "attempt": 4,
+   "status": "failed",
+   "failed_check": "command_exit",
+   "evidence": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 45,
+    "type": "step_finished",
+    "ts": "2026-10-02T03:08:51Z"
+   },
+   "gate_log": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\04\\logs\\gate-05-command_exit-c61e460395.out.log",
+   "gate_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\04\\gate.json"
+  },
+  "decision": {
+   "decision": "retry start, execution 2 of 5, attempt 5",
+   "evidence": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 46,
+    "type": "retry_decided",
+    "ts": "2026-10-02T03:08:51Z"
+   }
+  },
+  "retry_start": {
+   "attempt": 5,
+   "start_kind": "retry",
+   "fingerprint": "f977df559d104a19353a63376e1c65d86be0508c8a09fbffc199afe2af36142b",
+   "evidence": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 47,
+    "type": "step_started",
+    "ts": "2026-10-02T03:08:51Z"
+   }
+  },
+  "terminal": {
+   "attempt": 5,
+   "status": "passed",
+   "evidence": {
+    "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\journal.jsonl",
+    "line": 49,
+    "type": "step_finished",
+    "ts": "2026-10-02T03:37:53Z"
+   },
+   "gate_json": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\gate.json"
+  },
+  "same_fingerprint": true,
+  "kind": "automatic in-run retry (step retry budget max=1 on gate:command_exit)"
+ },
+ "campaign": {
+  "name": "oh-dispatch-deepening",
+  "milestone": "m7-smoke-fixes",
+  "milestone_index": 7,
+  "campaign_log": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\campaign.jsonl",
+  "rounds": [
+   {
+    "campaign_jsonl_line": 37,
+    "event": "milestone_started",
+    "ts": "2026-10-01T21:48:34Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes",
+    "judge_dir": null
+   },
+   {
+    "campaign_jsonl_line": 38,
+    "event": "judged",
+    "ts": "2026-10-01T23:28:45Z",
+    "judge_attempt": 1,
+    "verdict": "REVISE",
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a01\\run"
+   },
+   {
+    "campaign_jsonl_line": 39,
+    "event": "escalated",
+    "ts": "2026-10-01T23:28:45Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": "the judge changed files outside its write scope: .watch.agent.json",
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a01\\run"
+   },
+   {
+    "campaign_jsonl_line": 40,
+    "event": "granted",
+    "ts": "2026-10-01T23:29:26Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": null
+   },
+   {
+    "campaign_jsonl_line": 41,
+    "event": "judged",
+    "ts": "2026-10-02T01:05:05Z",
+    "judge_attempt": 2,
+    "verdict": "REVISE",
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a02\\run"
+   },
+   {
+    "campaign_jsonl_line": 42,
+    "event": "revision_committed",
+    "ts": "2026-10-02T01:05:05Z",
+    "judge_attempt": 2,
+    "verdict": null,
+    "why": null,
+    "commit": "62bf5e3af8515039ec95bd07cc57cdec97f1ee98",
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": null
+   },
+   {
+    "campaign_jsonl_line": 43,
+    "event": "judged",
+    "ts": "2026-10-02T02:39:21Z",
+    "judge_attempt": 3,
+    "verdict": "REVISE",
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a03\\run"
+   },
+   {
+    "campaign_jsonl_line": 44,
+    "event": "revision_committed",
+    "ts": "2026-10-02T02:39:21Z",
+    "judge_attempt": 3,
+    "verdict": null,
+    "why": null,
+    "commit": "06e6a0acb4defdddb32d6f648c969d5c4396eee8",
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": null
+   },
+   {
+    "campaign_jsonl_line": 45,
+    "event": "judged",
+    "ts": "2026-10-02T04:31:15Z",
+    "judge_attempt": 4,
+    "verdict": "PASS",
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a04\\run"
+   },
+   {
+    "campaign_jsonl_line": 46,
+    "event": "escalated",
+    "ts": "2026-10-02T04:31:15Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": "the judge passed the milestone but exit checks failed: the three failed cells pass live under a desktop-like parent environment",
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a04\\run"
+   },
+   {
+    "campaign_jsonl_line": 47,
+    "event": "granted",
+    "ts": "2026-10-02T04:32:25Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": null
+   },
+   {
+    "campaign_jsonl_line": 48,
+    "event": "judged",
+    "ts": "2026-10-02T04:49:13Z",
+    "judge_attempt": 5,
+    "verdict": "PASS",
+    "why": null,
+    "commit": null,
+    "trunk_after": null,
+    "run_dir": null,
+    "judge_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a05\\run"
+   },
+   {
+    "campaign_jsonl_line": 49,
+    "event": "milestone_passed",
+    "ts": "2026-10-02T04:49:13Z",
+    "judge_attempt": null,
+    "verdict": null,
+    "why": null,
+    "commit": null,
+    "trunk_after": "7bb6f78325def8a93df7dd6dbc1c91d85888474f",
+    "run_dir": null,
+    "judge_dir": null
+   }
+  ],
+  "verdict_history": [
+   "REVISE (a01)",
+   "REVISE (a02)",
+   "REVISE (a03)",
+   "PASS refused - escalated (a04)",
+   "PASS (a05)"
+  ],
+  "trunk_before": "7426973c700a9264ef51eeb85bd69192763ff3b0",
+  "trunk_after": "7bb6f78325def8a93df7dd6dbc1c91d85888474f",
+  "judge_context_only": "Judge runs a01-a05 are separate runs; they are linked, not spliced into the canonical run's journal."
+ },
+ "artifacts": [
+  {
+   "what": "recorded landed patch",
+   "where": "packet:artifacts/landed.patch",
+   "provenance": "packet:artifacts/provenance.json",
+   "basis": "Exact recorded base and landing commits; read-only Git export."
+  },
+  {
+   "what": "landed diff",
+   "where": "worktree branch arch/m7-smoke-fixes",
+   "head": "7bb6f78",
+   "evidence": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\summary.json (diff_stat)"
+  },
+  {
+   "what": "test-suite gate logs (fail then pass)",
+   "where": "transcripts/implement-att04/gate-command-exit.out.log and transcripts/implement-att05/gate-command-exit.out.log",
+   "original": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\04\\logs\\gate-05-command_exit-c61e460395.out.log"
+  },
+  {
+   "what": "review verdict MERGEABLE",
+   "where": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\02.review\\01.review\\attempts\\04\\final.md"
+  },
+  {
+   "what": "exit report",
+   "where": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\exit-report.md"
+  },
+  {
+   "what": "judge packets and verdicts",
+   "where": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\judge\\a01..a05"
+  }
+ ],
+ "known_holes": [
+  "Phase waiting is derived, not a dedicated logged event: review cannot start before implement settles (journal lines 3, 8, 9). No slot contention is demonstrated because each phase contains only one step.",
+  "No timeout, kill, abort-victim, quarantine, exclusion, pause or provider deferral occurred in this run (summary.json quarantined/deferred/excluded are empty; all 25 rate_limit events read status=allowed).",
+  "No incomplete attempt is present in the primary run. The separate m0-baseline supplement has an unmatched attempt start; its termination cause is unknown.",
+  "Cached evaluations create no invocation. Their reported wall_seconds=0.0 is an engine default, not a measurement of evaluation latency."
+ ]
+}

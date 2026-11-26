@@ -1,0 +1,12 @@
+{
+  "durable": {
+    "box": "buildbox",
+    "providers": ["zai", "deepseek"]
+  },
+  "pi_cloud": {
+    "url": "https://pi-cloud.example.workers.dev",
+    "providers": ["zai", "deepseek"],
+    "mcp_servers": ["deepthink", "sequential-thinking", "isession",
+                    "mcp-inspector", "brave-search", "playwright"]
+  }
+}

@@ -1,0 +1,293 @@
+{
+  "run_id": "r-20261026-081451-a9caaf5e",
+  "workflow": "implement-review",
+  "status": "finished",
+  "started": "2026-10-26T08:16:41Z",
+  "finished": "2026-10-26T08:39:30Z",
+  "repo": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\repo",
+  "branch": "proof/review-base",
+  "base_sha": "28edad190cec9564266cce8b9506e8f8e58aefba",
+  "args": {
+    "base": "proof/review-base",
+    "branch": "proof/review-d3704cb",
+    "execution_timeout_s": 5400,
+    "harness_executor": "pi",
+    "mode": "review",
+    "model": "zai/glm-5.3",
+    "repo": "C:/Users/<user>/ohflow-home/workflows/review-hardening/repo",
+    "review_brief": "C:/Users/<user>/ohflow-home/workflows/review-hardening/review.brief.md",
+    "review_iter": 100,
+    "skills_dir": "C:/Users/<user>/.agents/skills",
+    "test_cmd": "python ohflow/tests/run_tests.py -k durable",
+    "thinking": "high",
+    "worktree": "C:/Users/<user>/ohflow-home/workflows/review-hardening/wt"
+  },
+  "max_parallel": 1,
+  "baseline": {
+    "command": null,
+    "skipped": "no baseline_cmd in the workflow"
+  },
+  "worktrees": {
+    "feature": {
+      "base": "proof/review-base",
+      "base_sha": "28edad190cec9564266cce8b9506e8f8e58aefba",
+      "branch": "proof/review-d3704cb",
+      "created_by": "engine",
+      "existed": true,
+      "name": "feature",
+      "node_modules_mode": "none",
+      "node_modules_source": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\repo\\node_modules",
+      "path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\wt",
+      "sentinel": "node_modules/.package-lock.json"
+    }
+  },
+  "worktree": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\wt",
+  "quarantined": [],
+  "deferred": [],
+  "excluded": [],
+  "auto_resume": 0,
+  "phases": {
+    "01.implement": {
+      "name": "Implement",
+      "status": "passed",
+      "started": "2026-10-26T08:16:42Z",
+      "policy": "abort",
+      "min_success": "all",
+      "max_parallel": 1,
+      "settled_at": "2026-10-26T08:18:33Z",
+      "steps": {
+        "01.implement/01.implement": {
+          "step_id": "implement",
+          "kind": "gate",
+          "role": "gate",
+          "status": "passed",
+          "attempt": 1,
+          "wall_seconds": 110.9,
+          "fingerprint": "351d53ebe3e280c8282bdc219b5943fd717c2b26d9a4514f0ad90606d1af499e",
+          "head_sha": "d3704cb3a26c6729ea54c8f5c486f52051d4ae26",
+          "handover": null,
+          "write_scope": [],
+          "gate": {
+            "checks": [
+              {
+                "detail": null,
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\01.implement\\01.implement\\attempts\\01\\logs\\gate-commits.out.log",
+                "expected": ">= 1",
+                "name": "commits_past_base",
+                "observed": 3,
+                "passed": true
+              },
+              {
+                "detail": "command: python ohflow/tests/run_tests.py -k durable",
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\01.implement\\01.implement\\attempts\\01\\logs\\gate-02-command_exit-d5890ad720.out.log",
+                "expected": 0,
+                "name": "command_exit",
+                "observed": 0,
+                "passed": true
+              },
+              {
+                "detail": null,
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\01.implement\\01.implement\\attempts\\01\\logs\\gate-status.out.log",
+                "expected": "clean",
+                "name": "tree_clean",
+                "observed": "clean",
+                "passed": true
+              }
+            ],
+            "coord": "01.implement/01.implement",
+            "passed": true
+          },
+          "retry_decision": "no retry: status 'passed' is not a failure",
+          "attempts": [
+            {
+              "attempt": 1,
+              "kind": "gate",
+              "start_kind": "initial",
+              "status": "passed",
+              "fingerprint": "351d53ebe3e280c8282bdc219b5943fd717c2b26d9a4514f0ad90606d1af499e",
+              "started": "2026-10-26T08:16:42Z",
+              "ended": "2026-10-26T08:18:33Z",
+              "failure_class": null,
+              "abort_victim": false,
+              "retry_decision": "no retry: status 'passed' is not a failure",
+              "gate_passed": true,
+              "tool_calls": null,
+              "llm_calls": null,
+              "observation_errors": null,
+              "wall_seconds": null,
+              "tokens": null,
+              "cost": null,
+              "cost_source": null,
+              "error": null,
+              "dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\01.implement\\01.implement\\attempts\\01"
+            }
+          ],
+          "executions": 1,
+          "result": null,
+          "dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\01.implement\\01.implement"
+        }
+      },
+      "good": 1,
+      "total": 1
+    },
+    "02.review": {
+      "name": "Review",
+      "status": "passed",
+      "started": "2026-10-26T08:18:33Z",
+      "policy": "continue",
+      "min_success": "all",
+      "max_parallel": 1,
+      "settled_at": "2026-10-26T08:39:30Z",
+      "steps": {
+        "02.review/01.review": {
+          "step_id": "review",
+          "kind": "agent",
+          "role": "review",
+          "status": "passed",
+          "attempt": 1,
+          "wall_seconds": 1256.9,
+          "fingerprint": "0ba93d75686c21caa1350db7427ba0c34c49a450f708f916713d58179e44c5bf",
+          "head_sha": "d3704cb3a26c6729ea54c8f5c486f52051d4ae26",
+          "handover": null,
+          "write_scope": [],
+          "gate": {
+            "checks": [
+              {
+                "detail": null,
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review\\attempts\\01\\final.md",
+                "expected": "/VERDICT:\\s*(MERGEABLE|BLOCKED)/",
+                "name": "final_message_matches",
+                "observed": "BLOCKED",
+                "passed": true
+              },
+              {
+                "detail": null,
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review\\attempts\\01\\logs\\gate-status.out.log",
+                "expected": "clean",
+                "name": "tree_clean",
+                "observed": "clean",
+                "passed": true
+              },
+              {
+                "detail": "command: python ohflow/tests/run_tests.py -k durable",
+                "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review\\attempts\\01\\logs\\gate-03-command_exit-d5890ad720.out.log",
+                "expected": 0,
+                "name": "command_exit",
+                "observed": 0,
+                "passed": true
+              }
+            ],
+            "coord": "02.review/01.review",
+            "passed": true
+          },
+          "retry_decision": "no retry: status 'passed' is not a failure",
+          "attempts": [
+            {
+              "attempt": 1,
+              "kind": "agent",
+              "start_kind": "initial",
+              "status": "passed",
+              "fingerprint": "0ba93d75686c21caa1350db7427ba0c34c49a450f708f916713d58179e44c5bf",
+              "started": "2026-10-26T08:18:33Z",
+              "ended": "2026-10-26T08:39:30Z",
+              "failure_class": null,
+              "abort_victim": false,
+              "retry_decision": "no retry: status 'passed' is not a failure",
+              "gate_passed": true,
+              "tool_calls": 63,
+              "llm_calls": 58,
+              "observation_errors": 1,
+              "wall_seconds": 1187.4,
+              "tokens": {
+                "prompt_tokens": 3941136,
+                "completion_tokens": 36743,
+                "cache_read_tokens": 3830016,
+                "cache_write_tokens": 0,
+                "reasoning_tokens": 23290
+              },
+              "cost": 1.3130413600000002,
+              "cost_source": "pi-catalog",
+              "error": null,
+              "dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review\\attempts\\01"
+            }
+          ],
+          "executions": 1,
+          "result": {
+            "coord": "02.review/01.review",
+            "attempt": 1,
+            "conversation_id": "2026-10-26T08-18-36-995Z_01a1774a-3f43-7230-a659-22df0bd7982a",
+            "transcript_dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review\\attempts\\01\\session",
+            "execution_status": "finished",
+            "tools": [
+              "bash"
+            ],
+            "mcp_servers": [],
+            "skills": [],
+            "tool_calls": 63,
+            "observation_errors": 1,
+            "llm_calls": 58,
+            "wall_seconds": 1187.4,
+            "tokens": {
+              "prompt_tokens": 3941136,
+              "completion_tokens": 36743,
+              "cache_read_tokens": 3830016,
+              "cache_write_tokens": 0,
+              "reasoning_tokens": 23290
+            },
+            "cost": 1.3130413600000002,
+            "cost_source": "pi-catalog",
+            "final_text_path": "final.md",
+            "structured": null,
+            "schema_error": null,
+            "error": null,
+            "settings": {
+              "requested": {
+                "model": {
+                  "model": "zai/glm-5.3",
+                  "base_url": "https://api.z.ai/api/coding/paas/v4",
+                  "api_key_env": "ZAI_CODING_CN_API_KEY",
+                  "params": {
+                    "thinking": "high"
+                  },
+                  "extra_body": {}
+                },
+                "tools": {
+                  "preset": "default",
+                  "enable_browser": false,
+                  "enable_sub_agents": false,
+                  "only": [
+                    "terminal"
+                  ],
+                  "allow": [],
+                  "mcp_profile": null,
+                  "mcp_profile_resolved": null
+                },
+                "mcp_servers": [],
+                "agent_profile": null,
+                "max_command_s": null
+              },
+              "effective": {
+                "model": "zai/glm-5.3",
+                "thinking": "high",
+                "tools": [
+                  "bash"
+                ],
+                "max_command_s": 4860
+              }
+            },
+            "pi_version": "1.4.0"
+          },
+          "dir": "C:\\Users\\<user>\\ohflow-home\\workflows\\review-hardening\\runs\\r-20261026-081451-a9caaf5e\\phases\\02.review\\01.review"
+        }
+      },
+      "good": 1,
+      "total": 1
+    }
+  },
+  "diff_stat": {
+    "feature": " ohflow/README.md                              |   5 +-\n ohflow/references/harness-executors.md        | 101 ++-\n ohflow/references/ohflow.md                   |   2 +\n ohflow/scripts/ohflow/attempts.py             |  11 +-\n ohflow/scripts/ohflow/durable_runner.py       | 725 +++++++++++++++++++++\n ohflow/scripts/ohflow/engine.py               | 119 +++-\n ohflow/scripts/ohflow/harness_executors.py    |   8 +\n ohflow/scripts/ohflow/pi_runner.py            |  15 +-\n ohflow/scripts/ohflow/preflight.py            |   2 +\n ohflow/scripts/ohflow/remote_git.py           | 104 +++\n ohflow/scripts/ohflow/workflows/rollcall.py   |  15 +-\n ohflow/tests/fakes/fake_durable.py            | 191 ++++++\n .../tests/fixtures/durable/killed-events.jsonl     |   5 +\n .../tests/fixtures/durable/reattach-events.jsonl   |  22 +\n .../tests/fixtures/durable/single-events.jsonl     |  13 +\n ohflow/tests/test_durable_02_transport.py     | 126 ++++\n ohflow/tests/test_durable_03_reattach.py      | 177 +++++\n .../test_harness_executor_contract_durable.py      | 212 ++++++\n ohflow/tests/test_signed_in_01_validation.py  |   3 +-\n 19 files changed, 1830 insertions(+), 26 deletions(-)\n"
+  },
+  "log": {
+    "feature": "d3704cb Document the durable executor and the reattach start kind\nfbf1a07 Reattach a durable attempt instead of restarting it\n073076e Add the durable harness executor and its git transport\n"
+  }
+}

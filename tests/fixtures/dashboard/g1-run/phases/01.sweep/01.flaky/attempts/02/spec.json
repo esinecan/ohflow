@@ -1,0 +1,37 @@
+{
+  "coord": "01.sweep/01.flaky",
+  "attempt": 2,
+  "role": "flaky provider",
+  "harness_executor": "pi",
+  "workspace": "C:\\fixture\\g1\\work\\real\\wt\\flaky",
+  "model": {
+    "model": "zai/glm-5.3-flash",
+    "base_url": "http://127.0.0.1:64349",
+    "api_key_env": "ZAI_CODING_CN_API_KEY",
+    "params": {
+      "thinking": "low"
+    },
+    "extra_body": {}
+  },
+  "tools": {
+    "preset": "default",
+    "enable_browser": false,
+    "enable_sub_agents": false,
+    "only": [],
+    "allow": [],
+    "mcp_profile": null,
+    "mcp_profile_resolved": null
+  },
+  "skills": [],
+  "skills_dir": null,
+  "mcp_config": null,
+  "max_iterations": 60,
+  "max_command_s": null,
+  "execution_timeout_s": 900,
+  "stall_timeout_s": null,
+  "write_scope": [],
+  "fork_session": null,
+  "brief_path": "brief.md",
+  "schema_path": null,
+  "out_dir": "."
+}

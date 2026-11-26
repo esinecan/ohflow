@@ -1,0 +1,1567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ohflow glossary map</title>
+<style>
+:root{
+  --bg:#f6f6f2; --panel:#ffffff; --text:#1b1d21; --muted:#5a606b; --line:#d6d8dd;
+  --edge:#848b96; --edge-hi:#1f5fd1; --accent:#1f5fd1; --halo:#f6f6f2;
+  --pill-stroke:rgba(0,0,0,.28); --sel-stroke:#111; --chip:#eceef2;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161a; --panel:#1b1e24; --text:#e7e9ed; --muted:#a2a9b4; --line:#333843;
+    --edge:#6c7480; --edge-hi:#82b4ff; --accent:#82b4ff; --halo:#14161a;
+    --pill-stroke:rgba(255,255,255,.38); --sel-stroke:#fff; --chip:#262a32;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
+  background:var(--bg);color:var(--text);
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+header{flex:0 0 auto;padding:8px 16px 6px;border-bottom:1px solid var(--line);background:var(--panel)}
+h1{margin:0;font-size:18px;line-height:1.25}
+.sub{margin:2px 0 6px;color:var(--muted);font-size:12.5px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.search{position:relative;flex:1 1 220px;min-width:160px;max-width:420px}
+.search input{
+  width:100%;padding:6px 10px;font:inherit;color:var(--text);background:var(--bg);
+  border:1px solid var(--line);border-radius:8px;
+}
+.search input:focus{outline:2px solid var(--accent);outline-offset:0}
+#results{
+  position:absolute;left:0;right:0;top:100%;z-index:20;margin:2px 0 0;padding:0;list-style:none;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+#results[hidden]{display:none}
+#results li{padding:5px 10px;cursor:pointer;display:flex;gap:8px;align-items:center}
+#results li:hover,#results li.act{background:var(--chip)}
+#results .g{margin-left:auto;font-size:11px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+label.tog{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+button{font:inherit;color:var(--text);background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:6px}
+.legend button{display:inline-flex;gap:6px;align-items:center;padding:2px 8px;font-size:12px;border-radius:999px}
+.legend button[aria-pressed="true"]{border-color:var(--accent);outline:1px solid var(--accent)}
+.legend .note{font-size:12px;color:var(--muted);margin-left:6px;display:inline-flex;gap:5px;align-items:center}
+.legend .dash{display:inline-block;width:16px;height:10px;border:1.5px dashed var(--muted);border-radius:5px}
+#stage{flex:1 1 auto;min-height:180px;position:relative;overflow:hidden}
+#svg{display:block;width:100%;height:100%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#svg.panning{cursor:grabbing}
+.node{cursor:pointer}
+.node rect{stroke:var(--pill-stroke);stroke-width:1}
+.node text{fill:#fff;font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node:hover rect,.node:focus rect{stroke:var(--sel-stroke);stroke-width:2}
+.node:focus{outline:none}
+.node.sel rect{stroke:var(--sel-stroke);stroke-width:3}
+.node.nb rect{stroke:var(--edge-hi);stroke-width:2}
+.node.dim{opacity:.13}
+.edge .line{fill:none;stroke:var(--edge);stroke-width:1.2;marker-end:url(#arr);pointer-events:none}
+.edge .hit{fill:none;stroke:transparent;stroke-width:10;pointer-events:stroke;cursor:help}
+.edge.hi .line,.edge.hov .line{stroke:var(--edge-hi);stroke-width:2;marker-end:url(#arrHi)}
+.edge.dim{opacity:.07}
+.edge .elabel{display:none;font-size:10.5px;fill:var(--text);text-anchor:middle;dominant-baseline:central;
+  paint-order:stroke;stroke:var(--halo);stroke-width:4px;stroke-linejoin:round;pointer-events:none}
+.edge.lbl .elabel,.edge.hov .elabel{display:block}
+.edge.hi .elabel,.edge.hov .elabel{fill:var(--edge-hi);font-weight:600}
+#arr path{fill:var(--edge)} #arrHi path{fill:var(--edge-hi)}
+#tip{
+  position:absolute;z-index:10;pointer-events:none;max-width:340px;padding:6px 9px;font-size:12px;
+  background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+}
+#tip[hidden]{display:none}
+#tip .t{font-weight:600}
+#tip .e{color:var(--muted);margin-top:2px;font-family:ui-monospace,Consolas,monospace;font-size:11px}
+#panel{
+  flex:0 0 auto;height:clamp(150px,30vh,320px);overflow:auto;padding:10px 16px 14px;
+  background:var(--panel);border-top:1px solid var(--line);
+}
+#panel h2{margin:0 0 2px;font-size:17px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-size:11.5px;font-weight:500;padding:1px 8px;border-radius:999px;color:#fff}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--muted);word-break:break-word;margin:2px 0 4px}
+.desc{margin:4px 0 8px;max-width:80ch}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+@media (max-width:700px){
+  header{padding:6px 12px 4px}
+  h1{font-size:16px}
+  .sub{font-size:11.5px;margin:1px 0 4px}
+  .legend{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px;margin-top:4px}
+  .legend button,.legend .note{flex:0 0 auto;white-space:nowrap}
+  #panel{height:clamp(140px,30vh,280px);padding:8px 12px 12px}
+}
+.cols h3{margin:6px 0 4px;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.cols ul{margin:0;padding:0;list-style:none}
+.cols li{padding:4px 0;border-top:1px solid var(--line)}
+.rel{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.rel .vb{color:var(--edge-hi);font-weight:600}
+.rel .vb.in{color:var(--muted)}
+.lnk{padding:0 7px;border-radius:999px;font-size:13px;font-weight:600;color:#fff;border:1px solid transparent}
+.lnk:hover{border-color:var(--text)}
+.ev{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-word;margin-top:1px}
+.hint{color:var(--muted)}
+.empty{color:var(--muted);font-style:italic}
+
+[hidden]{display:none!important}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+button:disabled{opacity:.45;cursor:default}
+::selection{background:var(--accent);color:var(--panel)}
+.mode{display:flex;gap:8px;margin:8px 0}
+.mode [aria-pressed="true"],#lesson-nav [aria-current="step"]{background:var(--accent);color:var(--panel)}
+body.guided .controls,body.guided .legend,body.guided #stage,body.guided #panel{display:none}
+#lessons{flex:1;min-height:0;overflow:auto}
+.lesson-intro{padding:18px 24px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+#lesson-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+#lesson-nav button{min-height:36px}
+.lesson-intro h2{font-size:24px;line-height:1.2;margin:0 0 10px}
+.lesson-intro p{max-width:75ch;margin:8px 0}
+#prediction{margin-top:16px;max-width:75ch}
+#prediction summary{cursor:pointer;color:var(--accent);padding:6px 0}
+.lesson-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);min-height:470px}
+.lesson-map{overflow:auto;padding:16px;scrollbar-color:var(--edge) var(--bg)}
+.lesson-map>p{margin:0 0 12px;color:var(--muted)}
+#lesson-svg{display:block;width:1180px}
+.lesson-node{cursor:pointer}
+.lesson-node rect{fill:var(--panel);stroke:var(--line);stroke-width:1.5;rx:6}
+.lesson-node text{fill:var(--text);font-size:13px;pointer-events:none}
+.lesson-node.current rect{stroke:var(--accent)}
+.lesson-node.selected rect,.lesson-node:focus rect{stroke:var(--accent);stroke-width:3}
+.lesson-node:focus{outline:none}
+.lesson-edge{stroke:var(--edge);stroke-width:1;opacity:.35;fill:none}
+.lesson-column{fill:var(--muted);font-size:12px}
+#lesson-detail{padding:20px;border-left:1px solid var(--line);background:var(--panel)}
+#lesson-detail h3{margin:0 0 10px;font-size:20px}
+#lesson-detail p{line-height:1.6;overflow-wrap:anywhere}
+#lesson-detail h4{font-size:13px;margin:20px 0 4px}
+.lesson-footer{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--line)}
+@media(max-width:760px){
+ .lesson-intro{padding:14px 16px}.lesson-intro h2{font-size:21px}
+ .lesson-layout{grid-template-columns:minmax(0,1fr)}
+ .lesson-map{max-height:320px}
+ #lesson-detail{border-left:0;border-top:1px solid var(--line);padding:16px}
+ .lesson-footer{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>ohflow glossary map</h1>
+  <p class="sub" id="sub">Map of the ohflow glossary terms and the relations between them. Its definitions come from CONTEXT.md.</p>
+  <div class="mode" aria-label="Map mode">
+    <button id="guided-mode" type="button" aria-pressed="true">Guided lessons</button>
+    <button id="full-mode" type="button" aria-pressed="false">Full map</button>
+  </div>
+  <div class="controls">
+    <div class="search">
+      <input id="q" type="search" placeholder="Find a term (name, code, description)" autocomplete="off" aria-label="Find a term">
+      <ul id="results" hidden></ul>
+    </div>
+    <label class="tog"><input type="checkbox" id="allLabels"> Show all edge labels</label>
+    <button id="fit" type="button">Fit view</button>
+  </div>
+  <div class="legend" id="legend" aria-label="Groups"></div>
+</header>
+<main id="lessons" aria-label="Guided glossary">
+ <section class="lesson-intro">
+  <nav id="lesson-nav" aria-label="Lessons"></nav>
+  <h2 id="lesson-title"></h2><p id="lesson-lead"></p><p id="lesson-contrast"></p>
+  <p id="lesson-question"></p><details id="prediction"><summary>Reveal the answer</summary><p id="lesson-answer"></p></details>
+ </section>
+ <div class="lesson-layout">
+  <div class="lesson-map"><p>Map so far. Click a term for its meaning and example. Scroll right as the map grows.</p><svg id="lesson-svg" viewBox="0 0 1180 650" aria-label="Growing glossary map"></svg></div>
+  <section id="lesson-detail" aria-live="polite"></section>
+ </div>
+ <nav class="lesson-footer" aria-label="Lesson navigation"><button id="previous-lesson">Previous lesson</button><button id="next-lesson">Next lesson</button></nav>
+</main>
+<div id="stage">
+  <svg id="svg" role="img" aria-label="ohflow glossary knowledge graph">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+      <marker id="arrHi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+    </defs>
+    <g id="view"><g id="edges"></g><g id="nodes"></g></g>
+  </svg>
+  <div id="tip" hidden></div>
+</div>
+<section id="panel" aria-live="polite"></section>
+
+<script type="application/json" id="graph-data">
+{
+"groups": [{"name": "Campaign", "color": "#1f6fb2"},
+  {"name": "Workflow structure", "color": "#6a3fa0"},
+  {"name": "Execution & recovery", "color": "#8a6d00"},
+  {"name": "Records & logs", "color": "#00798c"},
+  {"name": "Harness & agent", "color": "#a8235f"},
+  {"name": "Configuration", "color": "#4a6580"},
+  {"name": "Gates & checks", "color": "#b5301f"},
+  {"name": "Roll call", "color": "#3a7d1e"}],
+"nodes": [
+  {"name": "Campaign", "code": "campaign.py:Campaign", "group": "Campaign", "desc": "A design document or a spec bundle delivered milestone by milestone, one workflow per milestone, with a fresh judge agent after each. The ohflow campaign verbs name its module with --campaign."},
+  {"name": "Campaign lead", "code": "no code name; campaign.py:grant records its revision grants", "group": "Campaign", "desc": "The orchestrator agent or the operator, in the role of planning, watching and steering one campaign. The campaign log records the lead's milestone revision grants; the engine has no other record of the role. (A role in one campaign, not a third actor.)"},
+  {"name": "Campaign status", "code": "CampaignController._state; campaign-status.json key state", "group": "Campaign", "desc": "The operating condition reported by the campaign controller: running milestone work, held for release, judging, paused, escalated, stopped by a preflight failure (preflight_failed), or delivered. Individual workflow runs and steps have their own statuses. (Campaign scope; see also: workflow run status.)"},
+  {"name": "Campaign log", "code": "campaign.py:CampaignLog; campaign.jsonl", "group": "Records & logs", "desc": "campaign.jsonl, the append-only record of a campaign. It names the commit, the round and the decision of every run, and ohflow campaign history joins it with the judge handovers and each round's acceptance checks. The bare word ledger has no owner; the token budget's account is the token ledger."},
+  {"name": "Milestone", "code": "campaign.py:Milestone", "group": "Campaign", "desc": "One slice of a design with a milestone spec and acceptance checks: a Milestone with its title, its workflow, its spec and its acceptance_checks."},
+  {"name": "Milestone round", "code": "round_no in code; round in campaign.jsonl; judge/rNN/", "group": "Campaign", "desc": "One cycle of running or resuming a milestone's workflow, collecting acceptance evidence and asking for a judge decision. Its number advances after a judging outcome is recorded; an interruption before that point does not itself create another round. (A round can contain multiple step attempts.) The bare word round means a milestone round."},
+  {"name": "Milestone acceptance check", "code": "AcceptanceCheck; Milestone.acceptance_checks", "group": "Campaign", "desc": "A named mechanical command, AcceptanceCheck.cmd, that the campaign controller runs after a milestone's workflow run and before the judge decision. It has its own execution directory and timeout (timeout_s), and passes with exit code zero. (Checks milestone acceptance; a gate check checks a step attempt.) Its cwd names its workspace: \"land\" or \"repo\" means the default workspace, \"land:<workspace>\" runs in the worktree that holds the output branch there, and \"repo:<workspace>\" runs in that workspace's repository; {base} in its command is that workspace's integration-branch commit."},
+  {"name": "Judge", "code": "Campaign.judge; Milestone.judge", "group": "Campaign", "desc": "The fresh agent that passes a milestone, revises it or escalates one question. Each milestone round's judge runs in a workflow run of its own, under Campaign.judge_execution_timeout_s."},
+  {"name": "Judge packet", "code": "judge/rNN/packet.md", "group": "Records & logs", "desc": "judge/rNN/packet.md: the milestone spec, workflow evidence, acceptance check results and earlier decisions one judge reads. The bare word packet means a judge packet; another use carries a qualifier, such as the dashboard's evidence packet, a recorded run it serves as historical evidence."},
+  {"name": "Judge decision", "code": "DECISION_SCHEMA; JSON key decision", "group": "Campaign", "desc": "The JSON the judge returns: PASS, REVISE or ESCALATE, under the key decision. The campaign controller checks it before it acts."},
+  {"name": "Milestone revision", "code": "revision_committed", "group": "Campaign", "desc": "A judge's permitted edits to milestone inputs, committed by the controller after a valid REVISE decision so the workflow can resume against those inputs. REVISE without an actual permitted edit causes escalation. (Changes the work definition; a step retry starts another attempt.)"},
+  {"name": "Campaign escalation", "code": "_escalate(); ESCALATION.md", "group": "Campaign", "desc": "The controller stopping milestone progression and recording a reason requiring intervention, such as a judge's ESCALATE, an invalid judge result, a refused PASS or an exhausted revision budget. The milestone must be reopened before progression can continue. (Distinct from a paused workflow run awaiting recovery.)"},
+  {"name": "Milestone revision grant", "code": "campaign grant --revisions", "group": "Campaign", "desc": "An explicit addition to a milestone's revision budget, recorded through ohflow campaign grant --milestone ID --revisions N. It makes the milestone eligible for continuation on a subsequent campaign run without resetting spent revision counts or step execution allowances. (Adds allowance; does not itself restart execution.)"},
+  {"name": "Milestone landing", "code": "_land(); milestone_landed", "group": "Campaign", "desc": "Recording a milestone as accepted and, when it has an output branch, advancing the campaign integration branch to the output commit in each workspace where the milestone's workflow has a worktree on the output branch. The output commit must contain the integration history; a missing branch or other history in any workspace escalates and leaves every integration branch where it was. Without an output branch, landing is recorded and no branch moves. (The judge decision allows a landing; the landing moves the branches.)"},
+  {"name": "Campaign integration branch", "code": "Campaign.integration_branch", "group": "Campaign", "desc": "The Git branch that accumulates accepted milestone commits across a campaign. Landing uses it as the target for branch advancement when a milestone output branch is configured. A campaign with several workspaces has one in each workspace, all under the one name Campaign.integration_branch, created at each workspace's base branch; the one-repository form creates it at integration_base. (Campaign scope; see also: milestone output branch.)"},
+  {"name": "Workflow definition", "code": "workflow.py:Workflow; --workflow; workflow.json", "group": "Workflow structure", "desc": "The configuration describing phases, steps and execution policies: the Workflow that a workflow module's build(args) returns, with its phases, its worktrees and workspaces, the args it was built from and its limits."},
+  {"name": "Workflow run", "code": "engine.py:Engine.run; supervisor.py:run_workflow", "group": "Workflow structure", "desc": "One execution of a workflow definition, including later resumes that continue it. The short form is run."},
+  {"name": "Phase", "code": "workflow.py:Phase", "group": "Workflow structure", "desc": "A group of steps (Phase.steps) in a workflow that share a barrier and a failure policy. The phases run in order, and run --only-phase NAME runs one of them alone. The merge steps of a phase run first, one at a time, in workflow order, outside the concurrency limit. The other steps of the phase then run in parallel, and max_parallel limits how many run at once (--max-parallel sets the default and caps every phase); the slots go to the longest step first, by its p50 in the run's estimate.json, and a run with no estimate keeps the workflow order. The mode argument of the implement-review workflow selects a driver mode (all, review or fix). It does not name a phase. The parts of ohflow's own project plan are stages, such as Stage 1 in docs/todo.md, never phases."},
+  {"name": "Step", "code": "workflow.py:Step", "group": "Workflow structure", "desc": "A named piece of work within a workflow phase, configured to run an agent, execute a command in its shell (sh or cmd), perform checks, or merge the branch merge_branch with its merge_message."},
+  {"name": "Agent step", "code": "Step(kind='agent'); AgentSpec", "group": "Workflow structure", "desc": "A step of kind agent: one agent with one agent brief, started through one harness executor. It runs in its worktree, or in the default workspace when it has none. A campaign's judge step has no worktree and runs in the campaign repository. (A command step runs a command and no agent.)"},
+  {"name": "Worktree", "code": "WorktreeSpec", "group": "Workflow structure", "desc": "The Git working directory a step edits, named by Step.worktree and configured by WorktreeSpec. It sits in one workspace, which WorktreeSpec.workspace names. It is created from WorktreeSpec.base, and base_sha_mode records its base commit as head or as the merge_base with that base. It is a step's isolated, revertible working area, for code or any other files: revert removes it with its branch. A worktree separates working files; it is not a security sandbox."},
+  {"name": "Attempt", "code": "attempt_started; attempt_finished; rundir.py:attempt_dir", "group": "Execution & recovery", "desc": "One numbered try at executing a step. A command, gate or merge step has an attempt but no agent invocation. explain and actions take --attempt N, the newest by default."},
+  {"name": "Retry", "code": "RetryPolicy; start_kind='retry'", "group": "Execution & recovery", "desc": "Another attempt of an agent step inside the same workflow run, started because its retry policy allows it after a failure. The run log records it with start_kind retry. RetryPolicy.carry_context lets the pi and claude executors continue the previous attempt's conversation."},
+  {"name": "Auto-resume", "code": "Workflow.auto_resume; phase_resumed; start_kind='auto_resume'", "group": "Execution & recovery", "desc": "The pass that restarts the deferred steps of a phase by itself, after a cooldown, except a step an attempt kill ended. Workflow.auto_resume, or run --auto-resume for one run, sets how many passes a phase may make. The run log records each pass as a phase_resumed event, and the attempts it starts carry start_kind auto_resume."},
+  {"name": "Workflow rerun", "code": "run without --resume", "group": "Execution & recovery", "desc": "Starting a new workflow run in a new directory, with a new log and fresh run-scoped budgets. Successful steps from earlier runs are not automatically reused. ohflow compare --runs A B sets two runs side by side, step by step."},
+  {"name": "Cached step outcome", "code": "status='cached'", "group": "Execution & recovery", "desc": "An outcome that reuses a recorded step success because its step fingerprint matches and any required recorded handover remains intact. The step and its gate checks do not execute again, and no execution start is spent."},
+  {"name": "Launch method", "code": "detach.py:Launched.method; launch JSON key launch_method", "group": "Execution & recovery", "desc": "How the operating system starts a detached process: direct, breakaway or wmi. It is not a harness executor and not a model. Owner: detach.py."},
+  {"name": "Run directory", "code": "rundir.Run.run_dir", "group": "Records & logs", "desc": "The directory ohflow writes for one run: run-log.jsonl, workflow.json, board.md and one directory per step. Its name is the run id. A driver's --out directory and a roll-call case directory each contain a run directory and are not one."},
+  {"name": "Run log", "code": "run_log.py:RunLog; run-log.jsonl", "group": "Records & logs", "desc": "run-log.jsonl, the append-only record of what the engine did. The run log is the truth. Owner: run_log.py. Its events are run_started, phase_started, attempt_started, attempt_finished, gate_ran, phase_settled, run_finished, retry_decided, worktree_ready, run_log_recovered, phase_resumed, work_excluded and token_budget, and a step's status in it is pending, running, passed, failed, timeout, quarantined, skipped, cached or deferred. An attempt's logs/ directory holds its event log and its tool output, never a run log."},
+  {"name": "Attempt directory", "code": "attempts/NN/; GateContext.attempt_dir", "group": "Records & logs", "desc": "attempts/NN/ below a step directory: the inputs and the available outputs of one attempt. A file in it can be absent after a preparation failure or an interruption, so attempts are counted from the run log."},
+  {"name": "Attempt result", "code": "attempt_record.py; result.json", "group": "Records & logs", "desc": "result.json in an attempt directory: the status, error, settings, tool calls, tokens and cost of one attempt, when the attempt produced it."},
+  {"name": "Agent transcript", "code": "ohflow transcript; harness transcript(); transcript_dir", "group": "Records & logs", "desc": "The file where a human reads one attempt, as the harness executor module names it. The command is ohflow transcript. The short form is transcript."},
+  {"name": "Agent", "code": "workflow.py:AgentSpec", "group": "Harness & agent", "desc": "An LLM program that a harness executor starts. The dashboard draws one card for each step. A card is not an agent."},
+  {"name": "Harness", "code": "signed_in.py:SignedInRules; pi_runner.py", "group": "Harness & agent", "desc": "The program around a model that runs the agent loop: model calls, context and tool calls. The pi CLI, the Claude Code CLI and the Codex CLI are three harnesses. Cloudflare's ContainerHarness and PiHarness are classes of the agents package that run a harness; the Durable Objects StepAgent and CliAgent each hold one, and ohflow text names them only by class name. (A harness runs the loop; a harness executor starts and stops one.)"},
+  {"name": "Harness executor", "code": "harness_executor.py:HarnessExecutor; key harness_executor; flag --harness-executor", "group": "Harness & agent", "desc": "The component that launches, monitors, collects results from and stops a harness: pi, claude, codex, durable, pi-cloud, claude-cloud or codex-cloud. Each agent step names its harness executor in AgentSpec.harness_executor, because ohflow has no default. A harness executor is not a model. Owner: harness_executors.py."},
+  {"name": "Agent invocation", "code": "HarnessExecutor.launch()", "group": "Harness & agent", "desc": "The logical execution of an agent within an agent-step attempt. Preparation can fail before an invocation starts; reattach continues an existing invocation."},
+  {"name": "Tool call", "code": "Activity.calls; result.json key tool_calls", "group": "Harness & agent", "desc": "One operation an agent asks a tool to run. The engine counts them per attempt in tool_calls, and ohflow actions lists one attempt's model calls with the actions each one launched."},
+  {"name": "Execution preset", "code": "no code name; workflows/rollcall.py:MODELS is one", "group": "Configuration", "desc": "A harness executor with its default model configuration and cost basis, as the roll call pairs them. No code names it. (An execution preset picks an executor and a model; a tool preset picks an agent's tools.)"},
+  {"name": "Model configuration", "code": "workflow.py:ModelConfig", "group": "Configuration", "desc": "The ModelConfig of an agent step: a model tier or a model name, base_url, api_key_env and params, the closed set of keys each harness executor accepts, such as pi's thinking."},
+  {"name": "Agent profile", "code": "AgentSpec.agent_profile", "group": "Configuration", "desc": "The harness setup an agent starts in: the instructions, hooks, memory, skills and inherited tool/MCP configuration it loads, such as the usual setup or a hermetic setup. claude and codex take it, and validate refuses the field agent_profile on every other harness executor. (durable names its box in AgentSpec.box, never here.)"},
+  {"name": "Agent tool policy", "code": "workflow.py:ToolPolicy", "group": "Configuration", "desc": "The declared settings for which tools an agent step should receive, AgentSpec.tools: built-in tool selection, browser and sub-agent options (enable_browser, enable_sub_agents), and MCP tool selection over the servers mcp_config names. Support and enforcement depend on the harness executor and agent profile; where the harness executor enforces it, the agent is built with those tools only, so tool policy is the gate. (Part of agent execution configuration; see also: effective agent tools.)"},
+  {"name": "Agent brief", "code": "AgentSpec.brief; brief.md", "group": "Configuration", "desc": "The instructions an agent reads first, written to the attempt's brief.md. claude and codex get a bootstrap prompt that only says where it is; pi, durable and the cloud executors send the brief's text as the first message. A step on an ssh box or a cloud box gets a copy whose local paths are rewritten to its remote workspace, and a step on the local box reads the brief as written. The short form is brief."},
+  {"name": "Write scope", "code": "Step.write_scope; OHFLOW_WRITE_SCOPE", "group": "Configuration", "desc": "Step.write_scope: the glob patterns of the paths one step may edit. Two steps of one phase that write in one workspace may not have overlapping write scopes."},
+  {"name": "Stall timeout", "code": "Step.stall_timeout_s", "group": "Configuration", "desc": "Step.stall_timeout_s: the permitted interval without observed activity while no tool call is open. An open tool call suspends stall detection. The setting is optional."},
+  {"name": "Execution timeout", "code": "Step.execution_timeout_s", "group": "Configuration", "desc": "Step.execution_timeout_s: the elapsed-time limit for a step's main execution, excluding preparation and subsequent gate checks. Gate commands have their own limits. The engine currently gives a reattach a fresh execution-timeout deadline. On the local box, the kill ends a durable step's durable host with its commands; on an ssh box, it drops the host's connection, and the tether ends the step; on a cloud box, the executor posts abort, which stops the box."},
+  {"name": "Gate", "code": "GateSpec", "group": "Gates & checks", "desc": "The GateSpec of a step: the conjunction of its checks. A quality gate is that group of checks. A gate with no checks passes."},
+  {"name": "Gate check", "code": "CheckSpec", "group": "Gates & checks", "desc": "One named test of a gate, a CheckSpec with its name and args. Its name appears as gate:<check> in retry tokens. A check that reads a diff compares against since: the worktree base (the default), the step's start commit or the last merge."},
+  {"name": "Gate report", "code": "GateReport; gate.json", "group": "Gates & checks", "desc": "gate.json, the result of every gate check for one attempt."},
+  {"name": "Review verdict", "code": "reviewer's closing line (MERGEABLE or BLOCKED)", "group": "Gates & checks", "desc": "The VERDICT: line of a reviewer: MERGEABLE or BLOCKED. A gate check can accept a valid BLOCKED line without approving the work."},
+  {"name": "Roll call", "code": "rollcall.py; workflows/rollcall.py", "group": "Roll call", "desc": "The live-agent test. Most agents write who they are into a file and commit it; in the review scenario a solo agent commits its file and a reviewer with no write scope changes none. Owner: ohflow rollcall."},
+  {"name": "Test scenario", "code": "RollCallCase.scenario", "group": "Roll call", "desc": "One pattern of the roll-call workflow: single, fanout, relay, merge, retry, review, campaign or silent."},
+  {"name": "Test case", "code": "rollcall.py:RollCallCase; rollcall --cases", "group": "Roll call", "desc": "One test scenario on some harness executors at some scale, written scenario:harness-executors[:count][:option]. The class is RollCallCase, and rollcall --cases runs a list of them in place of a matrix."},
+  {"name": "Test matrix", "code": "rollcall.py:MATRICES", "group": "Roll call", "desc": "A named table of test cases: smoke, quick, full or liveness, which rollcall --matrix runs and rollcall --list prints."},
+  {"name": "Campaign controller", "code": "campaign.py:CampaignController", "group": "Campaign", "desc": "The program that runs the milestones, asks for the judge and applies the decision: CampaignController."},
+  {"name": "Milestone output branch", "code": "Milestone.output_branch", "group": "Campaign", "desc": "Milestone.output_branch, the optional Git branch holding a milestone's work for acceptance and landing. When configured, its commit is the proposed destination of the campaign integration branch. In a campaign with several workspaces it is one name, and it exists in each workspace where the milestone's workflow has a worktree on it. (Milestone scope; see also: campaign integration branch.)"},
+  {"name": "Workflow module", "code": "build(args) -> Workflow; workflow.py:load_workflow", "group": "Workflow structure", "desc": "The Python source that builds a workflow definition. A verb names it with --workflow and passes it --args k=v."},
+  {"name": "Step fingerprint", "code": "fingerprint.py:fingerprint_input", "group": "Execution & recovery", "desc": "A hash of selected inputs describing a step's work: configuration, brief, dependencies, consumed handovers and relevant worktree state. It excludes the run ID and actual attempt number. It does not capture every possible external change."},
+  {"name": "Gate step", "code": "Step(kind='gate')", "group": "Workflow structure", "desc": "A step of kind gate: it runs only its gate and starts no agent."},
+  {"name": "Model call", "code": "result.json key llm_calls; Activity.llm_calls", "group": "Harness & agent", "desc": "One request from a harness to its model. One model call may ask for several tool calls."},
+  {"name": "Step handover", "code": "handover.py:recorded; attempts/NN/handover.md", "group": "Records & logs", "desc": "handover.md, written by a producer step's agent for a receiving agent, following its handover spec, Step.handover. The handover_written gate check requires it. [Contract](references/step-handover.md)."},
+  {"name": "Consumes", "code": "Step.consumes", "group": "Workflow structure", "desc": "Step.consumes: the producer steps whose step handovers an agent receives. Each one is also named in depends_on, and the consumed content enters the receiver's step fingerprint."},
+  {"name": "Handover spec", "code": "workflow.py:HandoverSpec", "group": "Configuration", "desc": "HandoverSpec: the audience, the extra headings beside the core questions, and the size limit max_chars that govern one step handover."},
+  {"name": "Workflow resume", "code": "ohflow run --resume; cli.py:cmd_run", "group": "Execution & recovery", "desc": "run --resume RUN_ID: continuing an existing workflow run using its history and the currently loaded workflow definition. Matching successes may be reused; unfinished work may reattach or start another attempt when eligible. Spent budgets and exclusions still apply to unchanged work. A resume is refused while the run log reads running and the run supervisor that the run directory records is alive. The run --detach launcher asks before it starts a supervisor, and hands that supervisor --resume-checked."},
+  {"name": "Deferred", "code": "status='deferred'; engine.py:Engine._auto_resumable", "group": "Execution & recovery", "desc": "A step outcome indicating that work was postponed or interrupted without reaching its own verdict. This includes temporary failures, work interrupted or prevented by a run abort, an attempt kill, and an execution that the death of its run supervisor left open; recovery remains subject to the applicable budgets and exclusion threshold."},
+  {"name": "Final message", "code": "final.md", "group": "Records & logs", "desc": "The last text of an agent that completed its answer. It is a claim. The artifact is the evidence. A stopped attempt also leaves its last text in final.md, and ohflow explain prints that as an interrupted last message, never as a final message."},
+  {"name": "Artifact", "code": "gates.py:run_gate reads worktree and attempt files", "group": "Records & logs", "desc": "A file or commit that a step leaves behind as evidence of its work. Gate checks read artifacts, not the final message."},
+  {"name": "Exit report", "code": "exit_report.py; exit-report.md/html", "group": "Records & logs", "desc": "exit-report.md and exit-report.html, written when a run ends. exit.json is the same record for tools. The command ohflow report rebuilds all three after a hard kill."},
+  {"name": "Judge handover", "code": "judge/rNN/judge-handover.md", "group": "Records & logs", "desc": "judge-handover.md: the note one judge leaves for the next milestone's judge. The judge brief carries its format: a title, a lead paragraph and the core headings of a step handover. No gate check reads its headings."},
+  {"name": "Coordinate", "code": "coords.py; phase/step", "group": "Workflow structure", "desc": "The address of a step, NN.phase-name/NN.step-id with both numbers 1-based, such as 02.batch-a/01.c9-spill. The run log, the board and the gate report all key on it, and a verb's --step takes it, or a step id that names one step."},
+  {"name": "Failure policy", "code": "workflow.py:Phase.on_step_failure; Phase.min_success", "group": "Workflow structure", "desc": "Phase.on_step_failure, what a phase does with a failed step: quarantine (the default) records it as quarantined, continue keeps it failed, and abort stops the run and kills the agents still running. Phase.min_success (all, any or a number) counts passed and cached steps. A phase that misses it settles deferred when at least one step is deferred and none is failed or timeout, even if other steps are quarantined or skipped; otherwise it settles failed."},
+  {"name": "Objective", "code": "workflow.py:Step.objective", "group": "Workflow structure", "desc": "What a campaign or a run serves: the wanted effect the operator names. Its objective kind tells the agents how far they may steer the work towards it. (A step objective is one display line on one step; the objective is what the whole run is for.)"},
+  {"name": "Position block", "code": "coords.py:render_position; position.md", "group": "Workflow structure", "desc": "The text the engine writes to position.md and puts before the agent brief (coords.render_position), which ohflow position prints for one step: run, phase, step, attempt, coordinate, worktree, branch, base commit and write scope; the other workspaces; the contracts; the merges of earlier phases; the quarantined branches; the received handovers; the steps running beside it and after it; its gate; the schema contract; its own handover instructions; and, from the second attempt, the previous attempt's failures and handover. (The position block says where the step stands; the agent brief says what to do.)"},
+  {"name": "Workflow run status", "code": "rundir.py:Run.status", "group": "Execution & recovery", "desc": "The current operational condition of a workflow run, established from recorded history, supervisor liveness and preparation or exit records. Examples include held, running, paused, finished, failed, crashed, interrupted and orphaned. (Describes a run's condition; a workflow phase describes how work is grouped.)"},
+  {"name": "Held workflow run", "code": "ohflow run --hold; live.py:HELD_REASON", "group": "Execution & recovery", "desc": "A workflow run whose live supervisor awaits explicit release before engine execution starts: a newly prepared run, or the resumed run of a campaign round that a judge's REVISE starts. Its plan and dashboard may already exist before its first run-log event. run --resume cannot hold. (A wait before execution; see also: workflow release.)"},
+  {"name": "Workflow release", "code": "ohflow go; cli.py:cmd_go", "group": "Execution & recovery", "desc": "The instruction that lets a held workflow run proceed, issued through ohflow go. When a workflow module is available, the supervisor reloads and validates it before execution, incorporating edits made during the hold. Release can still end in a preparation failure. (Releases a held run; workflow resume continues existing execution history.) go refuses while the pilot still runs. go --predictions FILE writes the held run's predictions.md before the release, and refuses, sending no go, when predictions.md already holds predictions."},
+  {"name": "Finished workflow run", "code": "run_finished; status 'finished'", "group": "Execution & recovery", "desc": "A workflow run whose engine reached the end of the selected execution without aborting or pausing. Individual steps may still have failed or been skipped under the configured policies; finished alone does not establish that every step was accepted. (Engine completion, distinct from acceptance of all step outcomes.)"},
+  {"name": "Run supervisor", "code": "supervisor.py:run_workflow", "group": "Execution & recovery", "desc": "supervisor.run_workflow, the process that hosts one workflow run: it reserves the run directory, holds a fresh run until release, starts the dashboard (unless --no-dashboard; --dashboard-port fixes its port and --open-dashboard opens it), runs the engine and, once it has reserved the run directory, writes the exit report on every exit path; a dry run and a refusal before the reservation write none. A run whose run log still says running while its supervisor is no longer alive is orphaned. With --pilot it runs the pilot before the hold, and before the exit report it runs the Cloudflare check."},
+  {"name": "Preflight", "code": "preflight.py; engine.py:Engine.preflight", "group": "Execution & recovery", "desc": "The checks a fresh run makes before any step starts, from the repository to the node_modules source; a failing check stops the run with preflight failed: and one line per problem. references/ohflow.md names each one. ohflow preflight runs them with no run, adds the Git Bash check, and prints one FAIL <check>: <observed>; <fix> line per failing check: for the harness executors --harness-executors names, and for a workflow --workflow names. (ohflow validate checks only the workflow definition.)"},
+  {"name": "Dry run", "code": "ohflow run --dry-run; supervisor.py:run_workflow", "group": "Execution & recovery", "desc": "--dry-run: preflight, the baseline and the attempt input files of every step, with no agent started. It writes no exit report, no estimate, no run notes and no dashboard, so it is no proof that the run works."},
+  {"name": "Reattach", "code": "start_kind='reattach'; engine.py:Engine._reattempt_dir", "group": "Execution & recovery", "desc": "Reconnecting to and continuing the same attempt after losing supervision or connection. It preserves the attempt number and continues the same logical agent invocation."},
+  {"name": "Execution start", "code": "attempt_started; attempts.py:executions", "group": "Execution & recovery", "desc": "A recorded start of work: an initial start, retry, auto-resume or reattach. A reattach spends another execution start while continuing the same numbered attempt."},
+  {"name": "Retry budget", "code": "workflow.py:RetryPolicy.max", "group": "Execution & recovery", "desc": "RetryPolicy.max: how many additional attempts the retry policy permits. (see also: milestone revision budget; reattach)"},
+  {"name": "Auto-resume budget", "code": "workflow.py:Workflow.auto_resume", "group": "Execution & recovery", "desc": "How many automatic recovery passes may retry work postponed by interruptions or temporary failures."},
+  {"name": "Execution-start budget", "code": "attempts.py:may_start; MANUAL_RECOVERY_ALLOWANCE", "group": "Execution & recovery", "desc": "The total allowed recorded starts for unchanged work, including reattachments. (1 initial start + retry budget + auto-resume budget + 1 manual-recovery allowance, MANUAL_RECOVERY_ALLOWANCE)"},
+  {"name": "Failure exclusion threshold", "code": "attempts.py:EXCLUSION_THRESHOLD; work_excluded", "group": "Execution & recovery", "desc": "The number of counted failures after which unchanged work is refused further starts. It is currently hardcoded to 2 (EXCLUSION_THRESHOLD in attempts.py) and stops unchanged work after two counted failures, even if more starts remain available. The run log records the refusal as work_excluded."},
+  {"name": "Counted failure", "code": "attempts.py:failed_executions", "group": "Execution & recovery", "desc": "A started execution of unchanged work that ends in a judged failure (failed, timeout or quarantined) or a genuine transient deferral. Cached, skipped or never-started work and executions interrupted by a run abort, an attempt kill or the death of the run supervisor do not contribute to the failure exclusion threshold."},
+  {"name": "Abort victim", "code": "abort_victim; engine.py:Engine._defer_unstarted", "group": "Execution & recovery", "desc": "An execution that ended without its own verdict because something outside it stopped it or kept it from starting: a run abort, an attempt kill, a workflow resume closing an execution that its dead run supervisor left open, or the closure of the execution record that a reattach then continues (reattach: <reason>). It is recorded deferred with abort_victim; the name keeps the run abort, its first case. One that never started spends no attempt number and no execution start. One that started spends an execution start. Neither is a counted failure. The closure after a supervisor's death also carries interrupted, and the reattach case reattached."},
+  {"name": "Retry eligibility", "code": "retry.py:should_retry", "group": "Execution & recovery", "desc": "Whether a failed agent step may start another attempt: its retry policy must cover every failure reason in RetryPolicy.on, whose tokens are timeout, agent_error and gate:<check> (validate refuses gate:ownership and gate:no_ai_attribution, because either failure means the agent did the wrong thing), the relevant budgets must have capacity, and no exclusion or other refusal may apply. Deferred work follows the auto-resume/manual-resume recovery path."},
+  {"name": "Transient failure", "code": "failure.py:classify", "group": "Execution & recovery", "desc": "A recognized temporary external problem, such as rate limiting, provider overload or a dropped connection, for which waiting may change the outcome."},
+  {"name": "Structural failure", "code": "failure.py:classify", "group": "Execution & recovery", "desc": "A failure classified as a work or setup problem, such as failed checks, malformed output or invalid credentials. Unrecognized failures default to this class; the classification alone does not determine retry eligibility. (A check-in's judgment of the work is a deviation, a design flaw or a miss; a structural failure classifies one failed attempt.)"},
+  {"name": "Provider cooldown", "code": "engine.py:Engine._back_off", "group": "Execution & recovery", "desc": "The wait the engine holds before the next start after a transient failure: until a provider's announced quota reset plus 60 seconds when the error names one, otherwise transient_backoff_s, doubled per hit up to ten times its base value. The run log keeps it, so a resume waits out the same cooldown. It reads the z.ai 1308 message and the Codex \"usage limit ... try again at 3:23 AM\" message; the Codex time is local, and a time already past means the next day."},
+  {"name": "Step identity", "code": "attempts.py:executions(state, coord, fingerprint)", "group": "Execution & recovery", "desc": "The pair (step coordinate, step fingerprint) identifying a particular revision of a step's work within a workflow run. Attempts at unchanged work share this identity. Changing a hashed input creates a new identity with fresh execution allowances; earlier attempts remain recorded."},
+  {"name": "Open tool call", "code": "cli_harness_executor.py:POLL_CALLS_S", "group": "Harness & agent", "desc": "A tool operation whose start has been observed but whose completion has not yet been observed. It may still be running; an open record alone does not prove useful progress."},
+  {"name": "Stall", "code": "error 'stall'; cli_harness_executor.py:CliAgentRuntime", "group": "Harness & agent", "desc": "A stop triggered when observed inactivity exceeds the configured stall timeout and no tool call is open. It measures silence, not whether the agent is making useful progress."},
+  {"name": "Command time cap", "code": "workflow.py:AgentSpec.command_time_cap_s; effective_command_time_cap", "group": "Configuration", "desc": "The effective time limit for a command invoked by an agent. Its default is derived from the execution timeout; an explicit command_time_cap_s can tighten it. The shared CLI runtime also stops an open tool call after this cap plus a currently hardcoded 60-second grace period. On claude-cloud and codex-cloud no cap stops a running call: the stream reports a call only when the CLI does, Claude Code at its start and Codex some calls only at their end, and no output arrives while a command runs."},
+  {"name": "Agent execution configuration", "code": "workflow.py:AgentSpec; ToolPolicy; Step", "group": "Configuration", "desc": "The combined settings governing how an agent step runs: harness executor, execution target, model configuration, agent profile, agent tool policy, agent brief, skills, and execution limits (stall timeout, execution timeout, command time cap and iteration limit). Which settings are supported or enforced depends on the executor."},
+  {"name": "Execution target", "code": "harness_executors.py:HARNESS_EXECUTOR_INFO", "group": "Configuration", "desc": "The kind of place where a step's commands run: the local box, an ssh box or a cloud box. The harness executor and AgentSpec.box fix it together, and no field names it. (The kind of place; a box is the one machine an attempt uses.)"},
+  {"name": "Agent skills", "code": "workflow.py:AgentSpec.skills; AgentSpec.skills_dir", "group": "Configuration", "desc": "AgentSpec.skills: skills named for an agent explicitly. pi loads them from AgentSpec.skills_dir. durable resolves the names on its box. pi-cloud, claude-cloud and codex-cloud take them from the skills mirror, at the commit the step pins when it starts. Each of these five refuses whichever of the two fields it does not use. claude and codex refuse both fields, so they have only the skills their agent profile holds."},
+  {"name": "MCP tool allowlist", "code": "workflow.py:ToolPolicy.allow", "group": "Configuration", "desc": "An explicit selection of MCP tools by server.tool pattern, narrowing the configured tools that the blocklist leaves. An empty allowlist applies no additional restriction; it does not mean no MCP tools."},
+  {"name": "MCP tool blocklist", "code": "workflow.py:ToolPolicy.block", "group": "Configuration", "desc": "A list of server.tool patterns, owned by the workflow, that removes matching tools from the configured MCP tool set. An empty blocklist removes nothing."},
+  {"name": "Effective agent tools", "code": "logs/mcp-list.json; claude_runner.py records the announced tools", "group": "Harness & agent", "desc": "The tools actually exposed to an agent invocation, resulting from the harness, agent profile, supported tool-policy rules and connected external systems. An unavailable listing means unknown, not empty; exposure alone does not establish successful authentication or use. (The resulting tool set; see also: agent tool policy.)"},
+  {"name": "Tool output", "code": "tool_output.py; logs/tool-output/", "group": "Records & logs", "desc": "logs/tool-output/ in an attempt directory: the live output of each tool call, capped at 5 MiB per call, kept apart from the agent transcript and outside the step fingerprint. A call whose output keeps arriving more than 2 seconds after the call ended is marked detached."},
+  {"name": "Transport branch", "code": "remote_git.py:BRANCH_RULE; ohflow/<harness executor>/<attempt key>", "group": "Records & logs", "desc": "ohflow/<harness executor>/<attempt key> on the origin of the step's workspace: the branch that carries one step's start commit to its remote workspace on an ssh box or a cloud box, and its result back. The runner deletes it after the fetch. A step on the local box has none. It is neither a milestone output branch nor the campaign integration branch."},
+  {"name": "Structured output", "code": "structured.py:parse_structured; Step.schema", "group": "Gates & checks", "desc": "The JSON a step returns for Step.schema: in its final message, or, for a claude step, in its latest StructuredOutput call, whatever prose follows it. The runner extracts it into result.json as structured, or records schema_error. Extracted JSON proves no schema validity; the schema_valid gate check validates it."},
+  {"name": "Attention item", "code": "attention.py:GROUPS", "group": "Records & logs", "desc": "One entry of the dashboard's attention list, in one of three groups: intervention (the engine starts nothing more by itself), recovering (the engine acts alone, such as a cooldown or a pending auto-resume) and signal (a measured threshold, never a verdict)."},
+  {"name": "Estimate", "code": "estimate.py; estimate.json", "group": "Records & logs", "desc": "The forecast estimate.json records before a run: per step a median (p50) and an 80th-percentile (p80) of wall time, check time and tokens, and a median cost, from n earlier attempts in the finished runs that --history names, the basis key that answered and a confidence of ok or low. A percentile is not a guarantee, and a missing measurement is not zero."},
+  {"name": "Campaign charter", "code": "campaign.py:Campaign.charter", "group": "Campaign", "desc": "The file Campaign.charter names: the standard a campaign's work must meet. Every judge packet contains it, and a judge may not edit it."},
+  {"name": "Milestone acceptance", "code": "campaign.py:CampaignController._pass_refusal", "group": "Campaign", "desc": "Approval of a milestone's work, requiring a valid judge PASS, a finished workflow run with every step passed or cached, and all declared milestone acceptance checks passing. A judge PASS alone is insufficient. Acceptance is recorded through milestone landing, subject to any required branch checks."},
+  {"name": "Milestone revision budget", "code": "campaign.py:CampaignController._budget; Campaign.max_revisions", "group": "Campaign", "desc": "How many milestone revisions the controller may commit and continue automatically. The allowance is the milestone override (Milestone.max_revisions), or otherwise the campaign default (Campaign.max_revisions, currently 2), plus recorded revision grants. Only a revision committed for automatic continuation spends it. (Distinct from step retry and execution-start budgets.)"}],
+"edges": [
+  {"from": "Campaign", "label": "contains 1..N", "to": "Milestone", "evidence": "campaign.py: Campaign.milestones (tuple of Milestone)"},
+  {"from": "Campaign", "label": "has 1", "to": "Campaign integration branch", "evidence": "campaign.py: Campaign.integration_branch"},
+  {"from": "Campaign", "label": "sets default", "to": "Judge", "evidence": "campaign.py: Campaign.judge defaults to default_judge() (an AgentSpec)"},
+  {"from": "Campaign", "label": "passes N to each milestone run", "to": "Auto-resume", "evidence": "campaign.py: Campaign.auto_resume; CampaignController._run_workflow (RunOptions auto_resume)"},
+  {"from": "Campaign controller", "label": "runs milestones of", "to": "Campaign", "evidence": "campaign.py: CampaignController.run loops over camp.milestones"},
+  {"from": "Campaign controller", "label": "holds", "to": "Campaign status", "evidence": "campaign.py: CampaignController._state; CampaignController._status writes campaign-status.json"},
+  {"from": "Campaign controller", "label": "advances", "to": "Milestone round", "evidence": "campaign.py: CampaignController._milestone (round_no = st.judgements + 1, loop)"},
+  {"from": "Campaign controller", "label": "runs one per milestone", "to": "Workflow run", "evidence": "campaign.py: CampaignController._run_workflow calls run_workflow"},
+  {"from": "Campaign controller", "label": "runs itself", "to": "Milestone acceptance check", "evidence": "campaign.py: CampaignController._acceptance_checks"},
+  {"from": "Campaign controller", "label": "writes", "to": "Judge packet", "evidence": "campaign.py: CampaignController._packet / render_packet"},
+  {"from": "Campaign controller", "label": "starts a fresh", "to": "Judge", "evidence": "campaign.py: CampaignController._judge / _judge_workflow"},
+  {"from": "Campaign controller", "label": "validates", "to": "Judge decision", "evidence": "campaign.py: CampaignController._pass_refusal, _stray_edits"},
+  {"from": "Campaign controller", "label": "commits", "to": "Milestone revision", "evidence": "campaign.py: CampaignController._commit_revision"},
+  {"from": "Campaign controller", "label": "performs", "to": "Milestone landing", "evidence": "campaign.py: CampaignController._land"},
+  {"from": "Campaign controller", "label": "raises", "to": "Campaign escalation", "evidence": "campaign.py: CampaignController._escalate"},
+  {"from": "Campaign lead", "label": "sets up and monitors", "to": "Campaign", "evidence": "CONTEXT.md (campaign lead); campaign.py: CampaignController is not the lead"},
+  {"from": "Campaign lead", "label": "issues", "to": "Milestone revision grant", "evidence": "cli.py: cmd_campaign (campaign grant) calling campaign.grant"},
+  {"from": "Campaign escalation", "label": "requests intervention from", "to": "Campaign lead", "evidence": "campaign.py: CampaignController._escalate writes ESCALATION.md and runs on_escalate"},
+  {"from": "Campaign escalation", "label": "sets", "to": "Campaign status", "evidence": "campaign.py: CampaignController._escalate calls _status(state='escalated')"},
+  {"from": "Campaign escalation", "label": "is recorded in", "to": "Campaign log", "evidence": "campaign.py: CampaignController._escalate appends the escalated event"},
+  {"from": "Milestone revision grant", "label": "makes eligible for continuation after", "to": "Campaign escalation", "evidence": "campaign.py: replay() sets status running on granted; CampaignController.run continues it on the next campaign run"},
+  {"from": "Milestone revision grant", "label": "is recorded in", "to": "Campaign log", "evidence": "campaign.py: grant() appends the granted event"},
+  {"from": "Milestone", "label": "has 0..N", "to": "Milestone acceptance check", "evidence": "campaign.py: Milestone.acceptance_checks"},
+  {"from": "Milestone", "label": "may override the judge with", "to": "Judge", "evidence": "campaign.py: Milestone.judge (None takes Campaign.judge)"},
+  {"from": "Milestone", "label": "names 0..1", "to": "Milestone output branch", "evidence": "campaign.py: Milestone.output_branch"},
+  {"from": "Milestone", "label": "points to 1", "to": "Workflow module", "evidence": "campaign.py: Milestone.workflow (path); CampaignController._load_workflow"},
+  {"from": "Milestone", "label": "takes 1..N", "to": "Milestone round", "evidence": "campaign.py: MilestoneState.judgements; CampaignController._milestone loop"},
+  {"from": "Milestone", "label": "is delivered by one", "to": "Workflow run", "evidence": "campaign.py: CampaignController._milestone keeps one run_dir (st.run_dir) across rounds"},
+  {"from": "Milestone round", "label": "runs or resumes", "to": "Workflow run", "evidence": "campaign.py: CampaignController._run_workflow (resume when run-log.jsonl exists)"},
+  {"from": "Milestone round", "label": "writes", "to": "Judge packet", "evidence": "campaign.py: judge_run_dir(...).parent holds packet.md under judge/rNN/"},
+  {"from": "Milestone round", "label": "requests", "to": "Judge decision", "evidence": "campaign.py: CampaignController._milestone calls _judge, then appends judged"},
+  {"from": "Judge", "label": "is a kind of", "to": "Agent", "evidence": "campaign.py: default_judge returns AgentSpec(role='milestone-judge', ...)"},
+  {"from": "Judge", "label": "runs as", "to": "Agent step", "evidence": "campaign.py: CampaignController._judge_workflow builds Step(kind='agent')"},
+  {"from": "Judge", "label": "gets its own", "to": "Workflow run", "evidence": "campaign.py: CampaignController._judge runs run_workflow in judge_run_dir"},
+  {"from": "Judge", "label": "reads", "to": "Judge packet", "evidence": "campaign.py: CampaignController._judge_workflow uses packet.read_text() as the brief"},
+  {"from": "Judge", "label": "returns", "to": "Judge decision", "evidence": "campaign.py: CampaignController._judge returns result['structured']"},
+  {"from": "Judge packet", "label": "becomes", "to": "Agent brief", "evidence": "campaign.py: CampaignController._judge_workflow: agent=replace(spec, brief=brief)"},
+  {"from": "Judge packet", "label": "includes output of", "to": "Milestone acceptance check", "evidence": "campaign.py: render_packet section 'Acceptance checks the controller ran'"},
+  {"from": "Judge packet", "label": "quotes", "to": "Review verdict", "evidence": "campaign.py: render_packet appends the latest verdict.json files"},
+  {"from": "Judge packet", "label": "lists earlier", "to": "Judge decision", "evidence": "campaign.py: render_packet section 'Lineage'"},
+  {"from": "Judge decision", "label": "if REVISE, leads to", "to": "Milestone revision", "evidence": "campaign.py: CampaignController._milestone (REVISE branch calls _commit_revision)"},
+  {"from": "Judge decision", "label": "if PASS, leads to", "to": "Milestone landing", "evidence": "campaign.py: CampaignController._milestone (PASS branch calls _land)"},
+  {"from": "Judge decision", "label": "if ESCALATE, leads to", "to": "Campaign escalation", "evidence": "campaign.py: CampaignController._milestone (ESCALATE branch calls _escalate)"},
+  {"from": "Judge decision", "label": "must pass check schema_valid", "to": "Gate check", "evidence": "campaign.py: CampaignController._judge_workflow GateSpec(schema_valid); _judge reads the decision only if the gate passed"},
+  {"from": "Judge decision", "label": "is recorded in", "to": "Campaign log", "evidence": "campaign.py: CampaignController._milestone appends the judged event"},
+  {"from": "Milestone acceptance check", "label": "can make the program refuse PASS of", "to": "Judge decision", "evidence": "campaign.py: CampaignController._pass_refusal ('acceptance checks failed')"},
+  {"from": "Milestone acceptance check", "label": "may run in", "to": "Worktree", "evidence": "campaign.py: AcceptanceCheck.cwd 'land' is the worktree of the milestone output branch; another cwd is the product repository or an absolute path"},
+  {"from": "Milestone acceptance check", "label": "writes evidence into", "to": "Run directory", "evidence": "campaign.py: CampaignController._acceptance_checks log_dir = run_dir / 'acceptance-checks'"},
+  {"from": "Milestone revision", "label": "changes", "to": "Agent brief", "evidence": "campaign.py: JUDGE_ROLE (the judge may change briefs); _commit_revision commits milestone inputs"},
+  {"from": "Milestone revision", "label": "changes", "to": "Workflow module", "evidence": "campaign.py: JUDGE_ROLE (the judge may change the workflow module); FROZEN_INPUTS = spec.md"},
+  {"from": "Milestone revision", "label": "changes for edited steps", "to": "Step fingerprint", "evidence": "campaign.py:CampaignController._load_workflow docstring ('Fingerprints decide which steps run again')"},
+  {"from": "Milestone revision", "label": "leaves steps with unchanged fingerprints as", "to": "Cached step outcome", "evidence": "campaign.py: JUDGE_ROLE; a changed dependency fingerprint also changes a dependent step"},
+  {"from": "Milestone revision", "label": "triggers a resume of", "to": "Workflow run", "evidence": "campaign.py: CampaignController._milestone loops back to _run_workflow, which resumes the same run directory"},
+  {"from": "Milestone revision", "label": "is recorded in", "to": "Campaign log", "evidence": "campaign.py: CampaignController._milestone appends revision_committed"},
+  {"from": "Milestone landing", "label": "advances, when an output branch is set,", "to": "Campaign integration branch", "evidence": "campaign.py: CampaignController._land (git update-ref on the integration branch)"},
+  {"from": "Milestone landing", "label": "reads the commit of", "to": "Milestone output branch", "evidence": "campaign.py: CampaignController._land (_rev of m.output_branch, merge-base --is-ancestor)"},
+  {"from": "Milestone landing", "label": "records the acceptance of", "to": "Milestone", "evidence": "campaign.py: replay() sets status passed on milestone_landed"},
+  {"from": "Milestone landing", "label": "is recorded in", "to": "Campaign log", "evidence": "campaign.py: CampaignController._land appends milestone_landed"},
+  {"from": "Worktree", "label": "checks out", "to": "Milestone output branch", "evidence": "campaign.py: CampaignController._land_path returns the WorktreeSpec whose branch equals m.output_branch"},
+  {"from": "Workflow module", "label": "builds", "to": "Workflow definition", "evidence": "workflow.py: load_workflow calls mod.build(args)"},
+  {"from": "Workflow definition", "label": "contains 1..N", "to": "Phase", "evidence": "workflow.py: Workflow.phases"},
+  {"from": "Workflow definition", "label": "declares 0..N", "to": "Worktree", "evidence": "workflow.py: Workflow.worktrees (tuple of WorktreeSpec)"},
+  {"from": "Workflow definition", "label": "sets", "to": "Auto-resume", "evidence": "workflow.py: Workflow.auto_resume"},
+  {"from": "Phase", "label": "contains 1..N", "to": "Step", "evidence": "workflow.py: Phase.steps"},
+  {"from": "Step", "label": "depends on earlier", "to": "Step", "evidence": "workflow.py: Step.depends_on; engine.py: Engine._blocked_dependencies"},
+  {"from": "Step", "label": "sets", "to": "Execution timeout", "evidence": "workflow.py: Step.execution_timeout_s"},
+  {"from": "Step", "label": "declares", "to": "Write scope", "evidence": "workflow.py: Step.write_scope"},
+  {"from": "Step", "label": "may carry 0..1", "to": "Gate", "evidence": "workflow.py: Step.gate (GateSpec)"},
+  {"from": "Step", "label": "may name 0..1", "to": "Worktree", "evidence": "workflow.py: Step.worktree (a WorktreeSpec.name)"},
+  {"from": "Step", "label": "has 0..N", "to": "Attempt", "evidence": "engine.py: Engine._execute_step / _attempt_step (attempt numbers per step)"},
+  {"from": "Agent step", "label": "is a kind of", "to": "Step", "evidence": "workflow.py: STEP_KINDS; Step.kind == 'agent'"},
+  {"from": "Gate step", "label": "is a kind of", "to": "Step", "evidence": "workflow.py: STEP_KINDS; Step.kind == 'gate'"},
+  {"from": "Gate step", "label": "runs only", "to": "Gate", "evidence": "engine.py: Engine._attempt_step (kind 'gate' has no main work, only run_gate)"},
+  {"from": "Agent step", "label": "carries 1", "to": "Agent", "evidence": "workflow.py: Step.agent (AgentSpec); validate() requires it for kind 'agent'"},
+  {"from": "Agent step", "label": "assigns", "to": "Agent brief", "evidence": "workflow.py: AgentSpec.brief; engine.py: Engine._prepare_step_dir"},
+  {"from": "Agent step", "label": "launches the agent through", "to": "Harness executor", "evidence": "workflow.py: AgentSpec.harness_executor; engine.py: Engine._run_agent"},
+  {"from": "Agent step", "label": "may be retried under", "to": "Retry", "evidence": "workflow.py: Step.retry (RetryPolicy); _retry_errors allows retry.max > 0 only on agent steps"},
+  {"from": "Agent step", "label": "reviewer ends with", "to": "Review verdict", "evidence": "workflows/implement_review.py:build (reviewer step) step; final_message_matches on the closing verdict line"},
+  {"from": "Workflow run", "label": "executes", "to": "Workflow definition", "evidence": "engine.py: Engine(workflow, run_dir).run()"},
+  {"from": "Workflow run", "label": "runs in order", "to": "Phase", "evidence": "engine.py: Engine.run loops over workflow.phases calling _run_phase"},
+  {"from": "Workflow run", "label": "writes into", "to": "Run directory", "evidence": "engine.py: Engine.run_dir; Engine.run writes workflow.json"},
+  {"from": "Workflow run", "label": "appends to", "to": "Run log", "evidence": "engine.py: Engine._transition calls run_log.append"},
+  {"from": "Workflow rerun", "label": "executes the same", "to": "Workflow definition", "evidence": "cli.py: cmd_run (no --resume builds a new run from the same workflow)"},
+  {"from": "Workflow rerun", "label": "creates a new", "to": "Run directory", "evidence": "cli.py: cmd_run (run_dir = out_root / new_run_id() when --resume is absent)"},
+  {"from": "Launch method", "label": "starts detached", "to": "Workflow run", "evidence": "cli.py: cmd_run --detach calls detach.launch; result key launch_method"},
+  {"from": "Launch method", "label": "starts detached", "to": "Campaign", "evidence": "cli.py: cmd_campaign run --detach calls detach.launch; result key launch_method"},
+  {"from": "Run directory", "label": "contains", "to": "Run log", "evidence": "run_log.py: RunLog.path = run_dir / 'run-log.jsonl'"},
+  {"from": "Run directory", "label": "contains 0..N", "to": "Attempt directory", "evidence": "rundir.py: attempt_dir(run_dir, coord, attempt) = phases/NN.phase/NN.step/attempts/NN"},
+  {"from": "Run log", "label": "records", "to": "Attempt", "evidence": "engine.py: Engine._attempt_step (attempt_started, attempt_finished)"},
+  {"from": "Run log", "label": "records", "to": "Gate", "evidence": "engine.py: Engine._attempt_step (gate_ran event)"},
+  {"from": "Attempt directory", "label": "contains, when produced,", "to": "Attempt result", "evidence": "attempt_record.py: write(out_dir, record) writes result.json; a preparation failure or interruption can leave none"},
+  {"from": "Attempt directory", "label": "contains, when produced,", "to": "Gate report", "evidence": "gates.py: write_report(attempt_dir, report) writes gate.json; a preparation failure or interruption can leave none"},
+  {"from": "Attempt directory", "label": "contains, when produced,", "to": "Agent transcript", "evidence": "result.json transcript_dir points at logs/ or session/ inside the attempt (claude_runner.py, pi_runner.py)"},
+  {"from": "Attempt", "label": "writes to 1", "to": "Attempt directory", "evidence": "engine.py: Engine._prepare_step_dir; rundir.attempt_dir"},
+  {"from": "Attempt", "label": "may contain 0..1", "to": "Agent invocation", "evidence": "engine.py: Engine._run_agent calls harness_executor.launch for agent steps only; a reattach continues the same invocation"},
+  {"from": "Attempt", "label": "is checked, once its main work ends, by", "to": "Gate", "evidence": "engine.py: Engine._attempt_step calls run_gate after the main work; interrupted work reaches no gate"},
+  {"from": "Retry", "label": "starts another", "to": "Attempt", "evidence": "engine.py: Engine._execute_step (kind = 'retry'); attempts.may_start"},
+  {"from": "Retry", "label": "names in retry.on", "to": "Gate check", "evidence": "workflow.py: RetryPolicy.on accepts 'gate:<check>' tokens; retry.py: failure_tokens"},
+  {"from": "Auto-resume", "label": "starts", "to": "Attempt", "evidence": "engine.py: Engine._run_phase (start_kind 'auto_resume' on later passes)"},
+  {"from": "Auto-resume", "label": "acts inside", "to": "Phase", "evidence": "engine.py: Engine._run_phase (phase_resumed event, one pass per deferred phase)"},
+  {"from": "Auto-resume", "label": "restarts deferred", "to": "Step", "evidence": "engine.py: Engine._auto_resumable"},
+  {"from": "Cached step outcome", "label": "skips the execution of", "to": "Step", "evidence": "engine.py: Engine._run_phase (prior.ok, prior.fingerprint == fp and handover.recorded intact)"},
+  {"from": "Cached step outcome", "label": "starts no", "to": "Attempt", "evidence": "engine.py: Engine._run_phase writes a synthetic attempt_finished with no attempt_started"},
+  {"from": "Step fingerprint", "label": "must match for", "to": "Cached step outcome", "evidence": "engine.py: Engine._run_phase compares fingerprint(...) with the stored one; handover evidence must also be intact"},
+  {"from": "Agent brief", "label": "is hashed into", "to": "Step fingerprint", "evidence": "fingerprint.py: fingerprint_input (agent.brief)"},
+  {"from": "Model configuration", "label": "is hashed into", "to": "Step fingerprint", "evidence": "fingerprint.py: fingerprint_input (agent.model)"},
+  {"from": "Agent tool policy", "label": "is hashed into", "to": "Step fingerprint", "evidence": "fingerprint.py: fingerprint_input (agent.tools, mcp_tool_policy)"},
+  {"from": "Write scope", "label": "is hashed into", "to": "Step fingerprint", "evidence": "fingerprint.py: fingerprint_input (write_scope)"},
+  {"from": "Harness executor", "label": "launches, monitors and stops", "to": "Harness", "evidence": "harness_executor.py: HarnessExecutor protocol (launch, poll, collect, kill)"},
+  {"from": "Harness executor", "label": "launches", "to": "Agent invocation", "evidence": "harness_executor.py: HarnessExecutor.launch returns a Handle"},
+  {"from": "Harness executor", "label": "collects", "to": "Attempt result", "evidence": "harness_executor.py: HarnessExecutor.collect (HostHarnessExecutor.collect reads result.json)"},
+  {"from": "Harness executor", "label": "locates", "to": "Agent transcript", "evidence": "harness_executors.py: harness_executor_module(name).transcript(attempt_dir, result)"},
+  {"from": "Harness", "label": "runs the loop of", "to": "Agent", "evidence": "CONTEXT.md (harness); harness_executor.py: HarnessExecutor"},
+  {"from": "Stall timeout", "label": "stops the agent through", "to": "Harness executor", "evidence": "cli_harness_executor.py: CliAgentRuntime.run (stop_error 'stall', kill_tree)"},
+  {"from": "Execution timeout", "label": "kills the agent through", "to": "Harness executor", "evidence": "engine.py: Engine._run_agent (deadline passes, harness_executor.kill)"},
+  {"from": "Execution timeout", "label": "ends before", "to": "Gate", "evidence": "engine.py: Engine._attempt_step runs the main work, then run_gate"},
+  {"from": "Agent", "label": "has 1", "to": "Model configuration", "evidence": "workflow.py: AgentSpec.model (ModelConfig)"},
+  {"from": "Agent", "label": "declares", "to": "Agent tool policy", "evidence": "workflow.py: AgentSpec.tools (ToolPolicy)"},
+  {"from": "Agent", "label": "may set", "to": "Agent profile", "evidence": "workflow.py: AgentSpec.agent_profile"},
+  {"from": "Agent invocation", "label": "is one logical execution of", "to": "Agent", "evidence": "CONTEXT.md (agent invocation); harness_executor.py: spec_json(agent, ...)"},
+  {"from": "Agent invocation", "label": "makes 0..N", "to": "Model call", "evidence": "attempt_record.py:empty_record (result.json) key llm_calls; activity.py: Activity.llm_calls"},
+  {"from": "Agent invocation", "label": "requests 0..N", "to": "Tool call", "evidence": "activity.py: Activity.calls; attempt_record.py:empty_record (tool_calls)"},
+  {"from": "Agent invocation", "label": "writes", "to": "Attempt result", "evidence": "attempt_record.py: write(); cli_harness_executor.py: CliAgentRuntime writes result.json"},
+  {"from": "Agent invocation", "label": "is preserved in", "to": "Agent transcript", "evidence": "result.json transcript_dir (pi_runner.py, claude_runner.py)"},
+  {"from": "Attempt result", "label": "records settings of", "to": "Model configuration", "evidence": "attempt_record.py: settings_record (requested model block)"},
+  {"from": "Model configuration", "label": "gives model access to", "to": "Harness", "evidence": "workflow.py: ModelConfig.base_url, api_key_env; pi_runner.py requires api_key_env; signed_in.py leaves it empty"},
+  {"from": "Execution preset", "label": "pairs", "to": "Harness executor", "evidence": "workflows/rollcall.py: MODELS keyed by harness executor"},
+  {"from": "Execution preset", "label": "pairs a default", "to": "Model configuration", "evidence": "workflows/rollcall.py: MODELS values are ModelConfig"},
+  {"from": "Agent profile", "label": "selects the setup of", "to": "Harness", "evidence": "signed_in.py: SignedInRules.profiles; claude_runner.py (hermetic)"},
+  {"from": "Write scope", "label": "limits edits inside", "to": "Worktree", "evidence": "gates.py: ownership diffs the worktree against write_scope; ohflow-guard.ts"},
+  {"from": "Write scope", "label": "is checked by", "to": "Gate check", "evidence": "gates.py: ownership (default allowed = ctx.write_scope)"},
+  {"from": "Gate", "label": "contains 0..N", "to": "Gate check", "evidence": "workflow.py: GateSpec.checks; gates.py: run_gate passes a gate with no checks"},
+  {"from": "Gate", "label": "produces", "to": "Gate report", "evidence": "gates.py: run_gate returns GateReport; write_report writes gate.json"},
+  {"from": "Gate report", "label": "records each", "to": "Gate check", "evidence": "gates.py: GateReport.checks (a GateResult per check)"},
+  {"from": "Gate check", "label": "can require", "to": "Review verdict", "evidence": "workflows/implement_review.py: _review_gate (final_message_matches on the verdict line)"},
+  {"from": "Roll call", "label": "runs", "to": "Test matrix", "evidence": "rollcall.py: run_matrix"},
+  {"from": "Roll call", "label": "executes each case as", "to": "Workflow run", "evidence": "rollcall.py: _run_workflow_case calls run_workflow"},
+  {"from": "Roll call", "label": "checks with", "to": "Gate check", "evidence": "gates.py: rollcall_matches; workflows/rollcall.py: _report_checks"},
+  {"from": "Test matrix", "label": "contains 1..N", "to": "Test case", "evidence": "rollcall.py: MATRICES (tuple of RollCallCase)"},
+  {"from": "Test case", "label": "specifies 1", "to": "Test scenario", "evidence": "rollcall.py: RollCallCase.scenario"},
+  {"from": "Test case", "label": "names 1..N", "to": "Harness executor", "evidence": "rollcall.py: RollCallCase.harness_executors"},
+  {"from": "Test case", "label": "sets the number of", "to": "Agent step", "evidence": "rollcall.py: RollCallCase.count (agents per harness executor)"},
+  {"from": "Test scenario", "label": "builds", "to": "Workflow definition", "evidence": "workflows/rollcall.py: build(args) via _BUILDERS"},
+  {"from": "Test scenario", "label": "(campaign scenario) runs a", "to": "Campaign", "evidence": "rollcall.py: _run_campaign builds an ohcamp.Campaign"},
+  {"from": "Test scenario", "label": "(retry scenario) exercises", "to": "Retry", "evidence": "workflows/rollcall.py: _retry (RetryPolicy(max=1, on=('gate:file_contains',)))"},
+  {"from": "Agent step", "label": "may set", "to": "Stall timeout", "evidence": "workflow.py: validate() accepts stall_timeout_s with an agent and a CAP_STALL harness executor"},
+  {"from": "Agent transcript", "label": "preserves", "to": "Tool call", "evidence": "harness_executors.py: harness_executor_module(name).transcript"},
+  {"from": "Agent tool policy", "label": "declares tools for", "to": "Tool call", "evidence": "workflow.py: ToolPolicy; pi_tool_policy.py enforces it for pi"},
+  {"from": "Attempt result", "label": "counts", "to": "Tool call", "evidence": "attempt_record.py: empty_record (tool_calls)"},
+  {"from": "Harness", "label": "makes in its loop", "to": "Model call", "evidence": "activity.py: Activity.llm_calls"},
+  {"from": "Model configuration", "label": "selects the model of", "to": "Model call", "evidence": "workflow.py: ModelConfig.model; pi_runner.py:build_command passes it to the pi CLI"},
+  {"label": "writes, through its agent,", "to": "Step handover", "evidence": "engine.py: Engine._attempt_step records handover_path and handover_sha256; gates.py: handover_written", "from": "Agent step"},
+  {"label": "answers", "to": "Handover spec", "evidence": "handover.py:questions", "from": "Step handover"},
+  {"label": "declares", "to": "Consumes", "evidence": "workflow.py:Step.consumes", "from": "Agent step"},
+  {"label": "reads", "to": "Step handover", "evidence": "handover.py:received", "from": "Consumes"},
+  {"label": "adds", "to": "Gate check", "evidence": "workflow.py:normalize_handovers", "from": "Handover spec"},
+  {"label": "contributes to", "to": "Step fingerprint", "evidence": "fingerprint.py:fingerprint_input", "from": "Step handover"},
+  {"label": "records", "to": "Final message", "evidence": "harness executor collect()", "from": "Attempt"},
+  {"label": "checks", "to": "Artifact", "evidence": "gates.py:run_gate", "from": "Gate"},
+  {"label": "is summarized, when its supervisor exits, in", "to": "Exit report", "evidence": "supervisor.py: run_workflow writes it on every exit path; a dry run writes none, and ohflow report rebuilds it after a hard kill", "from": "Workflow run"},
+  {"label": "continues", "to": "Workflow run", "evidence": "cli.py: cmd_run selects the existing run directory for --resume; engine.py: Engine replays its run log", "from": "Workflow resume"},
+  {"label": "restarts", "to": "Deferred", "evidence": "engine.py:Engine._run_phase", "from": "Auto-resume"},
+  {"label": "writes", "to": "Judge handover", "evidence": "campaign.py:CampaignController._judge_workflow", "from": "Judge"},
+  {"label": "references", "to": "Judge handover", "evidence": "campaign.py:render_packet", "from": "Judge packet"},
+  {"label": "includes", "to": "Step handover", "evidence": "campaign.py:render_packet", "from": "Judge packet"},
+  {"from": "Coordinate", "label": "addresses", "to": "Step", "evidence": "coords.py:coord (coordinate) phase/step"},
+  {"from": "Phase", "label": "sets", "to": "Failure policy", "evidence": "workflow.py: Phase.on_step_failure, Phase.min_success"},
+  {"from": "Objective", "label": "captions", "to": "Step", "evidence": "workflow.py: Step.objective; fingerprint.py: fingerprint_input leaves it out"},
+  {"from": "Position block", "label": "precedes", "to": "Agent brief", "evidence": "coords.py: render_position; engine.py: Engine._prepare_step_dir"},
+  {"from": "Workflow run", "label": "has one current", "to": "Workflow run status", "evidence": "rundir.py: Run.status"},
+  {"from": "Held workflow run", "label": "is a fresh", "to": "Workflow run", "evidence": "supervisor.py: run_workflow holds a fresh run until go"},
+  {"from": "Workflow release", "label": "releases", "to": "Held workflow run", "evidence": "cli.py: cmd_go"},
+  {"from": "Workflow release", "label": "reloads and validates", "to": "Workflow module", "evidence": "supervisor.py: run_workflow calls load_workflow after go"},
+  {"from": "Finished workflow run", "label": "is a status of", "to": "Workflow run", "evidence": "engine.py: Engine.run appends run_finished"},
+  {"from": "Run supervisor", "label": "hosts", "to": "Workflow run", "evidence": "supervisor.py: run_workflow"},
+  {"from": "Preflight", "label": "runs before", "to": "Workflow run", "evidence": "engine.py: Engine.preflight on every fresh run"},
+  {"from": "Dry run", "label": "prepares, starting no agent,", "to": "Attempt directory", "evidence": "supervisor.py: run_workflow with dry_run writes the attempt inputs only"},
+  {"from": "Attempt", "label": "spends 1..N", "to": "Execution start", "evidence": "attempts.py: executions; a reattach records another start of the same attempt"},
+  {"from": "Run log", "label": "records", "to": "Execution start", "evidence": "run_log.py:RunLog.replay (attempt_started) carries start_kind"},
+  {"from": "Reattach", "label": "continues the same", "to": "Attempt", "evidence": "engine.py: Engine._reattempt_dir keeps the attempt number and directory"},
+  {"from": "Reattach", "label": "continues the same", "to": "Agent invocation", "evidence": "durable_runner.py:reattach_target; pi_cloud_runner.py:reattach_target"},
+  {"from": "Reattach", "label": "spends one", "to": "Execution start", "evidence": "attempts.py: may_start(start_kind='reattach')"},
+  {"from": "Retry", "label": "spends one", "to": "Execution start", "evidence": "attempts.py: may_start(start_kind='retry')"},
+  {"from": "Retry budget", "label": "limits", "to": "Retry", "evidence": "workflow.py: RetryPolicy.max; attempts.py: may_start"},
+  {"from": "Auto-resume budget", "label": "limits", "to": "Auto-resume", "evidence": "workflow.py: Workflow.auto_resume; attempts.py: may_start"},
+  {"from": "Execution-start budget", "label": "limits", "to": "Execution start", "evidence": "attempts.py: may_start (1 + retry.max + auto_resume + MANUAL_RECOVERY_ALLOWANCE)"},
+  {"from": "Failure exclusion threshold", "label": "counts", "to": "Counted failure", "evidence": "attempts.py: failed_executions; EXCLUSION_THRESHOLD"},
+  {"from": "Failure exclusion threshold", "label": "is checked before", "to": "Execution-start budget", "evidence": "attempts.py: may_start checks the exclusion first"},
+  {"from": "Counted failure", "label": "is counted per", "to": "Step identity", "evidence": "attempts.py: executions(state, coord, fingerprint)"},
+  {"from": "Step identity", "label": "pairs", "to": "Coordinate", "evidence": "attempts.py: executions(state, coord, fingerprint)"},
+  {"from": "Step identity", "label": "pairs", "to": "Step fingerprint", "evidence": "attempts.py: executions(state, coord, fingerprint)"},
+  {"from": "Abort victim", "label": "is recorded as", "to": "Deferred", "evidence": "engine.py: Engine._defer_unstarted; abort_victim"},
+  {"from": "Abort victim", "label": "is never a", "to": "Counted failure", "evidence": "attempts.py: failed_executions leaves abort victims out"},
+  {"from": "Transient failure", "label": "can defer the step as", "to": "Deferred", "evidence": "failure.py: classify; engine.py: Engine._back_off"},
+  {"from": "Transient failure", "label": "starts a", "to": "Provider cooldown", "evidence": "engine.py: Engine._back_off"},
+  {"from": "Provider cooldown", "label": "delays", "to": "Auto-resume", "evidence": "engine.py: Engine._wait_out_cooldown"},
+  {"from": "Retry eligibility", "label": "decides", "to": "Retry", "evidence": "retry.py: should_retry"},
+  {"from": "Structural failure", "label": "does not alone decide", "to": "Retry eligibility", "evidence": "failure.py: classify; retry.py: should_retry"},
+  {"from": "Workflow resume", "label": "can reuse", "to": "Cached step outcome", "evidence": "engine.py: Engine._run_phase"},
+  {"from": "Cached step outcome", "label": "requires an intact", "to": "Step handover", "evidence": "handover.py: recorded"},
+  {"from": "Open tool call", "label": "suspends", "to": "Stall timeout", "evidence": "cli_harness_executor.py: CliAgentRuntime.run"},
+  {"from": "Stall timeout", "label": "triggers", "to": "Stall", "evidence": "cli_harness_executor.py: CliAgentRuntime.run (stop_error 'stall')"},
+  {"from": "Command time cap", "label": "stops, after a 60 s grace,", "to": "Open tool call", "evidence": "cli_harness_executor.py: COMMAND_TIME_CAP_GRACE_S"},
+  {"from": "Command time cap", "label": "defaults from", "to": "Execution timeout", "evidence": "workflow.py: default_command_time_cap"},
+  {"from": "Agent", "label": "may tighten", "to": "Command time cap", "evidence": "workflow.py: AgentSpec.command_time_cap_s"},
+  {"from": "Agent execution configuration", "label": "includes", "to": "Model configuration", "evidence": "workflow.py: AgentSpec.model"},
+  {"from": "Agent execution configuration", "label": "includes", "to": "Agent tool policy", "evidence": "workflow.py: AgentSpec.tools"},
+  {"from": "Agent execution configuration", "label": "includes", "to": "Agent profile", "evidence": "workflow.py: AgentSpec.agent_profile"},
+  {"from": "Agent execution configuration", "label": "includes", "to": "Execution target", "evidence": "harness_executors.py: HARNESS_EXECUTOR_INFO"},
+  {"from": "Execution target", "label": "follows from the", "to": "Harness executor", "evidence": "harness_executors.py: HARNESS_EXECUTOR_INFO (durable and pi-cloud run remotely)"},
+  {"from": "Agent", "label": "may name", "to": "Agent skills", "evidence": "workflow.py: AgentSpec.skills"},
+  {"from": "Effective agent tools", "label": "result from", "to": "Agent tool policy", "evidence": "pi_tool_policy.py; claude_runner.py records the announced tools"},
+  {"from": "Effective agent tools", "label": "are exposed to", "to": "Agent invocation", "evidence": "logs/mcp-list.json for pi; claude_runner.py records the announced tools"},
+  {"from": "Agent tool policy", "label": "may set", "to": "MCP tool allowlist", "evidence": "workflow.py: ToolPolicy.allow"},
+  {"from": "Agent tool policy", "label": "may set", "to": "MCP tool blocklist", "evidence": "workflow.py: ToolPolicy.block"},
+  {"from": "Transport branch", "label": "carries the work of", "to": "Attempt", "evidence": "remote_git.py: BRANCH_RULE; durable_runner.py; pi_cloud_runner.py"},
+  {"from": "Tool output", "label": "captures the output of", "to": "Tool call", "evidence": "tool_output.py"},
+  {"from": "Structured output", "label": "is validated by", "to": "Gate check", "evidence": "gates.py: schema_valid"},
+  {"from": "Judge decision", "label": "is the", "to": "Structured output", "evidence": "campaign.py: CampaignController._judge returns result['structured']"},
+  {"from": "Attention item", "label": "is derived from", "to": "Run log", "evidence": "attention.py: GROUPS"},
+  {"from": "Estimate", "label": "forecasts", "to": "Workflow run", "evidence": "estimate.py; supervisor.py writes estimate.json"},
+  {"from": "Campaign", "label": "names 1", "to": "Campaign charter", "evidence": "campaign.py: Campaign.charter"},
+  {"from": "Campaign charter", "label": "is included in", "to": "Judge packet", "evidence": "campaign.py: render_packet"},
+  {"from": "Milestone acceptance", "label": "requires a valid PASS in", "to": "Judge decision", "evidence": "campaign.py: CampaignController._pass_refusal"},
+  {"from": "Milestone acceptance", "label": "requires a", "to": "Finished workflow run", "evidence": "campaign.py: CampaignController._pass_refusal"},
+  {"from": "Milestone acceptance", "label": "requires passing", "to": "Milestone acceptance check", "evidence": "campaign.py: CampaignController._pass_refusal"},
+  {"from": "Milestone landing", "label": "records", "to": "Milestone acceptance", "evidence": "campaign.py: CampaignController._land"},
+  {"from": "Milestone revision budget", "label": "limits", "to": "Milestone revision", "evidence": "campaign.py: CampaignController._budget"},
+  {"from": "Milestone revision grant", "label": "raises", "to": "Milestone revision budget", "evidence": "campaign.py: CampaignController._budget = max_revisions + st.granted"}],
+"lessons": [
+ {
+  "title": "One piece of work",
+  "lead": "We will add password reset, review it, and deliver it as part of a larger account-security design. First we describe the work and prepare a run.",
+  "contrast": "Module / definition / run: the module is Python source, the definition is the configuration it builds, and a run is one execution of that definition. A held run is prepared but has not started executing.",
+  "prompt": "You start the run with --hold, then edit the workflow module before ohflow go. Has an agent started, and which definition runs?",
+  "answer": "No agent has started: a held run waits before engine execution. On ohflow go the supervisor reloads and validates the module, so the edited definition runs, unless that validation ends the run in a preparation failure.",
+  "terms": [
+   {
+    "name": "Workflow module",
+    "example": "reset_workflow.py exports build(args) for our feature."
+   },
+   {
+    "name": "Workflow definition",
+    "example": "build(args) returns the implementation and review phases with their policies."
+   },
+   {
+    "name": "Workflow run",
+    "example": "The first execution of that definition gets one run directory."
+   },
+   {
+    "name": "Held workflow run",
+    "example": "With --hold, workflow.json and the dashboard exist before the first run-log event."
+   },
+   {
+    "name": "Workflow release",
+    "example": "ohflow go releases the run after we tighten one brief during the hold."
+   },
+   {
+    "name": "Phase",
+    "example": "The implementation phase finishes before the review phase starts."
+   },
+   {
+    "name": "Step",
+    "example": "“Implement password reset” and “Review password reset” are two steps."
+   },
+   {
+    "name": "Agent step",
+    "example": "The implementation step assigns the feature to a coding agent."
+   },
+   {
+    "name": "Agent brief",
+    "example": "Its brief states the agreed reset behaviour and the commands to verify it."
+   },
+   {
+    "name": "Worktree",
+    "example": "The agent edits the feature branch in its own Git working directory."
+   }
+  ]
+ },
+ {
+  "title": "An agent does the work",
+  "lead": "The implementation step starts an agent. The harness performs model and tool calls; the engine records the attempt around that execution.",
+  "contrast": "Step / attempt / invocation: a step is the planned assignment, an attempt is one numbered try at it, and an agent invocation is the agent’s logical execution inside that try. A command, gate or merge step has attempts but no agent invocation. Declared policy / effective tools: the workflow declares tools; the harness exposes what it actually supports.",
+  "prompt": "Preparation fails before the model is called. Is there still an attempt, and is there an agent invocation?",
+  "answer": "There is an attempt: the run log records its start and the preparation failure. There is no agent invocation, so there may be no transcript.",
+  "terms": [
+   {
+    "name": "Attempt",
+    "example": "Attempt 01 is the first try at the implementation. The database-migration command step also gets attempt 01, with no agent invocation."
+   },
+   {
+    "name": "Agent invocation",
+    "example": "After preparation succeeds, the harness starts the agent for attempt 01."
+   },
+   {
+    "name": "Harness executor",
+    "example": "The pi executor launches that harness, polls it and collects its result."
+   },
+   {
+    "name": "Harness",
+    "example": "pi runs our coding agent’s model-and-tool loop."
+   },
+   {
+    "name": "Model configuration",
+    "example": "The implementation selects its model and the name of its key environment variable."
+   },
+   {
+    "name": "Agent tool policy",
+    "example": "Our workflow declares terminal and file-editing tools and no browser."
+   },
+   {
+    "name": "Effective agent tools",
+    "example": "logs/mcp-list.json shows which MCP tools pi actually connected; a missing listing means unknown, not none."
+   },
+   {
+    "name": "Write scope",
+    "example": "The implementation may edit the reset endpoint and its tests."
+   },
+   {
+    "name": "Run log",
+    "example": "attempt_started and attempt_finished record the implementation’s attempt."
+   },
+   {
+    "name": "Agent transcript",
+    "example": "The preserved messages and tool calls show how the agent investigated and edited."
+   }
+  ]
+ },
+ {
+  "title": "Check the result",
+  "lead": "The agent runs its test suite and says the feature is done. The engine watches the agent while it works, then checks its artifacts before review may start.",
+  "contrast": "Silence / stall: a stall is silence while no tool call is open. A quiet command keeps its tool call open, so stall detection waits and the command time cap applies. Finished / accepted: a finished run reached the end of its execution; that alone does not mean every step passed.",
+  "prompt": "The endpoint test command runs quietly for 120 seconds, and the stall timeout is 30 seconds. Is the agent stopped as stalled?",
+  "answer": "No. While the tool call is open, stall detection waits. The command time cap and the execution timeout still apply: a call open past the cap plus 60 seconds ends the attempt with command_time_cap.",
+  "terms": [
+   {
+    "name": "Open tool call",
+    "example": "The bash call that runs the endpoint tests has started and has not yet returned."
+   },
+   {
+    "name": "Stall timeout",
+    "example": "The implementation allows 30 seconds of silence while no tool call is open."
+   },
+   {
+    "name": "Stall",
+    "example": "If the agent goes silent between calls for longer than 30 seconds, the attempt stops with stall."
+   },
+   {
+    "name": "Command time cap",
+    "example": "With a 900-second execution timeout, no single command may run longer than 780 seconds."
+   },
+   {
+    "name": "Final message",
+    "example": "The agent says it implemented password reset and lists the tests it ran."
+   },
+   {
+    "name": "Artifact",
+    "example": "The committed endpoint and tests are the implementation artifacts."
+   },
+   {
+    "name": "Gate",
+    "example": "The implementation’s gate requires clean ownership, passing tests and a complete handover."
+   },
+   {
+    "name": "Gate check",
+    "example": "command_exit runs the endpoint tests and records their exit code."
+   },
+   {
+    "name": "Gate report",
+    "example": "gate.json records each result and the combined PASS or FAIL."
+   },
+   {
+    "name": "Finished workflow run",
+    "example": "The run finishes even though an optional lint step failed under the continue policy."
+   }
+  ]
+ },
+ {
+  "title": "Something goes wrong",
+  "lead": "An endpoint test can fail because of the code; a provider call can fail temporarily; a remote connection can drop. Recovery depends on the recorded cause, the workflow’s policy and the remaining allowances.",
+  "contrast": "Retry / reattach: a retry starts a new numbered attempt; a reattach continues the same attempt. Both spend an execution start. Failure class / eligibility: a structural failure can still be retried when the retry policy covers it.",
+  "prompt": "A provider 429 deferred the implementation once, then its endpoint test failed. The execution-start budget still has starts left. Does the engine start another attempt of the unchanged work?",
+  "answer": "No. The genuine transient deferral and the judged failure are two counted failures of unchanged work, and the failure exclusion threshold is checked before the remaining starts. Editing a hashed input, such as the brief, gives the work a new step identity with fresh allowances.",
+  "terms": [
+   {
+    "name": "Structural failure",
+    "example": "The failing endpoint test is a structural failure, and the retry policy still allows a fix."
+   },
+   {
+    "name": "Transient failure",
+    "example": "A provider 429 is transient: waiting may change the outcome."
+   },
+   {
+    "name": "Deferred",
+    "example": "The 429 leaves the implementation deferred, without a verdict of its own."
+   },
+   {
+    "name": "Auto-resume",
+    "example": "A configured phase pass restarts the deferred step after its provider cooldown."
+   },
+   {
+    "name": "Retry",
+    "example": "gate:command_exit in the retry policy starts attempt 02 after the endpoint test fails."
+   },
+   {
+    "name": "Reattach",
+    "example": "Had the step run on the durable executor and lost its SSH connection, the engine would continue attempt 01."
+   },
+   {
+    "name": "Execution start",
+    "example": "Attempt 01’s initial start and that reattach would be two execution starts of one attempt."
+   },
+   {
+    "name": "Execution-start budget",
+    "example": "With retry.max=1 and auto_resume=1, unchanged work may start 4 times in total."
+   },
+   {
+    "name": "Counted failure",
+    "example": "The 429 deferral and the failed test each count; an abort victim would not."
+   },
+   {
+    "name": "Failure exclusion threshold",
+    "example": "Two counted failures exclude the unchanged implementation from further starts."
+   },
+   {
+    "name": "Step fingerprint",
+    "example": "The implementation’s brief, configuration and consumed handovers determine its fingerprint."
+   },
+   {
+    "name": "Cached step outcome",
+    "example": "On a clean resume, the passed implementation is reused without a new start."
+   },
+   {
+    "name": "Step handover",
+    "example": "If the implementer’s handover.md is deleted, the cached outcome no longer holds and the step runs again."
+   },
+   {
+    "name": "Workflow resume",
+    "example": "After correcting the brief, we continue the existing run with --resume."
+   }
+  ]
+ },
+ {
+  "title": "Deliver a larger design",
+  "lead": "Password reset is one milestone of the account-security design. A fresh judge assesses each round using the specification, artifacts and acceptance evidence.",
+  "contrast": "Reviewer / judge: the workflow reviewer inspects the feature inside the run; the judge assesses the milestone round. Round / revision / grant: a round is one judging cycle, a revision is a committed edit to milestone inputs, and a grant adds revision allowance.",
+  "prompt": "The milestone names no output branch. The judge returns a valid PASS, the run finished with every step passed, and the acceptance checks pass. Does the milestone land, and does the integration branch move?",
+  "answer": "It lands: landing records the milestone acceptance. The integration branch stays where it is, because no output branch names a commit to advance it to.",
+  "terms": [
+   {
+    "name": "Campaign",
+    "example": "The account-security campaign coordinates password reset and the later session-hardening milestone."
+   },
+   {
+    "name": "Milestone",
+    "example": "Password reset has its own specification, workflow and acceptance checks."
+   },
+   {
+    "name": "Review verdict",
+    "example": "The in-workflow reviewer reports MERGEABLE or BLOCKED for the implementation."
+   },
+   {
+    "name": "Judge",
+    "example": "A fresh agent assesses whether password reset meets the milestone specification."
+   },
+   {
+    "name": "Milestone round",
+    "example": "One workflow execution or resume, followed by judging, forms a round."
+   },
+   {
+    "name": "Judge decision",
+    "example": "REVISE names changed milestone inputs; PASS requests acceptance; ESCALATE asks for intervention."
+   },
+   {
+    "name": "Milestone acceptance check",
+    "example": "The campaign runs the account-security integration tests before judging."
+   },
+   {
+    "name": "Milestone acceptance",
+    "example": "A PASS counts only with a finished run, every step passed or cached, and passing acceptance checks."
+   },
+   {
+    "name": "Milestone revision",
+    "example": "After REVISE, the controller commits the judge’s edit to the implementation brief."
+   },
+   {
+    "name": "Milestone revision budget",
+    "example": "The campaign default allows 2 committed revisions for password reset."
+   },
+   {
+    "name": "Milestone revision grant",
+    "example": "ohflow campaign grant --revisions 1 adds one revision without resetting the 2 already spent."
+   },
+   {
+    "name": "Milestone landing",
+    "example": "Landing records password reset as accepted."
+   },
+   {
+    "name": "Milestone output branch",
+    "example": "With output branch reset/out set, landing fast-forwards the integration branch to its commit."
+   },
+   {
+    "name": "Campaign integration branch",
+    "example": "The integration branch collects accepted milestone commits."
+   }
+  ]
+ }
+]
+}
+</script>
+<script>
+(function () {
+'use strict';
+var data = JSON.parse(document.getElementById('graph-data').textContent);
+var NS = 'http://www.w3.org/2000/svg';
+var ARROW = '→';
+
+var svg = document.getElementById('svg');
+var viewG = document.getElementById('view');
+var edgesG = document.getElementById('edges');
+var nodesG = document.getElementById('nodes');
+var stage = document.getElementById('stage');
+var tip = document.getElementById('tip');
+var panel = document.getElementById('panel');
+
+var gColor = {};
+data.groups.forEach(function (g) { gColor[g.name] = g.color; });
+
+// ------------------------------------------------------------------ model
+var nodes = data.nodes.map(function (n, i) {
+  return { name: n.name, code: n.code || '', group: n.group, desc: n.desc,
+           i: i, x: 0, y: 0, vx: 0, vy: 0, w: 80, h: 26, fixed: false, el: null };
+});
+var byName = {};
+nodes.forEach(function (n) { byName[n.name] = n; });
+var edges = data.edges.map(function (e, i) {
+  return { label: e.label, evidence: e.evidence, s: byName[e.from], t: byName[e.to], i: i, off: 0, el: null };
+});
+var outE = nodes.map(function () { return []; });
+var inE = nodes.map(function () { return []; });
+edges.forEach(function (e) { outE[e.s.i].push(e); inE[e.t.i].push(e); });
+
+// curvature offsets: several edges between one pair fan out
+(function () {
+  var pairs = {};
+  edges.forEach(function (e) {
+    if (e.s === e.t) return;
+    var a = Math.min(e.s.i, e.t.i), b = Math.max(e.s.i, e.t.i);
+    (pairs[a + '|' + b] = pairs[a + '|' + b] || []).push(e);
+  });
+  Object.keys(pairs).forEach(function (k) {
+    var list = pairs[k];
+    if (list.length === 1) return;
+    list.forEach(function (e, idx) {
+      var c = (idx - (list.length - 1) / 2) * 38;
+      e.off = e.s.i < e.t.i ? c : -c;
+    });
+  });
+})();
+
+// ----------------------------------------------------------------- build DOM
+function el(name, attrs, parent) {
+  var n = document.createElementNS(NS, name);
+  if (attrs) for (var k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+edges.forEach(function (e) {
+  var g = el('g', { 'class': 'edge' }, edgesG);
+  e.hit = el('path', { 'class': 'hit' }, g);
+  e.line = el('path', { 'class': 'line' }, g);
+  e.txt = el('text', { 'class': 'elabel' }, g);
+  e.txt.textContent = e.label;
+  e.el = g;
+  g.dataset.i = e.i;
+});
+
+nodes.forEach(function (n) {
+  var g = el('g', { 'class': 'node', tabindex: 0, role: 'button',
+                    'aria-label': n.name + ', group ' + n.group }, nodesG);
+  g.dataset.name = n.name;
+  n.rect = el('rect', { rx: 13, ry: 13, fill: gColor[n.group] }, g);
+  n.txt = el('text', {}, g);
+  n.txt.textContent = n.name;
+  n.el = g;
+});
+// measure text once the nodes sit in the page
+nodes.forEach(function (n) {
+  var tw = 0;
+  try { tw = n.txt.getComputedTextLength(); } catch (err) { tw = 0; }
+  if (!tw) tw = n.name.length * 7.4;
+  n.w = Math.ceil(tw + 24);
+  n.h = 26;
+  n.rect.setAttribute('width', n.w);
+  n.rect.setAttribute('height', n.h);
+  n.rect.setAttribute('x', -n.w / 2);
+  n.rect.setAttribute('y', -n.h / 2);
+});
+
+// ------------------------------------------------------------------- layout
+function rng(seed) {
+  var a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    var t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var rand = rng(20261005);
+var gnames = data.groups.map(function (g) { return g.name; });
+(function seedPositions() {
+  var R = 430;
+  var centers = {};
+  gnames.forEach(function (g, k) {
+    var a = (k / gnames.length) * Math.PI * 2 - Math.PI / 2;
+    centers[g] = { x: Math.cos(a) * R * 1.35, y: Math.sin(a) * R };
+  });
+  nodes.forEach(function (n) {
+    var c = centers[n.group];
+    n.x = c.x + (rand() - 0.5) * 160;
+    n.y = c.y + (rand() - 0.5) * 160;
+  });
+})();
+
+var alpha = 0;
+var aspect = 1.4;
+function tick() {
+  var N = nodes.length, i, j, a, b, dx, dy, d2, d, f;
+  // repulsion and overlap
+  for (i = 0; i < N; i++) {
+    a = nodes[i];
+    for (j = i + 1; j < N; j++) {
+      b = nodes[j];
+      dx = b.x - a.x; dy = b.y - a.y;
+      d2 = dx * dx + dy * dy + 0.01; d = Math.sqrt(d2);
+      f = 15000 / d2;
+      var fx = dx / d * f, fy = dy / d * f;
+      a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
+      var mx = (a.w + b.w) / 2 + 10, my = (a.h + b.h) / 2 + 8;
+      var ox = mx - Math.abs(dx), oy = my - Math.abs(dy);
+      if (ox > 0 && oy > 0) {
+        if (ox < oy) { var sx = (dx >= 0 ? 1 : -1) * ox * 0.18; a.vx -= sx; b.vx += sx; }
+        else { var sy = (dy >= 0 ? 1 : -1) * oy * 0.18; a.vy -= sy; b.vy += sy; }
+      }
+    }
+  }
+  // springs
+  edges.forEach(function (e) {
+    if (e.s === e.t) return;
+    dx = e.t.x - e.s.x; dy = e.t.y - e.s.y;
+    d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+    var rest = 120 + (e.s.w + e.t.w) * 0.34;
+    f = (d - rest) * 0.028;
+    var fx = dx / d * f, fy = dy / d * f;
+    e.s.vx += fx; e.s.vy += fy; e.t.vx -= fx; e.t.vy -= fy;
+  });
+  // group cohesion and gravity
+  var cen = {};
+  nodes.forEach(function (n) {
+    var c = cen[n.group] || (cen[n.group] = { x: 0, y: 0, k: 0 });
+    c.x += n.x; c.y += n.y; c.k++;
+  });
+  nodes.forEach(function (n) {
+    var c = cen[n.group];
+    n.vx += (c.x / c.k - n.x) * 0.012 - n.x * 0.0026 / aspect;
+    n.vy += (c.y / c.k - n.y) * 0.012 - n.y * 0.0034 * Math.sqrt(aspect);
+  });
+  nodes.forEach(function (n) {
+    if (n.fixed) { n.vx = 0; n.vy = 0; return; }
+    n.vx *= 0.62; n.vy *= 0.62;
+    var sp = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+    var cap = 34;
+    if (sp > cap) { n.vx *= cap / sp; n.vy *= cap / sp; }
+    n.x += n.vx * alpha; n.y += n.vy * alpha;
+  });
+  for (var pass = 0; pass < 3; pass++) {
+    for (i = 0; i < N; i++) {
+      a = nodes[i];
+      for (j = i + 1; j < N; j++) {
+        b = nodes[j];
+        dx = b.x - a.x; dy = b.y - a.y;
+        var ox2 = (a.w + b.w) / 2 + 12 - Math.abs(dx), oy2 = (a.h + b.h) / 2 + 10 - Math.abs(dy);
+        if (ox2 > 0 && oy2 > 0) {
+          var wa = a.fixed ? 0 : 1, wb = b.fixed ? 0 : 1, wt = wa + wb;
+          if (!wt) continue;
+          if (oy2 < ox2 * 0.5 || ox2 > oy2) {
+            var m1 = (dy >= 0 ? 1 : -1) * oy2;
+            a.y -= m1 * wa / wt; b.y += m1 * wb / wt;
+          } else {
+            var m2 = (dx >= 0 ? 1 : -1) * ox2;
+            a.x -= m2 * wa / wt; b.x += m2 * wb / wt;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------- edge geometry
+function rectHit(n, ux, uy, pad) {
+  var hw = n.w / 2 + pad, hh = n.h / 2 + pad;
+  var tx = ux === 0 ? Infinity : hw / Math.abs(ux);
+  var ty = uy === 0 ? Infinity : hh / Math.abs(uy);
+  var t = Math.min(tx, ty);
+  return { x: n.x + ux * t, y: n.y + uy * t };
+}
+function layoutEdge(e) {
+  var s = e.s, t = e.t, d, lx, ly;
+  if (s === t) {
+    var x = s.x, y = s.y - s.h / 2;
+    d = 'M' + (x - 14) + ' ' + y + ' C' + (x - 52) + ' ' + (y - 52) + ' ' + (x + 52) + ' ' + (y - 52) + ' ' + (x + 14) + ' ' + y;
+    lx = x; ly = y - 40;
+  } else {
+    var dx = t.x - s.x, dy = t.y - s.y;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var cx = (s.x + t.x) / 2 + (-dy / len) * e.off;
+    var cy = (s.y + t.y) / 2 + (dx / len) * e.off;
+    var u1x = cx - s.x, u1y = cy - s.y, l1 = Math.sqrt(u1x * u1x + u1y * u1y) || 1;
+    var u2x = cx - t.x, u2y = cy - t.y, l2 = Math.sqrt(u2x * u2x + u2y * u2y) || 1;
+    var p1 = rectHit(s, u1x / l1, u1y / l1, 1);
+    var p2 = rectHit(t, u2x / l2, u2y / l2, 2);
+    d = 'M' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1) + ' Q' + cx.toFixed(1) + ' ' + cy.toFixed(1) +
+        ' ' + p2.x.toFixed(1) + ' ' + p2.y.toFixed(1);
+    lx = 0.25 * p1.x + 0.5 * cx + 0.25 * p2.x;
+    ly = 0.25 * p1.y + 0.5 * cy + 0.25 * p2.y;
+  }
+  e.line.setAttribute('d', d);
+  e.hit.setAttribute('d', d);
+  e.txt.setAttribute('x', lx.toFixed(1));
+  e.txt.setAttribute('y', ly.toFixed(1));
+}
+function render() {
+  nodes.forEach(function (n) { n.el.setAttribute('transform', 'translate(' + n.x.toFixed(1) + ',' + n.y.toFixed(1) + ')'); });
+  edges.forEach(layoutEdge);
+}
+
+// ----------------------------------------------------------------- viewport
+var view = { x: 0, y: 0, k: 1 };
+function applyView() {
+  viewG.setAttribute('transform', 'translate(' + view.x.toFixed(1) + ',' + view.y.toFixed(1) + ') scale(' + view.k.toFixed(4) + ')');
+}
+function stageSize() {
+  var r = svg.getBoundingClientRect();
+  return { w: r.width || 800, h: r.height || 500, l: r.left, t: r.top };
+}
+function fit() {
+  var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  nodes.forEach(function (n) {
+    minx = Math.min(minx, n.x - n.w / 2); maxx = Math.max(maxx, n.x + n.w / 2);
+    miny = Math.min(miny, n.y - n.h / 2); maxy = Math.max(maxy, n.y + n.h / 2);
+  });
+  var s = stageSize(), pad = 24;
+  var k = Math.min((s.w - pad * 2) / (maxx - minx), (s.h - pad * 2) / (maxy - miny), 1.6);
+  view.k = k;
+  view.x = s.w / 2 - ((minx + maxx) / 2) * k;
+  view.y = s.h / 2 - ((miny + maxy) / 2) * k;
+  applyView();
+}
+function toWorld(cx, cy) {
+  var s = stageSize();
+  return { x: (cx - s.l - view.x) / view.k, y: (cy - s.t - view.y) / view.k };
+}
+function zoomAt(cx, cy, f) {
+  var s = stageSize();
+  var px = cx - s.l, py = cy - s.t;
+  var nk = Math.max(0.15, Math.min(3.5, view.k * f));
+  view.x = px - (px - view.x) * nk / view.k;
+  view.y = py - (py - view.y) * nk / view.k;
+  view.k = nk;
+  applyView();
+}
+function centerOn(n) {
+  var s = stageSize();
+  view.x = s.w / 2 - n.x * view.k;
+  view.y = s.h / 2 - n.y * view.k;
+  applyView();
+}
+
+// ---------------------------------------------------------------- selection
+var sel = null;          // node
+var hoverNode = null;
+var query = '';
+var matchSet = null;
+var groupFocus = null;
+var showAll = false;
+
+function refresh() {
+  var nb = {};
+  if (sel) {
+    nb[sel.i] = true;
+    outE[sel.i].forEach(function (e) { nb[e.t.i] = true; });
+    inE[sel.i].forEach(function (e) { nb[e.s.i] = true; });
+  }
+  nodes.forEach(function (n) {
+    var dim = false;
+    if (sel) dim = !nb[n.i];
+    else {
+      if (matchSet) dim = !matchSet[n.i];
+      if (groupFocus && n.group !== groupFocus) dim = true;
+    }
+    n.el.classList.toggle('dim', dim);
+    n.el.classList.toggle('sel', sel === n);
+    n.el.classList.toggle('nb', !!sel && sel !== n && !!nb[n.i]);
+  });
+  edges.forEach(function (e) {
+    var hi = false, dim = false;
+    if (sel) { hi = e.s === sel || e.t === sel; dim = !hi; }
+    else {
+      if (matchSet) dim = !(matchSet[e.s.i] && matchSet[e.t.i]);
+      if (groupFocus) dim = dim || !(e.s.group === groupFocus && e.t.group === groupFocus);
+    }
+    e.el.classList.toggle('hi', hi);
+    e.el.classList.toggle('dim', dim);
+    e.el.classList.toggle('lbl', showAll || hi);
+    var hov = !sel && hoverNode && (e.s === hoverNode || e.t === hoverNode);
+    e.el.classList.toggle('hov', !!hov || e.el.classList.contains('hov-edge'));
+  });
+}
+
+function focusHood(n) {
+  // zoom in on the selected node and its neighbours when the view is too small to read labels
+  var minx = n.x - n.w / 2, maxx = n.x + n.w / 2, miny = n.y - n.h / 2, maxy = n.y + n.h / 2;
+  var list = outE[n.i].map(function (e) { return e.t; }).concat(inE[n.i].map(function (e) { return e.s; }));
+  list.forEach(function (m) {
+    minx = Math.min(minx, m.x - m.w / 2); maxx = Math.max(maxx, m.x + m.w / 2);
+    miny = Math.min(miny, m.y - m.h / 2); maxy = Math.max(maxy, m.y + m.h / 2);
+  });
+  var s = stageSize(), pad = 36;
+  var k = Math.min((s.w - pad * 2) / (maxx - minx), (s.h - pad * 2) / (maxy - miny), 1.15);
+  if (k > view.k) view.k = k;
+  view.x = s.w / 2 - ((minx + maxx) / 2) * view.k;
+  view.y = s.h / 2 - ((miny + maxy) / 2) * view.k;
+  applyView();
+}
+function select(n, center) {
+  sel = n;
+  refresh();
+  renderPanel();
+  if (n && view.k < 0.75) focusHood(n);
+  else if (n && center) centerOn(n);
+}
+
+function mkLink(n) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'lnk';
+  b.style.background = gColor[n.group];
+  b.textContent = n.name;
+  b.addEventListener('click', function () { select(n, true); });
+  return b;
+}
+function relItem(e, other, outgoing) {
+  var li = document.createElement('li');
+  var row = document.createElement('div');
+  row.className = 'rel';
+  var vb = document.createElement('span');
+  vb.className = 'vb' + (outgoing ? '' : ' in');
+  vb.textContent = outgoing ? (e.label + ' ' + ARROW) : (ARROW + ' ' + e.label);
+  if (outgoing) { row.appendChild(vb); row.appendChild(mkLink(other)); }
+  else { row.appendChild(mkLink(other)); row.appendChild(vb); }
+  li.appendChild(row);
+  var ev = document.createElement('div');
+  ev.className = 'ev';
+  ev.textContent = e.evidence;
+  li.appendChild(ev);
+  return li;
+}
+function column(title, list, outgoing) {
+  var d = document.createElement('div');
+  var h = document.createElement('h3');
+  h.textContent = title + ' (' + list.length + ')';
+  d.appendChild(h);
+  var ul = document.createElement('ul');
+  if (!list.length) {
+    var li = document.createElement('li');
+    li.className = 'empty';
+    li.textContent = 'none';
+    ul.appendChild(li);
+  }
+  list.forEach(function (e) { ul.appendChild(relItem(e, outgoing ? e.t : e.s, outgoing)); });
+  d.appendChild(ul);
+  return d;
+}
+function renderPanel() {
+  panel.textContent = '';
+  if (!sel) {
+    var p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'Click a node to see its code identifier, description and relations. Click the background to clear. Drag a node to move it, drag the background to pan, scroll or pinch to zoom. Hover an arrow to see its evidence.';
+    panel.appendChild(p);
+    return;
+  }
+  var h = document.createElement('h2');
+  h.appendChild(document.createTextNode(sel.name));
+  var chip = document.createElement('span');
+  chip.className = 'chip';
+  chip.style.background = gColor[sel.group];
+  chip.textContent = sel.group;
+  h.appendChild(chip);
+  panel.appendChild(h);
+  var code = document.createElement('div');
+  code.className = 'code';
+  code.textContent = sel.code ? ('code: ' + sel.code) : 'code: none (docs only)';
+  panel.appendChild(code);
+  var desc = document.createElement('p');
+  desc.className = 'desc';
+  desc.textContent = sel.desc;
+  panel.appendChild(desc);
+  var cols = document.createElement('div');
+  cols.className = 'cols';
+  cols.appendChild(column('Outgoing relations', outE[sel.i], true));
+  cols.appendChild(column('Incoming relations', inE[sel.i], false));
+  panel.appendChild(cols);
+  panel.scrollTop = 0;
+}
+
+// ------------------------------------------------------------------- legend
+var legend = document.getElementById('legend');
+data.groups.forEach(function (g) {
+  var count = nodes.filter(function (n) { return n.group === g.name; }).length;
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-pressed', 'false');
+  var d = document.createElement('span');
+  d.className = 'dot';
+  d.style.background = g.color;
+  b.appendChild(d);
+  b.appendChild(document.createTextNode(g.name + ' (' + count + ')'));
+  b.addEventListener('click', function () {
+    groupFocus = groupFocus === g.name ? null : g.name;
+    Array.prototype.forEach.call(legend.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', 'false'); });
+    if (groupFocus) b.setAttribute('aria-pressed', 'true');
+    refresh();
+  });
+  legend.appendChild(b);
+});
+var note = document.createElement('span');
+note.className = 'note';
+var dash = document.createElement('span');
+dash.className = 'dash';
+note.appendChild(dash);
+note.appendChild(document.createTextNode('added node'));
+legend.appendChild(note);
+
+// ------------------------------------------------------------------- search
+var qi = document.getElementById('q');
+var results = document.getElementById('results');
+var actIdx = -1;
+function matches(q) {
+  q = q.toLowerCase();
+  var scored = [];
+  nodes.forEach(function (n) {
+    var nm = n.name.toLowerCase(), cd = n.code.toLowerCase(), ds = n.desc.toLowerCase();
+    var s = -1;
+    if (nm.indexOf(q) === 0) s = 0;
+    else if (nm.indexOf(q) > 0) s = 1;
+    else if (cd.indexOf(q) >= 0) s = 2;
+    else if (ds.indexOf(q) >= 0) s = 3;
+    if (s >= 0) scored.push({ n: n, s: s });
+  });
+  scored.sort(function (a, b) { return a.s - b.s || a.n.i - b.n.i; });
+  return scored.map(function (x) { return x.n; });
+}
+function renderResults(list) {
+  results.textContent = '';
+  actIdx = -1;
+  if (!query) { results.hidden = true; return; }
+  list.slice(0, 9).forEach(function (n) {
+    var li = document.createElement('li');
+    var d = document.createElement('span');
+    d.className = 'dot';
+    d.style.background = gColor[n.group];
+    li.appendChild(d);
+    li.appendChild(document.createTextNode(n.name));
+    var g = document.createElement('span');
+    g.className = 'g';
+    g.textContent = n.group;
+    li.appendChild(g);
+    li.addEventListener('mousedown', function (ev) { ev.preventDefault(); pick(n); });
+    results.appendChild(li);
+  });
+  if (!list.length) {
+    var li2 = document.createElement('li');
+    li2.textContent = 'No match';
+    results.appendChild(li2);
+  }
+  results.hidden = false;
+}
+function pick(n) {
+  select(n, true);
+  results.hidden = true;
+}
+qi.addEventListener('input', function () {
+  query = qi.value.trim();
+  var list = query ? matches(query) : [];
+  matchSet = null;
+  if (query) { matchSet = {}; list.forEach(function (n) { matchSet[n.i] = true; }); }
+  renderResults(list);
+  refresh();
+});
+qi.addEventListener('keydown', function (ev) {
+  var items = results.querySelectorAll('li');
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    if (!items.length) return;
+    actIdx = (actIdx + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    Array.prototype.forEach.call(items, function (x, k) { x.classList.toggle('act', k === actIdx); });
+  } else if (ev.key === 'Enter') {
+    var list = query ? matches(query) : [];
+    var target = actIdx >= 0 ? list[actIdx] : list[0];
+    if (target) pick(target);
+  } else if (ev.key === 'Escape') {
+    qi.value = ''; query = ''; matchSet = null; results.hidden = true; refresh();
+  }
+});
+qi.addEventListener('blur', function () { results.hidden = true; });
+qi.addEventListener('focus', function () { if (query) { renderResults(matches(query)); } });
+
+document.getElementById('allLabels').addEventListener('change', function (ev) { showAll = ev.target.checked; refresh(); });
+document.getElementById('fit').addEventListener('click', fit);
+
+// -------------------------------------------------------------- interaction
+var ptrs = {};
+var nptr = 0;
+var mode = null;   // 'node' | 'pan' | 'pinch'
+var drag = null, pan = null, pinch = null;
+var running = false;
+
+function dist2(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+function ptrList() { return Object.keys(ptrs).map(function (k) { return ptrs[k]; }); }
+
+function loop() {
+  if (!running) return;
+  tick();
+  alpha *= 0.972;
+  render();
+  if (alpha < 0.012 && !(drag && drag.moved)) { running = false; return; }
+  requestAnimationFrame(loop);
+}
+function reheat(a) {
+  alpha = Math.max(alpha, a);
+  if (!running) { running = true; requestAnimationFrame(loop); }
+}
+
+svg.addEventListener('pointerdown', function (e) {
+  hideTip();
+  try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  if (!ptrs[e.pointerId]) nptr++;
+  ptrs[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY };
+  if (nptr === 2) {
+    var l = ptrList();
+    mode = 'pinch';
+    pinch = { d: dist2(l[0], l[1]) || 1, k: view.k };
+    drag = null; pan = null;
+    return;
+  }
+  if (nptr > 2) return;
+  var ne = e.target.closest ? e.target.closest('.node') : null;
+  if (ne) {
+    mode = 'node';
+    drag = { n: byName[ne.dataset.name], moved: false };
+  } else {
+    mode = 'pan';
+    pan = { moved: false };
+    svg.classList.add('panning');
+  }
+});
+svg.addEventListener('pointermove', function (e) {
+  var p = ptrs[e.pointerId];
+  if (!p) { hoverAt(e); return; }
+  var dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (mode === 'pinch' && nptr === 2) {
+    var l = ptrList();
+    var d = dist2(l[0], l[1]) || 1;
+    var cx = (l[0].x + l[1].x) / 2, cy = (l[0].y + l[1].y) / 2;
+    var target = Math.max(0.15, Math.min(3.5, pinch.k * d / pinch.d));
+    zoomAt(cx, cy, target / view.k);
+    return;
+  }
+  if (mode === 'node' && drag) {
+    if (!drag.moved && Math.abs(e.clientX - p.sx) + Math.abs(e.clientY - p.sy) > 5) {
+      drag.moved = true; drag.n.fixed = true; hideTip();
+    }
+    if (drag.moved) {
+      var w = toWorld(e.clientX, e.clientY);
+      drag.n.x = w.x; drag.n.y = w.y;
+      reheat(0.35);
+      render();
+    }
+  } else if (mode === 'pan' && pan) {
+    if (!pan.moved && Math.abs(e.clientX - p.sx) + Math.abs(e.clientY - p.sy) > 4) pan.moved = true;
+    view.x += dx; view.y += dy;
+    applyView();
+  }
+});
+function endPointer(e) {
+  var p = ptrs[e.pointerId];
+  if (!p) return;
+  delete ptrs[e.pointerId];
+  nptr = Math.max(0, nptr - 1);
+  if (mode === 'node' && drag) {
+    if (!drag.moved) select(drag.n, false);
+    drag.n.fixed = false;
+    drag = null;
+  } else if (mode === 'pan' && pan) {
+    if (!pan.moved && e.type === 'pointerup') select(null, false);
+    pan = null;
+    svg.classList.remove('panning');
+  }
+  if (nptr === 0) mode = null;
+  else if (mode === 'pinch' && nptr < 2) mode = null;
+}
+svg.addEventListener('pointerup', endPointer);
+svg.addEventListener('pointercancel', endPointer);
+svg.addEventListener('wheel', function (e) {
+  e.preventDefault();
+  var f = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015));
+  zoomAt(e.clientX, e.clientY, f);
+}, { passive: false });
+svg.addEventListener('pointerleave', function () { hideTip(); setHover(null, null); });
+
+nodesG.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    var ne = e.target.closest('.node');
+    if (ne) { e.preventDefault(); select(byName[ne.dataset.name], false); }
+  }
+});
+
+var hoverEdge = null;
+function setHover(n, ed) {
+  if (hoverNode !== n) { hoverNode = n; refresh(); }
+  if (hoverEdge !== ed) {
+    if (hoverEdge) hoverEdge.el.classList.remove('hov-edge', 'hov');
+    hoverEdge = ed;
+    if (ed) ed.el.classList.add('hov-edge', 'hov');
+  }
+}
+function showTip(html1, html2, e) {
+  tip.textContent = '';
+  var a = document.createElement('div'); a.className = 't'; a.textContent = html1; tip.appendChild(a);
+  if (html2) { var b = document.createElement('div'); b.className = 'e'; b.textContent = html2; tip.appendChild(b); }
+  tip.hidden = false;
+  var s = stage.getBoundingClientRect();
+  var x = e.clientX - s.left + 14, y = e.clientY - s.top + 16;
+  var tw = tip.offsetWidth, th = tip.offsetHeight;
+  if (x + tw > s.width - 4) x = Math.max(4, e.clientX - s.left - tw - 14);
+  if (y + th > s.height - 4) y = Math.max(4, e.clientY - s.top - th - 14);
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+function hideTip() { tip.hidden = true; }
+function hoverAt(e) {
+  var t = e.target;
+  var ne = t.closest ? t.closest('.node') : null;
+  var ee = t.closest ? t.closest('.edge') : null;
+  if (ne) {
+    var n = byName[ne.dataset.name];
+    setHover(n, null);
+    showTip(n.name + '  [' + n.group + ']', n.code, e);
+  } else if (ee) {
+    var ed = edges[+ee.dataset.i];
+    setHover(null, ed);
+    showTip(ed.s.name + ' ' + ARROW + ' ' + ed.label + ' ' + ARROW + ' ' + ed.t.name, ed.evidence, e);
+  } else {
+    setHover(null, null);
+    hideTip();
+  }
+}
+
+// -------------------------------------------------------------------- start
+// run the layout before the first paint
+var ss = stageSize();
+aspect = Math.max(0.8, Math.min(2.4, ss.w / ss.h));
+nodes.forEach(function (n) { n.x *= aspect * 0.8; n.y *= 1 / Math.sqrt(aspect) ; });
+alpha = 1;
+for (var it = 0; it < 900; it++) { tick(); alpha = Math.max(0.04, alpha * 0.994); }
+alpha = 0;
+render();
+fit();
+refresh();
+renderPanel();
+window.addEventListener('resize', function () { /* keep the current view; the Fit button re-fits */ });
+// first-frame fit once layout has real size
+requestAnimationFrame(fit);
+})();
+</script>
+
+<script>
+(function(){
+ 'use strict';
+ const data=JSON.parse(document.getElementById('graph-data').textContent);
+ const byName=Object.fromEntries(data.nodes.map(n=>[n.name,n]));
+ const svg=document.getElementById('lesson-svg'), detail=document.getElementById('lesson-detail');
+ const spots={}, examples={};
+ data.lessons.forEach((l,i)=>l.terms.forEach((t,j)=>{
+  spots[t.name]={x:12+i*234,y:45+j*59,lesson:i};examples[t.name]=t.example;
+ }));
+ const rows=Math.max(...data.lessons.map(l=>l.terms.length));
+ svg.setAttribute('viewBox','0 0 1180 '+(60+rows*59));svg.style.height=(60+rows*59)+'px';
+ let current=0, selected='';
+ function element(tag,text,className){const e=document.createElement(tag);if(text)e.textContent=text;if(className)e.className=className;return e;}
+ function vector(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;}
+ function showTerm(name){
+  selected=name;const n=byName[name];detail.replaceChildren(element('h3',name),element('p',n.desc),element('h4','In our password-reset example'),element('p',examples[name]),element('h4','Source'),element('p',n.code,'code'));
+  const visible=new Set(Object.keys(spots).filter(n=>spots[n].lesson<=current));
+  const relations=data.edges.filter(e=>(e.from===name||e.to===name)&&visible.has(e.from)&&visible.has(e.to));
+  if(relations.length){detail.append(element('h4','Connections'));relations.forEach(e=>detail.append(element('p',e.from+' → '+e.label+' → '+e.to)));}
+  svg.querySelectorAll('.lesson-node').forEach(e=>e.classList.toggle('selected',e.dataset.name===name));
+  svg.querySelectorAll('.lesson-edge').forEach(e=>{e.style.display=e.dataset.from===name||e.dataset.to===name?'':'none';});
+ }
+ function showLesson(i){
+  current=i;const l=data.lessons[i];
+  document.getElementById('lesson-title').textContent=(i+1)+' of 5 · '+l.title;
+  for(const k of ['lead','contrast','question','answer'])document.getElementById('lesson-'+k).textContent=k==='question'?'Predict: '+l.prompt:l[k];
+  document.getElementById('prediction').open=false;
+  document.getElementById('previous-lesson').disabled=i===0;document.getElementById('next-lesson').disabled=i===4;
+  [...document.getElementById('lesson-nav').children].forEach((b,j)=>{if(i===j)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  svg.replaceChildren();
+  const visible=new Set(Object.keys(spots).filter(n=>spots[n].lesson<=i));
+  data.edges.filter(e=>visible.has(e.from)&&visible.has(e.to)).forEach(e=>{
+   const a=spots[e.from],b=spots[e.to];
+   const path=vector('path',{d:'M '+(a.x+110)+' '+(a.y+18)+' L '+(b.x+110)+' '+(b.y+18),class:'lesson-edge'});
+   path.dataset.from=e.from;path.dataset.to=e.to;svg.append(path);
+  });
+  data.lessons.slice(0,i+1).forEach((l,j)=>{const e=vector('text',{x:12+j*234,y:24,class:'lesson-column'});e.textContent=(j+1)+'. '+l.title;svg.append(e);});
+  visible.forEach(name=>{
+   const p=spots[name],g=vector('g',{transform:'translate('+p.x+' '+p.y+')',class:'lesson-node'+(p.lesson===i?' current':''),role:'button',tabindex:0,'aria-label':name});
+   g.dataset.name=name;g.append(vector('rect',{width:220,height:38}));const label=vector('text',{x:12,y:24});label.textContent=name;g.append(label);
+   g.onclick=()=>showTerm(name);g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showTerm(name);}};svg.append(g);
+  });
+  showTerm(l.terms[0].name);
+  const map=document.querySelector('.lesson-map');map.scrollLeft=i*234;map.scrollTop=0;
+ }
+ function mode(guided){
+  document.body.classList.toggle('guided',guided);document.getElementById('lessons').hidden=!guided;
+  document.getElementById('guided-mode').setAttribute('aria-pressed',String(guided));document.getElementById('full-mode').setAttribute('aria-pressed',String(!guided));
+  document.getElementById('sub').textContent=guided?'One example, five lessons. Learn the work, execution, checks, recovery and campaign terms.':'Explore all '+data.nodes.length+' terms and their '+data.edges.length+' code-backed relations. Definitions come from CONTEXT.md. Search, pan, zoom or select a node.';
+  if(!guided)requestAnimationFrame(()=>document.getElementById('fit').click());
+ }
+ data.lessons.forEach((l,i)=>{const b=element('button',(i+1)+'. '+l.title);b.onclick=()=>showLesson(i);document.getElementById('lesson-nav').append(b);});
+ document.getElementById('previous-lesson').onclick=()=>showLesson(Math.max(0,current-1));document.getElementById('next-lesson').onclick=()=>showLesson(Math.min(4,current+1));
+ document.getElementById('guided-mode').onclick=()=>mode(true);document.getElementById('full-mode').onclick=()=>mode(false);
+ showLesson(0);mode(true);
+})();
+</script>
+</body>
+</html>

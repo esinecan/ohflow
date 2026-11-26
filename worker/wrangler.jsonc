@@ -1,0 +1,33 @@
+{
+	"name": "pi-cloud",
+	"main": "src/index.mjs",
+	"compatibility_date": "2026-10-25",
+	"compatibility_flags": ["nodejs_compat"],
+	"upload_source_maps": true,
+	"rules": [{ "type": "Text", "globs": ["**/*.md", "**/*.sh", "**/snapshot/box/*"], "fallthrough": true }],
+	"ai": { "binding": "AI", "remote": true },
+	"durable_objects": {
+		"bindings": [
+			{ "name": "STEP", "class_name": "StepAgent" },
+			{ "name": "SNAPSHOT", "class_name": "SnapshotBuilder" },
+			{ "name": "CLI", "class_name": "CliAgent" },
+			{ "name": "CODEX_LOGIN", "class_name": "CodexLogin" },
+			{ "name": "SKILLS_MIRROR", "class_name": "SkillsMirror" },
+			{ "name": "CODEMODE_SANDBOX", "class_name": "CodemodeSandbox", "script_name": "pi-cloud-codemode" }
+		]
+	},
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["StepAgent"] },
+		{ "tag": "v2", "new_sqlite_classes": ["SnapshotBuilder"] },
+		{ "tag": "v3", "new_sqlite_classes": ["CliAgent"] },
+		{ "tag": "v4", "new_sqlite_classes": ["CodexLogin"] },
+		{ "tag": "v5", "new_sqlite_classes": ["SkillsMirror"] }
+	],
+	"containers": [
+		{ "class_name": "StepAgent", "scheduling_policy": "durable_object" },
+		{ "class_name": "CliAgent", "scheduling_policy": "durable_object" },
+		{ "class_name": "SnapshotBuilder", "scheduling_policy": "durable_object" }
+	],
+	"vars": { "MODEL": "zai" },
+	"observability": { "enabled": true, "traces": { "enabled": true } }
+}

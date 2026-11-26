@@ -1,0 +1,49 @@
+{
+  "coord": "01.abort/01.long-worker",
+  "attempt": 1,
+  "conversation_id": "2026-09-27T23-26-51-956Z_01a0e531-5a34-75d6-b602-bc7d1a540046",
+  "transcript_dir": "C:\\Users\\<user>\\ohflow-home\\experiments\\oh-dispatch-pi-parity-2026-09-27\\runs\\pi\\B2-engine-fault-matrix\\r-20260928-012339\\work\\real\\plan2\\ohflow\\r-20260928-012649-aac0c368\\phases\\01.abort\\01.long-worker\\attempts\\01\\session",
+  "execution_status": "error",
+  "tools": [],
+  "skills": [],
+  "tool_calls": 0,
+  "observation_errors": 0,
+  "llm_calls": 1,
+  "wall_seconds": 0.0,
+  "tokens": {
+    "prompt_tokens": 2635,
+    "completion_tokens": 19,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "cost": 0.000202375,
+  "cost_source": "pi-catalog",
+  "final_text_path": null,
+  "structured": null,
+  "schema_error": null,
+  "error": "pi runner was killed",
+  "settings": {
+    "requested": {
+      "model": {
+        "model": "zai/glm-5.3-flash",
+        "base_url": "https://api.z.ai/api/coding/paas/v4",
+        "api_key_env": "ZAI_CODING_CN_API_KEY",
+        "params": {
+          "thinking": "low"
+        },
+        "extra_body": {}
+      },
+      "tools": {
+        "preset": "default",
+        "enable_browser": false,
+        "enable_sub_agents": false,
+        "only": [],
+        "allow": [],
+        "mcp_profile": null,
+        "mcp_profile_resolved": null
+      }
+    },
+    "effective": null
+  }
+}

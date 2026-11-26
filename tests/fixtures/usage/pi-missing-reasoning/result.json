@@ -1,0 +1,70 @@
+{
+  "coord": "03.transient/01.flaky-provider",
+  "attempt": 1,
+  "conversation_id": "2026-09-27T23-25-52-148Z_01a0e530-7091-7039-9c31-de1b09bc56b6",
+  "transcript_dir": "C:\\Users\\<user>\\ohflow-home\\experiments\\oh-dispatch-pi-parity-2026-09-27\\runs\\pi\\B2-engine-fault-matrix\\r-20260928-012339\\work\\real\\plan1\\ohflow\\r-20260928-012354-8a9130b4\\phases\\03.transient\\01.flaky-provider\\attempts\\01\\session",
+  "execution_status": "error",
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "skills": [],
+  "tool_calls": 0,
+  "observation_errors": 0,
+  "llm_calls": 1,
+  "wall_seconds": 1.2,
+  "tokens": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "reasoning_tokens": 0
+  },
+  "cost": 0.0,
+  "cost_source": "unpriced",
+  "final_text_path": "final.md",
+  "structured": null,
+  "schema_error": null,
+  "error": "429: {\"message\":\"Rate limit reached for requests\",\"type\":\"rate_limit_error\",\"param\":null,\"code\":\"rate_limit_exceeded\"}",
+  "pi_version": "0.85.1",
+  "settings": {
+    "requested": {
+      "model": {
+        "model": "zai/glm-5.3-flash",
+        "base_url": "http://127.0.0.1:60032",
+        "api_key_env": "ZAI_CODING_CN_API_KEY",
+        "params": {
+          "thinking": "low"
+        },
+        "extra_body": {}
+      },
+      "tools": {
+        "preset": "default",
+        "enable_browser": false,
+        "enable_sub_agents": false,
+        "only": [],
+        "allow": [],
+        "mcp_profile": null,
+        "mcp_profile_resolved": null
+      }
+    },
+    "effective": {
+      "model": "zai/glm-5.3-flash",
+      "thinking": "low",
+      "tools": [
+        "read",
+        "bash",
+        "edit",
+        "write",
+        "grep",
+        "find",
+        "ls"
+      ]
+    }
+  }
+}

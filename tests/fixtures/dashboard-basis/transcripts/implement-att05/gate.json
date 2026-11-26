@@ -1,0 +1,48 @@
+{
+  "coord": "01.implement/01.implement",
+  "passed": true,
+  "checks": [
+    {
+      "name": "commits_past_base",
+      "passed": true,
+      "observed": 14,
+      "expected": ">= 1",
+      "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\gate-commits.out.log",
+      "detail": null
+    },
+    {
+      "name": "tree_clean",
+      "passed": true,
+      "observed": "clean",
+      "expected": "clean",
+      "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\gate-status.out.log",
+      "detail": null
+    },
+    {
+      "name": "ownership",
+      "passed": true,
+      "observed": "none",
+      "expected": [
+        "oh-dispatch/**"
+      ],
+      "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\gate-ownership.out.log",
+      "detail": null
+    },
+    {
+      "name": "no_ai_attribution",
+      "passed": true,
+      "observed": "none",
+      "expected": "none",
+      "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\gate-attribution.out.log",
+      "detail": null
+    },
+    {
+      "name": "command_exit",
+      "passed": true,
+      "observed": 0,
+      "expected": 0,
+      "evidence_path": "C:\\Users\\<user>\\ohflow-home\\workflows\\oh-dispatch-deepening\\milestones\\m7-smoke-fixes\\runs\\m7-smoke-fixes\\phases\\01.implement\\01.implement\\attempts\\05\\logs\\gate-05-command_exit-c61e460395.out.log",
+      "detail": "command: python oh-dispatch/tests/run_tests.py"
+    }
+  ]
+}

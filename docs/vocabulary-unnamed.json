@@ -1,0 +1,85 @@
+{
+ "workflow.ModelConfig": {
+  "extra_body": "every harness executor refuses a non-empty value; the field stays only because the step fingerprint hashes the whole ModelConfig"
+ },
+ "workflow.WorktreeSpec": {
+  "node_modules_mode": "how a worktree of a JavaScript repository gets node_modules (junction, install or none); references/ohflow.md documents it, and no ohflow concept rests on it",
+  "node_modules_source": "the node_modules folder a junction points at, the repository's own by default; a detail of node_modules_mode",
+  "node_modules_sentinel": "the file whose presence says node_modules is installed; a detail of node_modules_mode",
+  "install_cmd": "the install command a worktree runs when node_modules_mode is install; a detail of node_modules_mode",
+  "reuse_existing": "the engine sets it when a resumed run finds a worktree already at its path; a workflow leaves it false"
+ },
+ "workflow.AgentSpec": {
+  "fork_session": "a prior pi or Claude Code session the agent's conversation forks from; implement-review's fork_session argument fills it, and the concept is RetryPolicy.carry_context under retry"
+ },
+ "workflow.Step": {
+  "pool": "reserved and unused: no code reads it"
+ },
+ "workflow.Contracts": {
+  "text": "the text of the contracts file as the workflow read it; campaign contracts names the file"
+ },
+ "workflow.UnitPath": {
+  "description": "display text for a unit path in the CLI and the dashboard; it carries no behaviour"
+ },
+ "workflow.Phase": {
+  "slug_override": "replaces the slug in a phase's directory name in the run directory; a naming detail"
+ },
+ "campaign.MilestoneState": {
+  "judgements": "the controller's count of judge decisions, rebuilt from the campaign log by campaign.replay; internal state",
+  "revisions": "the controller's count of committed REVISE decisions, which the milestone revision budget spends; internal state rebuilt from the campaign log",
+  "granted": "the controller's sum of milestone revision grants, rebuilt from the campaign log; internal state",
+  "run_dir": "the run directory of the milestone's current round, rebuilt from the campaign log; internal state",
+  "decisions": "the judge decisions the controller rebuilt from the campaign log; internal state"
+ },
+ "cli flags: preflight": {
+  "--verbose": "a display option: also list the passed checks",
+  "-v": "the short form of --verbose"
+ },
+ "cli flags: validate": {
+  "--verbose": "a display option: add the detail of every step",
+  "-v": "the short form of --verbose"
+ },
+ "cli flags: run": {
+  "--reservation-token": "hidden: the run --detach launcher hands it to the supervisor it starts; no operator passes it"
+ },
+ "cli flags: watch": {
+  "--poll": "hidden: how often watch rereads the run, 2 s by default; the tests shorten it"
+ },
+ "cli flags: campaign watch": {
+  "--poll": "hidden: how often campaign watch rereads the campaign, 2 s by default; the tests shorten it"
+ },
+ "cli flags: table": {
+  "--by": "a display option: one row per run, phase or step",
+  "--format": "a display option: Markdown or JSON",
+  "--reconcile": "a diagnostic option: compare each agent result's tokens with the harness executor's usage records"
+ },
+ "cli flags: transcript": {
+  "--html": "a display option: export a pi session as HTML"
+ },
+ "cli flags: dashboard": {
+  "--open": "a display option of ohflow dashboard, which serves the page of an existing run directory: open it in the browser",
+  "--port": "the port ohflow dashboard serves on, one the OS picks by default"
+ },
+ "cli flags: rollcall": {
+  "--config": "a JSON file of the model and params per harness executor for one roll call; an argument, no concept",
+  "--repo": "the repository a roll call runs in, a throwaway one by default; an argument, no concept",
+  "--verbose": "a display option: stream each run's own lines",
+  "-v": "the short form of --verbose"
+ },
+ "settings keys": {
+  "tiers.heavy.claude": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.claude-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.codex": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.codex-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.durable": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.pi": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.heavy.pi-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.claude": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.claude-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.codex": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.codex-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.durable": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.pi": "covered by the pattern tiers.<tier>.<harness executor> in model tier",
+  "tiers.light.pi-cloud": "covered by the pattern tiers.<tier>.<harness executor> in model tier"
+ }
+}

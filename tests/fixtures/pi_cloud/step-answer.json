@@ -1,0 +1,1 @@
+{"operationId":"g3/fixture/1","session":"1","accepted":true,"reattach":false,"model":"zai/glm-5.3-flash","thinking":"low","branch":"ohflow/pi-cloud/fixture-1","start_sha":"5089b7302277c1fed3778441ec3ecae176a970c4","tools":["read","ls","find","grep","write","edit","delete","exec","git_clone","git_branch","git_commit","git_push"]}

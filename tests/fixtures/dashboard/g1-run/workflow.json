@@ -1,0 +1,176 @@
+{
+  "args": {
+    "prefix": "g1",
+    "repo": "C:\\fixture\\g1\\fixture",
+    "stub_url": "http://127.0.0.1:64349",
+    "wt_root": "C:\\fixture\\g1\\work\\real\\wt"
+  },
+  "auto_resume": 1,
+  "base_branch": "main",
+  "baseline_cmd": null,
+  "max_parallel": 2,
+  "name": "g1-worker-error-sweep",
+  "phases": [
+    {
+      "max_parallel": 2,
+      "min_success": "all",
+      "name": "Sweep",
+      "on_step_failure": "quarantine",
+      "slug_override": null,
+      "steps": [
+        {
+          "agent": {
+            "brief": "# How to work here\n\n- Put `--no-pager` on every git command.\n- Never send empty input to the terminal. Redirect any possibly-long output to\n  a file and read the file instead.\n- Respect the command cap in your position block. If a command can run longer\n  than that cap, start it in the background, redirect its output under\n  `.scratch/`, and poll the output for progress until it finishes. A long task\n  may keep running while it shows progress; do not mistake elapsed time alone\n  for a stall.\n- Commits carry no AI attribution: no Co-Authored-By trailer naming a model,\n  no generated-with footer.\n\nThe first provider request is deliberately HTTP 429. Retry after the engine sweep and make no unrelated edits. End with DONE.\n",
+            "fork_session": null,
+            "harness_executor": "pi",
+            "max_command_s": null,
+            "max_iterations": 60,
+            "mcp_config": null,
+            "model": {
+              "api_key_env": "ZAI_CODING_CN_API_KEY",
+              "base_url": "http://127.0.0.1:64349",
+              "extra_body": {},
+              "model": "zai/glm-5.3-flash",
+              "params": {
+                "thinking": "low"
+              }
+            },
+            "role": "flaky provider",
+            "skills": [],
+            "skills_dir": null,
+            "tools": {
+              "allow": [],
+              "enable_browser": false,
+              "enable_sub_agents": false,
+              "mcp_profile": null,
+              "only": [],
+              "preset": "default"
+            }
+          },
+          "command": null,
+          "depends_on": [],
+          "execution_timeout_s": 900,
+          "gate": {
+            "checks": [
+              {
+                "args": {},
+                "name": "tree_clean"
+              }
+            ]
+          },
+          "id": "flaky",
+          "kind": "agent",
+          "merge_branch": null,
+          "merge_message": null,
+          "note": null,
+          "pool": null,
+          "retry": {
+            "carry_context": false,
+            "max": 0,
+            "on": []
+          },
+          "schema": null,
+          "shell": "sh",
+          "stall_timeout_s": null,
+          "worktree": "flaky",
+          "write_scope": []
+        },
+        {
+          "agent": {
+            "brief": "# How to work here\n\n- Put `--no-pager` on every git command.\n- Never send empty input to the terminal. Redirect any possibly-long output to\n  a file and read the file instead.\n- Respect the command cap in your position block. If a command can run longer\n  than that cap, start it in the background, redirect its output under\n  `.scratch/`, and poll the output for progress until it finishes. A long task\n  may keep running while it shows progress; do not mistake elapsed time alone\n  for a stall.\n- Commits carry no AI attribution: no Co-Authored-By trailer naming a model,\n  no generated-with footer.\n\nCreate the file `control.txt` with the single line `control ran`. Commit only\nthat file with the message `Add control marker`. End with DONE.\n",
+            "fork_session": null,
+            "harness_executor": "pi",
+            "max_command_s": null,
+            "max_iterations": 60,
+            "mcp_config": null,
+            "model": {
+              "api_key_env": "ZAI_CODING_CN_API_KEY",
+              "base_url": "https://api.z.ai/api/coding/paas/v4",
+              "extra_body": {},
+              "model": "zai/glm-5.3-flash",
+              "params": {
+                "thinking": "low"
+              }
+            },
+            "role": "control",
+            "skills": [],
+            "skills_dir": null,
+            "tools": {
+              "allow": [],
+              "enable_browser": false,
+              "enable_sub_agents": false,
+              "mcp_profile": null,
+              "only": [],
+              "preset": "default"
+            }
+          },
+          "command": null,
+          "depends_on": [],
+          "execution_timeout_s": 900,
+          "gate": {
+            "checks": [
+              {
+                "args": {},
+                "name": "tree_clean"
+              },
+              {
+                "args": {
+                  "allowed": [
+                    "control.txt"
+                  ]
+                },
+                "name": "ownership"
+              }
+            ]
+          },
+          "id": "control",
+          "kind": "agent",
+          "merge_branch": null,
+          "merge_message": null,
+          "note": null,
+          "pool": null,
+          "retry": {
+            "carry_context": false,
+            "max": 0,
+            "on": []
+          },
+          "schema": null,
+          "shell": "sh",
+          "stall_timeout_s": null,
+          "worktree": "control",
+          "write_scope": [
+            "control.txt"
+          ]
+        }
+      ]
+    }
+  ],
+  "repo": "C:\\fixture\\g1\\fixture",
+  "transient_backoff_s": 1,
+  "worktrees": [
+    {
+      "base": "main",
+      "base_sha_mode": "head",
+      "branch": "g1/flaky",
+      "install_cmd": null,
+      "name": "flaky",
+      "node_modules_mode": "none",
+      "node_modules_sentinel": "node_modules/.package-lock.json",
+      "node_modules_source": null,
+      "path": "C:\\fixture\\g1\\work\\real\\wt\\flaky",
+      "reuse_existing": false
+    },
+    {
+      "base": "main",
+      "base_sha_mode": "head",
+      "branch": "g1/control",
+      "install_cmd": null,
+      "name": "control",
+      "node_modules_mode": "none",
+      "node_modules_sentinel": "node_modules/.package-lock.json",
+      "node_modules_source": null,
+      "path": "C:\\fixture\\g1\\work\\real\\wt\\control",
+      "reuse_existing": false
+    }
+  ]
+}

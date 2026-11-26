@@ -1,0 +1,591 @@
+{
+ "workflow.ModelConfig": [
+  "model",
+  "base_url",
+  "api_key_env",
+  "params",
+  "extra_body"
+ ],
+ "workflow.ToolPolicy": [
+  "preset",
+  "enable_browser",
+  "enable_sub_agents",
+  "only",
+  "allow",
+  "block"
+ ],
+ "workflow.CheckSpec": [
+  "name",
+  "args"
+ ],
+ "workflow.GateSpec": [
+  "checks"
+ ],
+ "workflow.RetryPolicy": [
+  "max",
+  "on",
+  "carry_context"
+ ],
+ "workflow.Workspace": [
+  "name",
+  "path",
+  "base_branch",
+  "remote",
+  "baseline_cmd",
+  "owned"
+ ],
+ "workflow.WorktreeSpec": [
+  "name",
+  "path",
+  "branch",
+  "base",
+  "node_modules_mode",
+  "node_modules_source",
+  "node_modules_sentinel",
+  "install_cmd",
+  "reuse_existing",
+  "base_sha_mode",
+  "workspace"
+ ],
+ "workflow.AgentSpec": [
+  "role",
+  "brief",
+  "model",
+  "tools",
+  "skills",
+  "skills_dir",
+  "mcp_config",
+  "max_iterations",
+  "harness_executor",
+  "fork_session",
+  "command_time_cap_s",
+  "agent_profile",
+  "box"
+ ],
+ "workflow.HandoverSpec": [
+  "audience",
+  "extra",
+  "max_chars"
+ ],
+ "workflow.Step": [
+  "id",
+  "kind",
+  "worktree",
+  "write_scope",
+  "depends_on",
+  "gate",
+  "agent",
+  "command",
+  "shell",
+  "merge_branch",
+  "merge_message",
+  "execution_timeout_s",
+  "retry",
+  "schema",
+  "pool",
+  "note",
+  "stall_timeout_s",
+  "objective",
+  "consumes",
+  "handover",
+  "unit"
+ ],
+ "workflow.Contracts": [
+  "path",
+  "text"
+ ],
+ "workflow.UnitPath": [
+  "name",
+  "description"
+ ],
+ "workflow.Unit": [
+  "id",
+  "path",
+  "size"
+ ],
+ "workflow.Phase": [
+  "name",
+  "steps",
+  "on_step_failure",
+  "min_success",
+  "max_parallel",
+  "slug_override"
+ ],
+ "workflow.Workflow": [
+  "name",
+  "repo",
+  "phases",
+  "worktrees",
+  "args",
+  "max_parallel",
+  "base_branch",
+  "baseline_cmd",
+  "transient_backoff_s",
+  "auto_resume",
+  "token_budget",
+  "token_reserve",
+  "paths",
+  "units",
+  "contracts",
+  "workspaces"
+ ],
+ "campaign.AcceptanceCheck": [
+  "name",
+  "cmd",
+  "cwd",
+  "shell",
+  "timeout_s"
+ ],
+ "campaign.Milestone": [
+  "id",
+  "title",
+  "workflow",
+  "spec",
+  "output_branch",
+  "acceptance_checks",
+  "args",
+  "max_revisions",
+  "judge"
+ ],
+ "campaign.Campaign": [
+  "name",
+  "root",
+  "repo",
+  "charter",
+  "milestones",
+  "integration_branch",
+  "integration_base",
+  "judge",
+  "judge_execution_timeout_s",
+  "max_revisions",
+  "on_escalate",
+  "auto_resume",
+  "contracts",
+  "workspaces"
+ ],
+ "campaign.MilestoneState": [
+  "status",
+  "judgements",
+  "revisions",
+  "granted",
+  "run_dir",
+  "decisions"
+ ],
+ "workflow.BASE_SHA_MODES": [
+  "head",
+  "merge_base"
+ ],
+ "workflow.FAILURE_POLICIES": [
+  "abort",
+  "continue",
+  "quarantine"
+ ],
+ "workflow.STEP_KINDS": [
+  "agent",
+  "command",
+  "gate",
+  "merge"
+ ],
+ "workflow.HARNESS_EXECUTORS": [
+  "claude",
+  "claude-cloud",
+  "codex",
+  "codex-cloud",
+  "durable",
+  "pi",
+  "pi-cloud"
+ ],
+ "workflow.FORBIDDEN_RETRY_ON": [
+  "gate:no_ai_attribution",
+  "gate:ownership"
+ ],
+ "workflow.RETRY_BARE_TOKENS": [
+  "agent_error",
+  "timeout"
+ ],
+ "run_log.STATUSES": [
+  "pending",
+  "running",
+  "passed",
+  "failed",
+  "timeout",
+  "quarantined",
+  "skipped",
+  "cached",
+  "deferred"
+ ],
+ "run_log.EVENTS": [
+  "run_started",
+  "phase_started",
+  "attempt_started",
+  "attempt_finished",
+  "gate_ran",
+  "phase_settled",
+  "run_finished",
+  "retry_decided",
+  "worktree_ready",
+  "run_log_recovered",
+  "phase_resumed",
+  "work_excluded",
+  "token_budget"
+ ],
+ "rundir.STOPPED_STATUSES": [
+  "crashed",
+  "failed",
+  "finished",
+  "interrupted",
+  "orphaned",
+  "paused"
+ ],
+ "attempts.EXCLUSION_THRESHOLD": [
+  2
+ ],
+ "attempts.MANUAL_RECOVERY_ALLOWANCE": [
+  1
+ ],
+ "attempts.AUTOMATIC_KINDS": [
+  "retry",
+  "auto_resume"
+ ],
+ "attempts.JUDGED_FAILURE_STATUSES": [
+  "failed",
+  "quarantined",
+  "timeout"
+ ],
+ "retry.RETRYABLE_STATUSES": [
+  "failed",
+  "quarantined",
+  "timeout"
+ ],
+ "attention.GROUPS": [
+  "intervention",
+  "recovering",
+  "signal"
+ ],
+ "campaign states": [
+  "delivered",
+  "escalated",
+  "held",
+  "judging",
+  "paused",
+  "preflight_failed",
+  "running"
+ ],
+ "cli verbs": [
+  "actions",
+  "board",
+  "campaign",
+  "check",
+  "cloud-spend",
+  "compare",
+  "construct",
+  "dashboard",
+  "estimate",
+  "explain",
+  "go",
+  "grant",
+  "history",
+  "kill",
+  "log",
+  "notes",
+  "position",
+  "preflight",
+  "report",
+  "revert",
+  "rollcall",
+  "run",
+  "session",
+  "status",
+  "table",
+  "transcript",
+  "validate",
+  "watch"
+ ],
+ "cli flags: ohflow": [],
+ "cli flags: preflight": [
+  "--args",
+  "--harness-executors",
+  "--json",
+  "--verbose",
+  "--workflow",
+  "-v"
+ ],
+ "cli flags: validate": [
+  "--args",
+  "--history",
+  "--json",
+  "--verbose",
+  "--workflow",
+  "-v"
+ ],
+ "cli flags: estimate": [
+  "--args",
+  "--history",
+  "--json",
+  "--max-parallel",
+  "--pilot",
+  "--workflow"
+ ],
+ "cli flags: board": [
+  "--args",
+  "--workflow"
+ ],
+ "cli flags: construct": [
+  "--bundle",
+  "--history",
+  "--out"
+ ],
+ "cli flags: run": [
+  "--args",
+  "--auto-resume",
+  "--dashboard-port",
+  "--detach",
+  "--dry-run",
+  "--history",
+  "--hold",
+  "--json",
+  "--max-parallel",
+  "--no-dashboard",
+  "--only-phase",
+  "--open-dashboard",
+  "--out",
+  "--pilot",
+  "--predictions",
+  "--reservation-token",
+  "--resume",
+  "--resume-checked",
+  "--run-id",
+  "--token-budget",
+  "--workflow"
+ ],
+ "cli flags: go": [
+  "--predictions",
+  "--run"
+ ],
+ "cli flags: kill": [
+  "--reason",
+  "--run",
+  "--step",
+  "--timeout"
+ ],
+ "cli flags: status": [
+  "--json",
+  "--run",
+  "--watch"
+ ],
+ "cli flags: watch": [
+  "--cursor",
+  "--json",
+  "--poll",
+  "--run",
+  "--timeout",
+  "--until"
+ ],
+ "cli flags: notes": [],
+ "cli flags: notes log": [
+  "--run"
+ ],
+ "cli flags: notes check": [
+  "--json",
+  "--run"
+ ],
+ "cli flags: session": [],
+ "cli flags: session open": [
+  "--brief",
+  "--cwd",
+  "--dir",
+  "--harness",
+  "--message",
+  "--model",
+  "--thinking"
+ ],
+ "cli flags: session send": [
+  "--dir",
+  "--file"
+ ],
+ "cli flags: session wait": [
+  "--dir",
+  "--timeout"
+ ],
+ "cli flags: session status": [
+  "--dir"
+ ],
+ "cli flags: session interrupt": [
+  "--dir"
+ ],
+ "cli flags: session close": [
+  "--dir",
+  "--force"
+ ],
+ "cli flags: position": [
+  "--args",
+  "--run",
+  "--step",
+  "--workflow"
+ ],
+ "cli flags: table": [
+  "--by",
+  "--format",
+  "--out",
+  "--reconcile",
+  "--runs"
+ ],
+ "cli flags: transcript": [
+  "--html",
+  "--out",
+  "--run",
+  "--step"
+ ],
+ "cli flags: explain": [
+  "--attempt",
+  "--json",
+  "--run",
+  "--step"
+ ],
+ "cli flags: compare": [
+  "--json",
+  "--runs"
+ ],
+ "cli flags: actions": [
+  "--attempt",
+  "--json",
+  "--run",
+  "--step"
+ ],
+ "cli flags: revert": [
+  "--run"
+ ],
+ "cli flags: dashboard": [
+  "--open",
+  "--port",
+  "--run"
+ ],
+ "cli flags: campaign": [],
+ "cli flags: campaign validate": [
+  "--args",
+  "--campaign"
+ ],
+ "cli flags: campaign run": [
+  "--args",
+  "--campaign",
+  "--detach",
+  "--history",
+  "--hold",
+  "--no-dashboard",
+  "--pilot"
+ ],
+ "cli flags: campaign status": [
+  "--args",
+  "--campaign"
+ ],
+ "cli flags: campaign grant": [
+  "--args",
+  "--campaign",
+  "--milestone",
+  "--revisions"
+ ],
+ "cli flags: campaign watch": [
+  "--args",
+  "--campaign",
+  "--cursor",
+  "--json",
+  "--poll",
+  "--timeout"
+ ],
+ "cli flags: campaign history": [
+  "--args",
+  "--campaign",
+  "--json",
+  "--milestone"
+ ],
+ "cli flags: campaign estimate": [
+  "--args",
+  "--campaign",
+  "--history",
+  "--json"
+ ],
+ "cli flags: rollcall": [
+  "--cases",
+  "--config",
+  "--dry-run",
+  "--list",
+  "--matrix",
+  "--out",
+  "--repo",
+  "--verbose",
+  "-v"
+ ],
+ "cli flags: report": [
+  "--run"
+ ],
+ "cli flags: cloud-spend": [
+  "--json",
+  "--run",
+  "--since",
+  "--until"
+ ],
+ "settings keys": [
+  "campaign.judge_model",
+  "commit_checks.no_ai_attribution",
+  "durable.box",
+  "durable.providers",
+  "operator.escalation_marker",
+  "operator.on_escalate",
+  "pi.api_key_env",
+  "pi.base_url",
+  "pi_cloud.mcp_servers",
+  "pi_cloud.providers",
+  "pi_cloud.url",
+  "tiers.heavy.claude",
+  "tiers.heavy.claude-cloud",
+  "tiers.heavy.codex",
+  "tiers.heavy.codex-cloud",
+  "tiers.heavy.durable",
+  "tiers.heavy.pi",
+  "tiers.heavy.pi-cloud",
+  "tiers.light.claude",
+  "tiers.light.claude-cloud",
+  "tiers.light.codex",
+  "tiers.light.codex-cloud",
+  "tiers.light.durable",
+  "tiers.light.pi",
+  "tiers.light.pi-cloud"
+ ],
+ "worker settings keys": [
+  "account_id",
+  "git_identity",
+  "git_owner",
+  "name",
+  "skills_repo",
+  "skills_root_skill",
+  "snapshot.mcp_servers",
+  "snapshot.repos",
+  "snapshot.skills",
+  "url"
+ ],
+ "executor capabilities": [
+  "box",
+  "carry_context",
+  "profile",
+  "reattach",
+  "signed_in",
+  "stall_timeout",
+  "tools_only"
+ ],
+ "cost sources": [
+  "claude-cli",
+  "durable-host",
+  "pi-catalog",
+  "pi-cloud-worker",
+  "subscription",
+  "unpriced"
+ ],
+ "cloud end errors": [
+  "clone_failed",
+  "fetch_back",
+  "host_lost",
+  "push_failed",
+  "skills_failed",
+  "unanswered"
+ ]
+}

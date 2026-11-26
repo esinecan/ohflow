@@ -1,0 +1,38 @@
+{
+  "coord": "03.transient/01.flaky-provider",
+  "attempt": 1,
+  "role": "neutral",
+  "harness_executor": "pi",
+  "workspace": "C:\\Users\\<user>\\ohflow-home\\experiments\\oh-dispatch-pi-parity-2026-09-27\\runs\\pi\\B2-engine-fault-matrix\\r-20260928-012339\\work\\real\\plan1\\wt\\wf",
+  "model": {
+    "model": "zai/glm-5.3-flash",
+    "base_url": "http://127.0.0.1:60032",
+    "api_key_env": "ZAI_CODING_CN_API_KEY",
+    "params": {
+      "thinking": "low"
+    },
+    "extra_body": {}
+  },
+  "tools": {
+    "preset": "default",
+    "enable_browser": false,
+    "enable_sub_agents": false,
+    "only": [],
+    "allow": [],
+    "mcp_profile": null,
+    "mcp_profile_resolved": null
+  },
+  "skills": [],
+  "skills_dir": null,
+  "mcp_config": null,
+  "max_iterations": 30,
+  "execution_timeout_s": 900,
+  "stall_timeout_s": null,
+  "write_scope": [
+    "owned/f.txt"
+  ],
+  "fork_session": null,
+  "brief_path": "brief.md",
+  "schema_path": null,
+  "out_dir": "."
+}
