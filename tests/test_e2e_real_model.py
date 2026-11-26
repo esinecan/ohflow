@@ -1,6 +1,6 @@
 """The end-to-end test: the `smoke` matrix of `ohflow rollcall`, on real models.
 
-    python ohflow/tests/run_tests.py --e2e
+    python3 tests/run_tests.py --e2e
 
 Skipped by default, and every skip prints its reason.
 

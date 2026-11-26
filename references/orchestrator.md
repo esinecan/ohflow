@@ -76,6 +76,7 @@ At a phase boundary or a new failure, record the expected behavior, actual obser
 reproduction command or artifact, and what remains uncertain in the run notes. Separate
 an operator mistake, a documentation omission, a confirmed defect and a design proposal.
 Update steering guidance when the evidence warrants it; keep open work in
-[docs/todo.md](../docs/todo.md), its single owner, with an observable completion check.
+the register that `references/local.md` names, or else in the ohflow repository's issues, with
+an observable completion check.
 Mark a fix complete only after the relevant code or documentation change is verified.
 Preserve failed trials rather than rewriting them as successes after a later repair.

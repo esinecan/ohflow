@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """The one command that runs the ohflow suite.
 
-    python ohflow/tests/run_tests.py --changed  # the tests the changes since main reach
-    python ohflow/tests/run_tests.py --changed 88beb7d # the tests the changes since a commit reach
-    python ohflow/tests/run_tests.py            # deterministic tests only
-    python ohflow/tests/run_tests.py --e2e      # plus the real-model run
-    python ohflow/tests/run_tests.py -k failure # only matching test names
-    python ohflow/tests/run_tests.py --shard 1/3 # one third of the tests
-    python ohflow/tests/run_tests.py --real-process # after the shards: the real-process tests
-    python ohflow/tests/run_tests.py --durations 15 # name the slowest tests
-    python ohflow/tests/run_tests.py --test-timeout 60 # one test may run 60 s
+    python3 tests/run_tests.py --changed  # the tests the changes since main reach
+    python3 tests/run_tests.py --changed 88beb7d # the tests the changes since a commit reach
+    python3 tests/run_tests.py            # deterministic tests only
+    python3 tests/run_tests.py --e2e      # plus the real-model run
+    python3 tests/run_tests.py -k failure # only matching test names
+    python3 tests/run_tests.py --shard 1/3 # one third of the tests
+    python3 tests/run_tests.py --real-process # after the shards: the real-process tests
+    python3 tests/run_tests.py --durations 15 # name the slowest tests
+    python3 tests/run_tests.py --test-timeout 60 # one test may run 60 s
 
 Why a script and not pytest. This box's interpreter is Python 3.14 and has no
 pytest.

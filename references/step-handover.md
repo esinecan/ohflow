@@ -51,6 +51,6 @@ The built-in relay, merge consolidation, implement/review and evidence-atlas wor
 
 ## Mechanical proof
 
-Run `python ohflow/tests/run_tests.py -k handover_01` from the folder that holds `ohflow`. The tests exercise actual engine preparation, gating, retries, cached resumes and deleted/modified evidence with fake agents.
+Run `python3 tests/run_tests.py -k handover_01` from the root of your ohflow clone. The tests exercise actual engine preparation, gating, retries, cached resumes and deleted/modified evidence with fake agents.
 
-From `scripts`, run `python -m ohflow.cli rollcall --cases relay:pi,claude --out <proof-directory>` with `PYTHONPATH=.`. The successor must reproduce a token supplied only through its predecessor's handover; the gate verifies it in `ROLLCALL.md`.
+From `scripts`, run `python3 -m ohflow.cli rollcall --cases relay:pi,claude --out <proof-directory>` with `PYTHONPATH=.`. The successor must reproduce a token supplied only through its predecessor's handover; the gate verifies it in `ROLLCALL.md`.

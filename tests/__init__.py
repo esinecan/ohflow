@@ -7,9 +7,9 @@ nothing outside this repository.
 
 Run it with:
 
-    python ohflow/tests/run_tests.py
+    python3 tests/run_tests.py
 
-See `ohflow/CONTRIBUTING.md`, section "Running the suite", for the shards, the
+See `CONTRIBUTING.md`, section "Running the suite", for the shards, the
 opt-in flag and for where a new regression test goes.
 """
 

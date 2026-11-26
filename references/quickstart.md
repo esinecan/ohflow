@@ -19,7 +19,7 @@ bash --version
 |---|---|
 | `claude` | the Claude CLI on PATH and `claude auth login` |
 | `codex` | the Codex CLI on PATH and its login |
-| `pi` | the pi CLI, `npm install -g @earendil-works/pi-coding-agent`, and a provider key in its variable (`ZAI_CODING_CN_API_KEY` for the default preset) |
+| `pi` | the pi CLI, `npm install -g @earendil-works/pi-coding-agent`, and a provider key in its variable (`ZAI_CODING_CN_API_KEY` for the roll call's `pi` cases, and `ZAI_API_KEY` for a `pi` step that `construct` builds on the default model) |
 
 `npm install -g` writes to Node's own prefix. A Node from the Linux distribution's packages has its prefix in `/usr`, and the install fails there with `EACCES`. Install Node 22.19 or newer through [nvm](https://github.com/nvm-sh/nvm) or from [nodejs.org](https://nodejs.org) instead, so the prefix is yours; that Node also serves `durable`.
 

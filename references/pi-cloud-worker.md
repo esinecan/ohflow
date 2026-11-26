@@ -17,7 +17,8 @@ Node 22.19 or newer. Containers bill their memory and disk for every second they
 3. **Write your settings.** Create `worker/pi-cloud.settings.local.json`, which git ignores, with the
    keys of the table below that you need. Your values override the shipped
    `worker/pi-cloud.settings.json`, which names the Worker `pi-cloud` and leaves every other value
-   empty. Every script here takes `--settings <file>` to read another file in place of
+   empty. Every Node script here takes `--settings <file>` to read another file in place of
+   `pi-cloud.settings.local.json`. `set-secrets.ps1` takes no such flag and always reads
    `pi-cloud.settings.local.json`.
 4. **Deploy.** From `worker/`, run `node scripts/deploy.mjs`. It deploys `<name>-codemode` first and
    then `<name>`, with your settings as the Worker's vars and your snapshot settings bundled into

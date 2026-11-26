@@ -7,7 +7,7 @@ milestone's inputs; the campaign controller commits that change and resumes the 
 campaign's integration branch moves forward (the milestone landing) and the next milestone
 starts. Nobody from the authoring session is needed at a milestone boundary.
 
-Controller: `scripts/ohflow/campaign.py`, class `CampaignController`. Verb: `python -m ohflow.cli campaign ...`.
+Controller: `scripts/ohflow/campaign.py`, class `CampaignController`. Verb: `python3 -m ohflow.cli campaign ...`.
 Tests: `tests/test_campaign_01_loop.py`. `ohflow construct` writes a campaign from a bundle of
 milestone specs: [construct](construct.md).
 
@@ -313,16 +313,16 @@ A PASS with edits is undone with `git stash`, so a PASS never changes an input.
 
 ## Run it
 
-Commands run from `~/.agents/skills/ohflow/scripts` with `PYTHONPATH=.`.
+Commands run from the `scripts/` folder of your ohflow clone with `PYTHONPATH=.`.
 
 ```bash
-python -m ohflow.cli campaign validate --campaign <root>/campaign.py
-python -m ohflow.cli campaign run --campaign <root>/campaign.py --detach [--hold] [--pilot]
-python -m ohflow.cli campaign status --campaign <root>/campaign.py
-python -m ohflow.cli campaign watch --campaign <root>/campaign.py [--timeout S]
-python -m ohflow.cli campaign history --campaign <root> [--milestone <id>] [--json]
-python -m ohflow.cli campaign estimate --campaign <root>/campaign.py [--history DIR] [--json]
-python -m ohflow.cli campaign grant --campaign <root>/campaign.py --milestone <id> --revisions 1
+python3 -m ohflow.cli campaign validate --campaign <root>/campaign.py
+python3 -m ohflow.cli campaign run --campaign <root>/campaign.py --detach [--hold] [--pilot]
+python3 -m ohflow.cli campaign status --campaign <root>/campaign.py
+python3 -m ohflow.cli campaign watch --campaign <root>/campaign.py [--timeout S]
+python3 -m ohflow.cli campaign history --campaign <root> [--milestone <id>] [--json]
+python3 -m ohflow.cli campaign estimate --campaign <root>/campaign.py [--history DIR] [--json]
+python3 -m ohflow.cli campaign grant --campaign <root>/campaign.py --milestone <id> --revisions 1
 ```
 
 `validate` builds every milestone's workflow with first-round arguments, so a workflow error
@@ -367,7 +367,7 @@ going.
 nothing. `--campaign` takes the campaign module or the campaign folder, so a campaign whose
 module no longer imports still reads. It reads both spellings of the campaign log: `round`,
 `decision` and `milestone_landed`, and the older `attempt`, `verdict` and `milestone_passed`.
-Line one is `HISTORY <name>: <M> milestones, <R> rounds, <k> REVISE, <e> ESCALATE`. Then each
+Line one is `HISTORY <name>: <M> milestones, <R> rounds, <k> REVISE, <e> ESCALATE · campaign.jsonl`. Then each
 milestone's rounds and events print together, in campaign log order:
 
 ```text
@@ -433,9 +433,10 @@ A resume re-runs only the steps whose fingerprints changed, so `(1 + r) x E(m)` 
 revised round as a whole run and is an upper bound. A milestone that already landed in the
 campaign's own log counts 0 and is marked `landed`, so the total is the work that is left.
 
-Line one is `CAMPAIGN ESTIMATE <name>: ~<p50> to <p80>, <tokens> tokens, <cost> for <n>
-milestones left, confidence <ok|low>; REVISE median <r> over <k> finished milestones,
-x<1 + r>`. Under it, one row per milestone with its scaled numbers, its factor, `landed` or
+Line one is `CAMPAIGN ESTIMATE <name>: ~<p50> (p50) to <p80> (p80), <tokens> tokens, <cost>
+for <n> milestones left, confidence <ok|low>; REVISE median <r> over <k> finished milestones,
+x<1 + r>; <a> attempts from <s> summaries`. With no matching history, line one is
+`CAMPAIGN ESTIMATE <name>: no history matched some step; <a> attempts from <s> summaries`. Under it, one row per milestone with its scaled numbers, its factor, `landed` or
 `left`, and one `total` row. `--json` carries each milestone's own run estimate besides the
 scaled numbers, the REVISE counts the median rests on and the campaign logs they came from.
 It exits 0, the no-history line included.

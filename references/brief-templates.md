@@ -49,7 +49,7 @@ were before the removal. Four rules came out of it.
   execution timeout.
 - **A gate runs the tests the change reaches, and CI runs the full suite.** Give
   the step a `command_exit` check whose `cmd` selects the tests from the step's
-  changes, such as `python ohflow/tests/run_tests.py --changed {base}`.
+  changes, such as `python3 tests/run_tests.py --changed {base}`.
   It runs once, on the operator's machine, in minutes, and its exit code is the
   gate. The full suite never runs in a step or a gate: [ohflow](ohflow.md#gate-checks)
   states the rule.
@@ -290,7 +290,7 @@ Run it with one `--args` per key. The template resolves `root`, `spec` and
 `contracts` to absolute paths, because every child reads them from its own
 worktree:
 
-    cd ~/.agents/skills/ohflow/scripts && PYTHONPATH=. python -m ohflow.cli run \
+    cd <ohflow clone>/scripts && PYTHONPATH=. python3 -m ohflow.cli run \
       --workflow ohflow/workflows/contract_fanout.py \
       --args repo=<repo> --args root=<output root> --args spec=<spec.md> \
       --args contracts=<contracts.md> --args "test_cmd=<changed-test selection>" \
@@ -397,7 +397,7 @@ step that turns findings into work, so the orchestrator agent starts the fix cyc
 3. Fire the [implement-review](implement-review.md) fix mode on the fan-out
    output branch:
 
-       cd ~/.agents/skills/ohflow/scripts && PYTHONPATH=. python -m ohflow.cli run \
+       cd <ohflow clone>/scripts && PYTHONPATH=. python3 -m ohflow.cli run \
          --workflow ohflow/workflows/implement_review.py --args mode=fix \
          --args repo=<repo> --args branch=fanout/output \
          --args worktree=<root>/worktrees/output --args base=<base> \

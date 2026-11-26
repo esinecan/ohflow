@@ -1,7 +1,10 @@
 """The harness executor registry: one row per harness executor.
 
-Outside the harness executor modules, one other place names every harness executor: `HARNESS_EXECUTOR_FIX` in
-`preflight.py`, the fix hint for a failed harness executor check.
+Outside the harness executor modules, these places name every harness executor:
+`HARNESS_EXECUTOR_FIX` in `preflight.py`, `executor_for` in `construct.py`, `MODELS` and
+`STALL_S` in `workflows/rollcall.py`, and `tiers` in `ohflow.settings.json`. `JOINS` and
+`_READERS` in `actions.py` and `_NORMALIZERS` in `dashboard_data.py` name every one except
+`durable`.
 
 Each harness executor owns its artifact format in one module. The registry row names that
 module and the capabilities validation reads. Every other module reaches a harness executor

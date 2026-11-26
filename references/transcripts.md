@@ -5,7 +5,7 @@ Every agent attempt leaves a record on disk. Each harness executor writes its ow
 ## Export an agent transcript
 
 ```powershell
-python -m ohflow.cli transcript --run <run-dir> --step <step-id> --html
+python3 -m ohflow.cli transcript --run <run-dir> --step <step-id> --html
 ```
 
 Each harness executor module answers `transcript` for its own steps:
@@ -21,7 +21,7 @@ A short step id must identify one step. Use the full coordinate, such as `02.rev
 ## One line per model call and action
 
 ```powershell
-python -m ohflow.cli actions --run <run-dir> --step <step-id>
+python3 -m ohflow.cli actions --run <run-dir> --step <step-id>
 ```
 
 `actions` joins each action to the model call that launched it and to its result, in every harness executor's format. The tokens and the latency sit on the call line once. Each harness executor's call key and what its format leaves out: [ohflow](ohflow.md#run-it).
@@ -29,7 +29,7 @@ python -m ohflow.cli actions --run <run-dir> --step <step-id>
 ## Run-level accounting
 
 ```powershell
-python -m ohflow.cli table --runs <run-dir> --by step
+python3 -m ohflow.cli table --runs <run-dir> --by step
 ```
 
 The table sums every real attempt, failed ones included. A priced attempt shows a number, and a `subscription` attempt shows its known zero. An attempt with no known price shows `unpriced`. A measurement no agent recorded shows `-`.
@@ -37,7 +37,7 @@ The table sums every real attempt, failed ones included. A priced attempt shows 
 ### Token reconcile
 
 ```powershell
-python -m ohflow.cli table --runs <runs-root> --reconcile
+python3 -m ohflow.cli table --runs <runs-root> --reconcile
 ```
 
 `--reconcile` compares each agent attempt's `result.json.tokens` with the harness executor's own usage record:

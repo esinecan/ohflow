@@ -2,7 +2,7 @@
 
 The built-in implement-review workflow runs two agents back to back. A workflow of your own runs many, across phases, with barriers and merge steps between them. Reach for it when one diff needs several agents at once, or when the work has phases that must land in order.
 
-Driver: `python -m ohflow.cli`, from `scripts/`, with `PYTHONPATH=.`. The orchestrator is plain Python, so a workflow validates under the system Python. Terms: [CONTEXT](../CONTEXT.md).
+Driver: `python3 -m ohflow.cli`, from `scripts/`, with `PYTHONPATH=.`. The orchestrator is plain Python, so a workflow validates under the system Python. Terms: [CONTEXT](../CONTEXT.md).
 
 **Own files, not features.** This is the decomposition rule, and it decides whether parallelism pays. Splitting by feature fails: on a small codebase every feature edits the same few files, so N agents produce N conflicting diffs in the same hunks. Split by file ownership. One serial scaffold step writes every shared file (the arg table, the help text, the config block, the empty modules with typed signatures) and commits once. Then each parallel agent fills in modules nobody else touches. The `ownership` gate enforces this from `git diff --name-only`, so an agent that strays fails its own gate rather than poisoning the merge.
 
@@ -138,8 +138,8 @@ The bound: settled tokens never exceed `token_budget` plus the recorded overshoo
 | Harness executor | Live usage arrives | Most one attempt can overshoot |
 |---|---|---|
 | `pi` | after each model call, in the event log and to the guard | the model call in flight when the grant was reached; `ohflow-guard.ts` starts no further call once the attempt's own usage reaches its grant, waits up to 30 s for an extension, then stops pi and writes `budget-stop.json` |
-| `claude`, `durable`, `pi-cloud`, `claude-cloud` | after each assistant message | the message that crossed the grant, plus what arrives before the next poll |
-| `codex`, `codex-cloud` | only when the turn completes, at the end of the attempt | everything the attempt used past its grant and the free allowance |
+| `claude`, `durable`, `pi-cloud` | after each assistant message | the message that crossed the grant, plus what arrives before the next poll |
+| `codex`, `codex-cloud`, `claude-cloud` | only at the end of the attempt: `codex` when its turn completes, `codex-cloud` and `claude-cloud` when the Worker's session settles | everything the attempt used past its grant and the free allowance |
 
 `budget.json` at the run root is the token ledger's snapshot: `limit_tokens`, `reserve_tokens`, `settled_tokens`, `observed_tokens` (settled plus the live usage of the attempts in flight), `reserved_tokens`, `free_tokens`, `in_flight`, `stopped`, `refused`, `unknown_usage`, `overshoot_tokens` and `overshoots`. The billing estimate is a separate field, `billing_estimate_usd`, summed from the priced `cost` of the settled attempts beside `billing_priced_attempts` and `billing_unpriced_attempts`. The budget never reads it.
 
@@ -147,7 +147,7 @@ The bound: settled tokens never exceed `token_budget` plus the recorded overshoo
 
 Every bound counts from the run log, keyed by the identity `(coordinate, fingerprint)`. Editing a brief changes the fingerprint, so the new revision gets its own budget. The old attempt directories stay on disk.
 
-Fingerprint version 6 hashes explicit handover contracts, readers and consumed content digests, alongside `Step.merge_message`, `AgentSpec.skills_dir` and the other selected inputs. A test classifies every workflow field as hashed or excluded. The key includes a worktree's uncommitted, non-ignored state: `git diff HEAD --binary` plus every path and byte of `git ls-files --others --exclude-standard`. Ignored build output is outside the key. The committed `HEAD` is outside it too, so an agent's own commit returns to the same clean identity and a clean resume stays cached. `AgentSpec.command_time_cap_s` is part of the step fingerprint.
+Fingerprint version 7 hashes explicit handover contracts, readers and consumed content digests, alongside `Step.merge_message`, `AgentSpec.skills_dir` and the other selected inputs. A test classifies every workflow field as hashed or excluded. The key includes a worktree's uncommitted, non-ignored state: `git diff HEAD --binary` plus every path and byte of `git ls-files --others --exclude-standard`. Ignored build output is outside the key. The committed `HEAD` is outside it too, so an agent's own commit returns to the same clean identity and a clean resume stays cached. `AgentSpec.command_time_cap_s` is part of the step fingerprint.
 
 | Bound | What it counts |
 |---|---|
@@ -240,7 +240,7 @@ The operator's steps for the notes are in [operate-a-run](operate-a-run.md#keep-
 
 ## Provider options on a ModelConfig
 
-`ModelConfig.params` is a closed set per harness executor. `pi`, `durable` and `pi-cloud` take `thinking`. `claude` takes `effort`, and `codex` takes `reasoning_effort`. Each executor's `agent_errors` refuses any other key ([harness executors](harness-executors.md)). Every harness executor refuses a non-empty `extra_body`. The field stays on `ModelConfig` because the step fingerprint hashes the whole model configuration.
+`ModelConfig.params` is a closed set per harness executor. `pi`, `durable` and `pi-cloud` take `thinking`. `claude` takes `effort`, and `codex` takes `reasoning_effort`. `claude-cloud` and `codex-cloud` take none. Each executor's `agent_errors` refuses any other key ([harness executors](harness-executors.md)). Every harness executor refuses a non-empty `extra_body`. The field stays on `ModelConfig` because the step fingerprint hashes the whole model configuration.
 
 ```python
 ModelConfig("light", "", "DEEPSEEK_API_KEY", params={"thinking": "off"})
@@ -260,11 +260,11 @@ DeepSeek's flash model thinks by default. Set `thinking` per workflow, per phase
 
 ## Gate checks
 
-Checks in `ohflow.gates`: `commits_past_base`, `command_exit`, `test_counts`, `tree_clean`, `ownership`, `paths_untouched`, `no_ai_attribution`, `final_message_matches`, `schema_valid`, `file_contains`, `rollcall_matches`. Every check is command-shaped and holds the field constant, as in [brief-templates](brief-templates.md). `rollcall_matches` compares a roll-call agent's report of its own tool policy with what its harness announced; its rules are in the [CONTRIBUTING](../CONTRIBUTING.md#testing-with-live-agents).
+Checks in `ohflow.gates`: `commits_past_base`, `command_exit`, `test_counts`, `tree_clean`, `ownership`, `paths_untouched`, `no_ai_attribution`, `final_message_matches`, `schema_valid`, `file_contains`, `handover_written`, `rollcall_matches`. Every check is command-shaped and holds the field constant, as in [brief-templates](brief-templates.md). `rollcall_matches` compares a roll-call agent's report of its own tool policy with what its harness announced; its rules are in the [CONTRIBUTING](../CONTRIBUTING.md#testing-with-live-agents).
 
 **A mechanical check pass is reused within its run.** A passed `command_exit` on a clean worktree is a mechanical check pass, recorded in the run's `check-passes.jsonl` with the command, its shell, its folder and the tree hash. A later `command_exit` in the same run with the same command, shell and folder on the same clean tree reuses it, and the campaign's acceptance checks do too; its evidence is the first run's log. A failure, a timeout and a dirty tree always run the command. A check whose result depends on files outside the worktree that change during a run sets `reuse: false`; `construct` sets it on a command that names another workspace.
 
-**A gate tests the change, never the whole suite.** Checking a change costs in proportion to the change. A gate, a `check-` step and a campaign acceptance check run only the tests that the step's changed files reach, in minutes. The full suite runs in CI after a push, where nobody waits for it, and never blocks a stage, a gate, an acceptance check or an agent's work. `{base}` in a `command_exit` command or a command step is the commit the step's worktree was created from; in an acceptance check it is the commit of the campaign's integration branch in the check's workspace. A command with `{base}` fails on a step that has no worktree. For this repository the gate command is `python ohflow/tests/run_tests.py --changed {base}`; the [CONTRIBUTING](../CONTRIBUTING.md#running-the-suite) gives its selection rules and its budget.
+**A gate tests the change, never the whole suite.** Checking a change costs in proportion to the change. A gate, a `check-` step and a campaign acceptance check run only the tests that the step's changed files reach, in minutes. The full suite runs in CI after a push, where nobody waits for it, and never blocks a stage, a gate, an acceptance check or an agent's work. `{base}` in a `command_exit` command or a command step is the commit the step's worktree was created from; in an acceptance check it is the commit of the campaign's integration branch in the check's workspace. A command with `{base}` fails on a step that has no worktree. For this repository the gate command is `python3 tests/run_tests.py --changed {base}`, run from the root of the ohflow clone; the [CONTRIBUTING](../CONTRIBUTING.md#running-the-suite) gives its selection rules and its budget.
 
 `validate` reads each `CheckSpec` against its check: an unknown check name, an argument the check does not take and a missing argument the check needs are each refused with the step, the check and the argument named, before any agent runs.
 
@@ -285,40 +285,42 @@ A relay step says `since="step_start"` and a consolidator says `since="last_merg
 
 ## Run it
 
+Run each command from the `scripts/` folder of your ohflow clone.
+
 ```bash
-cd ~/.agents/skills/ohflow/scripts && export PYTHONPATH=.
-python -m ohflow.cli preflight [--workflow ohflow/workflows/<workflow>.py --args k=v] [--harness-executors pi,claude] [-v]
-python -m ohflow.cli validate --workflow ohflow/workflows/<workflow>.py --args k=v [-v] [--history DIR]
-python -m ohflow.cli estimate --workflow ohflow/workflows/<workflow>.py --args k=v --history DIR [--pilot <run-dir>] [--json]
-python -m ohflow.cli board    --workflow ohflow/workflows/<workflow>.py --args k=v
-python -m ohflow.cli construct --bundle <bundle> --out <campaign> [--history DIR]
-python -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --dry-run
-python -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> [--predictions FILE] [--history DIR]
-python -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --hold
-python -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --pilot [--history DIR]
-python -m ohflow.cli go       --run <run-dir>
-python -m ohflow.cli kill     --run <run-dir> --step <coord> [--reason TEXT] [--timeout S]
-python -m ohflow.cli watch    --run <run-dir> [--timeout S] [--until change|end|attention] [--cursor NAME] [--json]
-python -m ohflow.cli status   --run <run-dir> [--watch] [--json]
-python -m ohflow.cli notes log   --run <run-dir> "<text>"
-python -m ohflow.cli notes check --run <run-dir>
-python -m ohflow.cli campaign watch --campaign <campaign.py> [--timeout S]
-python -m ohflow.cli campaign history --campaign <campaign.py or folder> [--milestone ID] [--json]
-python -m ohflow.cli campaign estimate --campaign <campaign.py> [--history DIR] [--json]
-python -m ohflow.cli position --run <run-dir> --step <step-id>
-python -m ohflow.cli explain  --run <run-dir> --step <step-id> [--attempt N] [--json]
-python -m ohflow.cli compare  --runs <run-A> <run-B> [--json]
-python -m ohflow.cli actions  --run <run-dir> --step <step-id> [--attempt N] [--json]
-python -m ohflow.cli revert   --run <run-dir>
-python -m ohflow.cli dashboard --run <run-dir> [--port N] [--open]
-python -m ohflow.cli report   --run <run-dir>
-python -m ohflow.cli table    --runs <runs-root> [--by phase|step] [--reconcile]
-python -m ohflow.cli rollcall --matrix smoke
+export PYTHONPATH=.
+python3 -m ohflow.cli preflight [--workflow ohflow/workflows/<workflow>.py --args k=v] [--harness-executors pi,claude] [-v]
+python3 -m ohflow.cli validate --workflow ohflow/workflows/<workflow>.py --args k=v [-v] [--history DIR]
+python3 -m ohflow.cli estimate --workflow ohflow/workflows/<workflow>.py --args k=v --history DIR [--pilot <run-dir>] [--json]
+python3 -m ohflow.cli board    --workflow ohflow/workflows/<workflow>.py --args k=v
+python3 -m ohflow.cli construct --bundle <bundle> --out <campaign> [--history DIR]
+python3 -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --dry-run
+python3 -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> [--predictions FILE] [--history DIR]
+python3 -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --hold
+python3 -m ohflow.cli run      --workflow ohflow/workflows/<workflow>.py --args k=v --out <runs-root> --pilot [--history DIR]
+python3 -m ohflow.cli go       --run <run-dir>
+python3 -m ohflow.cli kill     --run <run-dir> --step <coord> [--reason TEXT] [--timeout S]
+python3 -m ohflow.cli watch    --run <run-dir> [--timeout S] [--until change|end|attention] [--cursor NAME] [--json]
+python3 -m ohflow.cli status   --run <run-dir> [--watch] [--json]
+python3 -m ohflow.cli notes log   --run <run-dir> "<text>"
+python3 -m ohflow.cli notes check --run <run-dir>
+python3 -m ohflow.cli campaign watch --campaign <campaign.py> [--timeout S]
+python3 -m ohflow.cli campaign history --campaign <campaign.py or folder> [--milestone ID] [--json]
+python3 -m ohflow.cli campaign estimate --campaign <campaign.py> [--history DIR] [--json]
+python3 -m ohflow.cli position --run <run-dir> --step <step-id>
+python3 -m ohflow.cli explain  --run <run-dir> --step <step-id> [--attempt N] [--json]
+python3 -m ohflow.cli compare  --runs <run-A> <run-B> [--json]
+python3 -m ohflow.cli actions  --run <run-dir> --step <step-id> [--attempt N] [--json]
+python3 -m ohflow.cli revert   --run <run-dir>
+python3 -m ohflow.cli dashboard --run <run-dir> [--port N] [--open]
+python3 -m ohflow.cli report   --run <run-dir>
+python3 -m ohflow.cli table    --runs <runs-root> [--by phase|step] [--reconcile]
+python3 -m ohflow.cli rollcall --matrix smoke
 ```
 
 The roll call is in the [CONTRIBUTING](../CONTRIBUTING.md#testing-with-live-agents). `board` renders the workflow as a board before any run; `validate -v` prints each phase's parallel limit.
 
-**`run` flags.** `python -m ohflow.cli run --help` lists every flag; the `run` subparser in `build_parser()` of `scripts/ohflow/cli.py` owns them. `--json` works only with `--detach`; an attached run refuses it and exits 2.
+**`run` flags.** `python3 -m ohflow.cli run --help` lists every flag; the `run` subparser in `build_parser()` of `scripts/ohflow/cli.py` owns them. `--json` works only with `--detach`; an attached run refuses it and exits 2.
 
 **`--args` takes one `k=v`.** Repeat the flag once per key: `--args repo=X --args sweep=0`. Every verb that takes `--args` refuses the comma-joined form `--args repo=X,sweep=0` with exit 2, because it would read as one `repo` value. A value that is itself a comma list of `name=value` pairs, such as `harness_executors=security=pi,correctness=pi`, is accepted.
 
@@ -473,7 +475,7 @@ A codex command arrives wrapped as `"...pwsh.exe" -Command "<command>"`; the sum
 - A run with a cloud step (`pi-cloud`, `claude-cloud` or `codex-cloud`) reads Cloudflare's container meters for its Durable Objects before the exit report and writes `cloudflare.json`. The verdict names the figure, and `exit-report.md` has a `## Cloudflare` section with a flag for each object billed well beyond its reported container time. The meters lag by a few minutes, so `cloud-spend --run DIR` repeats the read later. `cloud-spend --since ISO [--until ISO]` reads the whole account over a window, with the calendar month's container memory against the 25 included GiB-hours. The credential is `CLOUDFLARE_API_TOKEN`, else `wrangler auth token`.
 - After a hard kill, `report --run` writes the missing `summary.json` and `retro.md`, rebuilds the three files and calls the run `orphaned`. `dashboard --run` serves any run directory later; when the run's own dashboard still serves, it prints that URL and starts nothing. `--dry-run` starts no dashboard and writes no exit report.
 
-**`position --run` needs no `--workflow`.** `run.json` records `workflow_path` (absolute, because a workflow lives in the skills repository while `workflow.repo` is the repository the agents edit) and `workflow_args` (the `--args` verbatim, so a workflow that copies nothing into `Workflow.args` stays rebuildable). `--workflow` overrides a moved path.
+**`position --run` needs no `--workflow`.** `run.json` records `workflow_path` (absolute, because a workflow module can live outside `workflow.repo`, the repository the agents edit) and `workflow_args` (the `--args` verbatim, so a workflow that copies nothing into `Workflow.args` stays rebuildable). `--workflow` overrides a moved path.
 
 **Dry-run before you burn agents.** `--dry-run` creates the worktrees, writes every brief, spec and position block, and launches nothing. Read a brief and a position block. Then run `revert` on the dry run, to prove teardown works before an agent has produced anything worth keeping. A successful rehearsal exits 0 and records each step as `dry-run`. `--dry-run` with `--resume` is refused, because a dry run writes run log events and a resume would write them into the real run's log. `status --run` shows what a resume would start.
 
@@ -522,15 +524,15 @@ tools=ToolPolicy(
 )
 ```
 
-A tool is offered when it matches an `allow` glob, or when `allow` is empty, and it matches no `block` glob. So the example offers `memory_search` from `note-store` and every `tracker` tool except `post`, and keeps the named built-ins. In a glob, `*` and `?` stay inside one segment of `server.tool`, and `**` crosses the dot. An `allow` glob that matches no tool fails the attempt. `allow`, `block` and `mcp_config` need nothing outside ohflow and the `pi` executor.
+A tool is offered when it matches an `allow` glob, or when `allow` is empty, and it matches no `block` glob. So the example offers `memory_search` from `note-store` and every `tracker` tool except `post`, and keeps the named built-ins. In a glob, `*` and `?` stay inside one segment of `server.tool`, and `**` crosses the dot. An `allow` glob that matches no tool fails the attempt.
 
-A non-empty `block` is part of the step fingerprint. `pi` applies `allow`, `block` and `mcp_config`, and every other harness executor refuses them. Every harness executor keeps server-qualified MCP tool names.
+A non-empty `allow` or `block` is part of the step fingerprint, and `mcp_config` always is. `pi` applies `allow`, `block` and `mcp_config`. `pi-cloud` applies `allow` and `block` to the MCP servers of the box's gateway, and refuses `mcp_config`. `claude` and `codex` take `mcp_config` when the agent sets `agent_profile="hermetic"`, and refuse `allow` and `block`. `durable`, `claude-cloud` and `codex-cloud` refuse all three. Every harness executor keeps server-qualified MCP tool names.
 
 `mcp_config` is a flat server map on the agent, for example `{"note-store": {"url": "http://127.0.0.1:8767/mcp", "transport": "http"}}`. The wrapped `{"mcpServers": ...}` shape is invalid.
 
 ## Traps
 
-**A brief needs no `--no-pager`.** Every harness executor that runs git sets `GIT_PAGER=cat`.
+**A `pi` or `durable` brief needs no `--no-pager`.** The `pi` and `durable` harness executors set `GIT_PAGER=cat` in the agent's shell. The other harness executors leave the pager to the harness they run.
 
 **An agent that writes a named file ends on a summary.** `schema_valid` reads only the last message. An agent that wrote its findings file, sent the JSON block, then sent a summary fails the gate although the file is valid. When the file is the deliverable, gate the file: a `command_exit` check that loads it and runs `ohflow.gates._validate_schema` against the step's schema. End the brief with "End with exactly one last message. That message holds the fenced JSON block, and no message follows it."
 

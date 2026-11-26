@@ -36,7 +36,7 @@ Pass each argument as `--args name=value`.
 | `harness_executors` | `harness_executor` | optional `dimension=pi` overrides, comma-separated; a dimension reviewer runs on `pi` only |
 | `schema_retry` | 1 | automatic retries of a dimension reviewer's `schema_valid` check |
 | `install_cmd` | `npm ci --no-audit --no-fund` | run once in the fresh worktree |
-| `test_cmd` | `npm test` | the test gate; exit 0 is pass. It runs the tests the change reaches, never the full suite: `{base}` in it is the step's base commit, as in `python ohflow/tests/run_tests.py --changed {base}` ([ohflow](ohflow.md#gate-checks)) |
+| `test_cmd` | `npm test` | the test gate; exit 0 is pass. It runs the tests the change reaches, never the full suite: `{base}` in it is the step's base commit, as in `python3 tests/run_tests.py --changed {base}` ([ohflow](ohflow.md#gate-checks)) |
 | `impl_iter`, `review_iter` | 150, 80 | `max_iterations` per phase |
 | `mode=all` | | create worktree, implement, gate, review, gate |
 | `mode=review` | | reuse the worktree, gate it, review only |
@@ -88,7 +88,7 @@ its transcript. Transcripts follow [transcripts](transcripts.md).
 
 `ohflow table` generates the numbers. Run it on any directory of finished runs:
 
-    cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli table --runs <runs root> --by phase
+    cd ohflow/scripts && PYTHONPATH=. python3 -m ohflow.cli table --runs <runs root> --by phase
 
 `transcripts.md` explains the columns and the cost source.
 
@@ -100,7 +100,7 @@ its transcript. Transcripts follow [transcripts](transcripts.md).
 4. **Fire.**
 
    ```bash
-   cd ~/.agents/skills/ohflow/scripts && PYTHONPATH=. python -m ohflow.cli run \
+   cd <ohflow clone>/scripts && PYTHONPATH=. python3 -m ohflow.cli run \
      --workflow ohflow/workflows/implement_review.py \
      --args repo=<repo> --args branch=feat/<x> --args worktree=<repo>-<x> \
      --args harness_executor=pi --args skills_dir=$HOME/.agents/skills \

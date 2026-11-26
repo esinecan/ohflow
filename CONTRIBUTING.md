@@ -12,9 +12,9 @@ An agent invocation is a nondeterministic unit of work. Its brief, tool policy, 
 
 ohflow runs coding agents as gated steps. Its program is the Python package `ohflow` in `scripts/`. A workflow holds phases, and a phase holds steps of kind `agent`, `command`, `gate` or `merge`. A workflow works on one or more workspaces: git repositories, and folders that ohflow turns into one for work that is not code. Each agent step runs in its own git worktree of one workspace, started through one harness executor: `pi`, `claude`, `codex`, `durable`, `pi-cloud`, `claude-cloud` or `codex-cloud`. The step names it, because ohflow has no default harness executor. Tool policy is the gate. An agent calls only the tools it was built with. A gate checks the agent's artifact, because the agent's final message is a claim. Every run leaves a run log. A run also serves a live dashboard, unless it is a dry run, a roll-call test case or a run with `--no-dashboard`. Every run except a dry run writes an exit report.
 
-Agents read [SKILL.md](SKILL.md). It routes by task and lists the verbs. Terms are in [CONTEXT.md](CONTEXT.md). [docs/glossary.md](docs/glossary.md) maps each term to its code and explains how the terms relate, with the m0 milestone as a worked example. `python docs/glossary_sync.py --write` copies the CONTEXT.md definitions into the glossary and its map; `tests/check_docs.py` fails when they disagree or when the public vocabulary surface changed without review. Facts live in [references/](references/).
+Agents read [SKILL.md](SKILL.md). It routes by task and lists the verbs. Terms are in [CONTEXT.md](CONTEXT.md). [docs/glossary.md](docs/glossary.md) maps each term to its code and explains how the terms relate, with the m0 milestone as a worked example. `python3 docs/glossary_sync.py --write` copies the CONTEXT.md definitions into the glossary and its map; `tests/check_docs.py` fails when they disagree or when the public vocabulary surface changed without review. Facts live in [references/](references/).
 
-Open work: [docs/todo.md](docs/todo.md) is the one to-do list for ohflow and its hosts.
+The [GitHub issues of `esinecan/ohflow`](https://github.com/esinecan/ohflow/issues) track the open work on ohflow.
 
 ## Module map
 
@@ -50,9 +50,9 @@ Smaller modules:
 - `construct.py` holds `ohflow construct`. `read_bundle` parses a bundle of milestone specs and refuses it with every fault it finds, `executor_for` derives a step's harness executor from its box and harness, and `write_campaign` writes the charter, `campaign.py` and each milestone's spec, `milestone.json`, `workflow.py` and briefs. [construct](references/construct.md) is the bundle format.
 - `patterns.py` builds a constructed milestone's workflow from its `milestone.json`, in one of six workflow patterns. Each constructed `workflow.py` calls its `build_milestone`, so a judge's edit to `milestone.json` or a brief reaches the next round.
 - `campaign_history.py` holds `ohflow campaign history`. It joins the campaign log, each judge handover's lead paragraph and each packet's acceptance checks. It reads files only.
-- `paths.py` renders a path for each destination. Twenty-five modules import it.
+- `paths.py` renders a path for each destination. Twenty-seven modules import it.
 - `settings.py` reads the operator settings.
-- `tiers.py` resolves a model tier, `heavy` or `light`, to the model the settings map it to on a harness executor. `workflow.validate`, `harness_executor.spec_json`, `estimate` and `validate -v` call it; nothing else reads a tier.
+- `tiers.py` resolves a model tier, `heavy` or `light`, to the model the settings map it to on a harness executor. `workflow.validate`, `harness_executor.spec_json`, `estimate.estimate_workflow`, `validate -v`, `patterns.model_config` and `sessions.open_session` call it. `construct.read_bundle` checks each tier name against its `TIERS`. Nothing else reads a tier.
 - `durable_host.py` installs the durable host from `host/` on the machine that runs a `durable` step, this one for box `local` or a box over ssh, as `~/.pi-durable/ohflow-host/<version>/`. `host/` is a Node package (Node 22.19 or newer): `ohflow-step.mjs` opens a pi-durable `Harness` over the step's `session.sqlite`, and `install.cjs` is the installer `durable_host.py` feeds to `node` on stdin.
 
 ## Operator settings
@@ -63,13 +63,13 @@ The suite reads `tests/operator.settings.json` instead of your local file, so yo
 
 ## Running the suite
 
-The suite uses `unittest` from the standard library. It runs from a fresh clone on Windows and Linux and needs no network and no git identity.
+The suite uses `unittest` from the standard library. It runs from a fresh clone on Windows and Linux and needs no network and no git identity. Every command in this section runs from the root of the ohflow clone.
 
 **A change runs the tests it reaches.** `run_tests.py --changed [BASE]` selects test files from the files changed since `BASE`, committed or not, and runs them after `tests/check_docs.py`. `BASE` defaults to the merge base of `HEAD` and `main`. A gate passes the step's base commit as `--changed {base}`, as [ohflow](references/ohflow.md#gate-checks) states.
 
 ```bash
-python ohflow/tests/run_tests.py --changed
-python ohflow/tests/run_tests.py --changed 88beb7d
+python3 tests/run_tests.py --changed
+python3 tests/run_tests.py --changed 88beb7d
 ```
 
 | Changed file | Test files it runs |
@@ -83,19 +83,20 @@ python ohflow/tests/run_tests.py --changed 88beb7d
 
 Imports count one level deep, because `tests/support.py` imports `ohflow.workflow` and `ohflow.cli`, and a transitive map would select nearly every file. The output names every selected file with its reasons and its estimated seconds from `tests/file_seconds.json`, and its last line gives the selection's runtime. A selection estimated past 300 s runs the changed test files, then the direct part (direct imports, own tests, files that name the change) cheapest first up to 300 s, and names each file it leaves to CI.
 
-**The full suite runs in CI only.** GitHub Actions runs it in three shards, then the real-process tests, on `ubuntu-latest` and `windows-latest` for each pull request into `main` that touches `ohflow/`, except one that changes only Markdown files (`.github/workflows/ohflow.yml`). No stage, gate, acceptance check or agent runs it, so nobody waits for it. On Linux (WSL Ubuntu) a full pass takes about five minutes (1538 tests, 274 s on 2026-11-21). A `windows-latest` runner takes about twenty minutes (1538 tests, 1225 s on 2026-11-21), and a Windows desktop about 34 minutes (1600 tests, 2018 s on 2026-11-23). When CI fails, run the failing test files by name. A Markdown-only pull request skips CI, and `--changed` runs `check_docs.py` and the test files that name each changed Markdown file's path. CI runs:
+**The full suite runs in CI only.** The GitHub Actions workflow `.github/workflows/ci.yml` runs on each push to `main`, on each pull request into `main` and on a manual dispatch. It skips a push or pull request that changes only Markdown files. It runs on `ubuntu-latest` and `windows-latest`, with Python 3.12 and Node 22. Each runner runs the Worker's node tests, then the suite in three shards, then the real-process tests. Shards 2 and 3 and the real-process tests also run after an earlier step fails. No stage, gate, acceptance check or agent runs it, so nobody waits for it. On Linux (WSL Ubuntu) a full pass takes about five minutes (1538 tests, 274 s on 2026-11-21). A `windows-latest` runner takes about twenty minutes (1538 tests, 1225 s on 2026-11-21), and a Windows desktop about 34 minutes (1600 tests, 2018 s on 2026-11-23). When CI fails, run the failing test files by name. For a Markdown-only change, `--changed` runs `check_docs.py` and the test files that name each changed Markdown file's path. These commands run the CI steps by hand:
 
 ```bash
-python ohflow/tests/run_tests.py --shard 1/3
-python ohflow/tests/run_tests.py --shard 2/3
-python ohflow/tests/run_tests.py --shard 3/3
-python ohflow/tests/run_tests.py --real-process
+node --test worker/test/*.test.mjs
+python3 tests/run_tests.py --shard 1/3
+python3 tests/run_tests.py --shard 2/3
+python3 tests/run_tests.py --shard 3/3
+python3 tests/run_tests.py --real-process
 ```
 
 Deterministic. `-k` takes one substring of a test name:
 
 ```bash
-python ohflow/tests/run_tests.py -k rollcall
+python3 tests/run_tests.py -k rollcall
 ```
 
 One test may run 300 s, and 1800 s under `--e2e`, whose live matrix is one test of a few minutes. A test past that limit ends the run with exit code 1, and the output names the test and prints the stack of every thread. The run ends every child process it still has first, so a caller that reads the output through a pipe is released. `--test-timeout SECONDS` sets the limit and wins over both defaults, and `--test-timeout 0` turns it off.
@@ -124,7 +125,7 @@ Codex announces no tool list, so a codex agent's tools go unchecked.
 - `claude-cloud`: the same as `pi-cloud`, and the Worker secret `CLAUDE_CODE_OAUTH_TOKEN`.
 - `codex-cloud`: the same as `pi-cloud`, and a Codex login on the Worker from `node worker/scripts/codex-login.mjs`.
 
-A **test case** is one test scenario on some harness executors at some scale. A **test matrix** is a named table of test cases. Test cases run one after another. Run the verb from `ohflow/scripts`.
+A **test case** is one test scenario on some harness executors at some scale. A **test matrix** is a named table of test cases. Test cases run one after another. Run the verb from `scripts`.
 
 ### Test scenarios
 
@@ -143,7 +144,7 @@ Each test scenario is one pattern of the roll-call workflow, chosen with the fir
 
 The `campaign` test case starts no plain run. It drives `CampaignController` over a one-milestone campaign. It passes only when the judge decisions are REVISE, then PASS.
 
-Every command in this section starts with `cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli`. A test case has the form `scenario:harness-executors[:count][:option]`. The options are `consolidator`, `reviewer`, `judge` (each names a harness executor), the agent profile `agent_profile=hermetic` (`claude` and `codex` only) and `carry_context`.
+Every command in this section starts with `cd scripts && PYTHONPATH=. python3 -m ohflow.cli`. A test case has the form `scenario:harness-executors[:count][:option]`. The options are `consolidator`, `reviewer`, `judge` (each names a harness executor), the agent profile `agent_profile=hermetic` (`claude` and `codex` only) and `carry_context`.
 
 ### Execution presets
 
@@ -187,15 +188,15 @@ Cost: `pi` runs on the Z.AI flat rate. `claude` and `codex` use their subscripti
 Live. This runs the smoke matrix:
 
 ```bash
-cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli rollcall --matrix smoke
+cd scripts && PYTHONPATH=. python3 -m ohflow.cli rollcall --matrix smoke
 ```
 
 Deterministic. These check every workflow without starting an agent:
 
 ```bash
-cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli rollcall --list
-cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli rollcall --matrix full --dry-run
-cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli rollcall --cases merge:pi,claude:2:consolidator=codex --dry-run
+cd scripts && PYTHONPATH=. python3 -m ohflow.cli rollcall --list
+cd scripts && PYTHONPATH=. python3 -m ohflow.cli rollcall --matrix full --dry-run
+cd scripts && PYTHONPATH=. python3 -m ohflow.cli rollcall --cases merge:pi,claude:2:consolidator=codex --dry-run
 ```
 
 ### Read a matrix result
@@ -206,13 +207,13 @@ Each test case prints one line, verdict first:
     FAIL review pi,claude count=1  1m02s  9.0 k tokens  <run dir>  step reviewer: <check>
     SKIP single claude count=1  claude harness executor: <why>
 
-A `FAIL` line ends with the first failing step and check. Read that run with `status --run <run dir>` and open its transcript with `transcript`. The last line is `ROLLCALL PASS: N of N cases` or `ROLLCALL FAIL: F of N cases failed, S skipped`. A run where every test case skipped reads `FAIL`. `--dry-run` prints one `WORKFLOW` line per test case and ends with `ROLLCALL DRY: N cases valid`. A test case whose workflow does not build prints an `INVALID` line instead. That dry run ends with `ROLLCALL DRY: B of N cases invalid` and exits 2.
+A `FAIL` line ends with the first failing step and check. Read that run with `status --run <run dir>` and open its transcript with `transcript`. The last line is `ROLLCALL PASS: P of N test cases` or `ROLLCALL FAIL: F of N test cases failed, S skipped`. A `PASS` line ends with `, S skipped` when a test case skipped. A run where every test case skipped reads `FAIL`. `--dry-run` prints one `WORKFLOW` line per test case and ends with `ROLLCALL DRY: N test cases valid`. A test case whose workflow does not build prints an `INVALID` line instead. That dry run ends with `ROLLCALL DRY: B of N test cases invalid` and exits 2.
 
 | Exit | Meaning |
 |---|---|
-| 0 | `ROLLCALL PASS` or `ROLLCALL DRY: N cases valid` |
+| 0 | `ROLLCALL PASS` or `ROLLCALL DRY: N test cases valid` |
 | 1 | `ROLLCALL FAIL` |
-| 2 | a bad test case, matrix or config, or `ROLLCALL DRY: B of N cases invalid` |
+| 2 | a bad test case, matrix or config, or `ROLLCALL DRY: B of N test cases invalid` |
 
 A passing test case has also proved its resume: resuming the finished run starts no step. The `campaign` test case does not check resume.
 
@@ -230,19 +231,19 @@ A harness executor entry may set `model` (a tier or a model id), `base_url`, `ap
 
 ## Add a harness executor
 
-A harness executor is a module that answers seven questions, plus one row in the registry and one fix hint in `preflight.py`.
+A harness executor is a module that answers seven questions, plus one row in the registry and an entry in each other place that names every harness executor. The top of [harness executors](references/harness-executors.md) lists those places.
 
 1. **Register it.** Add a `HarnessExecutorInfo` row to `HARNESS_EXECUTOR_INFO` in `scripts/ohflow/harness_executors.py`. It names the module and the capabilities that validation reads. Add the harness executor's fix hint to `HARNESS_EXECUTOR_FIX` in `scripts/ohflow/preflight.py`.
 2. **Answer the harness executor questions** in the module: `agent_errors`, `usage`, `activity`, `resume_target`, `reattach_target`, `transcript` and `make_harness_executor`. `harness_executors.py` lists what each returns. `usage` answers in the vocabulary of `attempt_record.TOKEN_KEYS`. `resume_target` is what a retry forks into a new attempt (`carry_context`); `reattach_target` is where a dead supervisor's attempt continues under the same attempt number, and it needs `CAP_REATTACH` in the registry row. An executor without one of them answers `None`; `durable_runner.py` answers `None` to the first and a `<box>:<dir>` to the second.
    Two more questions keep a silent command alive and visible: how the executor reports a tool call's start and end, and how it feeds the call's output to the tool-output contract (`CliEventAction.calls`, or `poll_calls` when stdout carries no events). [Harness executors](references/harness-executors.md#liveness-and-tool-output) lists each executor's answer.
-3. **Write a fake CLI** in `tests/fakes/fake_<name>.py`, after the existing four. It replays a session recorded from the real CLI.
+3. **Write a fake CLI** in `tests/fakes/fake_<name>.py`, after the five fake CLIs there. It replays a session recorded from the real CLI. `fake_pi_cloud.py` beside them is a fake Worker that a test imports.
 4. **Record fixtures** under `tests/fixtures/<name>/`: the real session, usage and error text.
 5. **Write the contract test** `tests/test_harness_executor_contract_<name>.py`. Take the shared assertions from `tests/contract_support.py`: usage equals the tokens in `result.json`, activity ends on the last tool call, a retry names its resume target or none, the transcript points at a file.
 6. **Add the roll-call execution preset.** Put the harness executor's cheap model in `MODELS` and its stall limit in `STALL_S`, both in `scripts/ohflow/workflows/rollcall.py`. The matrices in `scripts/ohflow/rollcall.py` run the harness executors in `THREE`; any other harness executor runs through `--cases`.
 7. **Run a live `single`.** The test case proves the harness executor end to end:
 
 ```bash
-cd ohflow/scripts && PYTHONPATH=. python -m ohflow.cli rollcall --cases single:<name>
+cd scripts && PYTHONPATH=. python3 -m ohflow.cli rollcall --cases single:<name>
 ```
 
 Done when the contract test passes and the live `single` prints `PASS`. Harness executor facts go in [harness executors](references/harness-executors.md).

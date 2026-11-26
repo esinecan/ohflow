@@ -27,7 +27,7 @@ Schema `ohflow.read-out/2`. The example is abridged. Its text values are illustr
     "counts": {"running": 2, "waiting": 3, "restarted": 1, "done": 4},
     "tokens": {"input": 812000, "output": 41000, "cache_read": 300000},
     "resume_command": null,
-    "revert_command": "python -m ohflow.cli revert --run <run-dir>"
+    "revert_command": "python3 -m ohflow.cli revert --run <run-dir>"
   },
   "phases": [
     {"coord": "02.fix", "name": "Fix", "state": "running", "good": 1, "total": 4,

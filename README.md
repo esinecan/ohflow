@@ -183,6 +183,14 @@ teaches them through one example. The terms on this page:
 - [CONTRIBUTING.md](CONTRIBUTING.md) holds the module map and the test suite, for people who change
   ohflow.
 
+## Roadmap
+
+- **Capped loop.** A workflow will repeat one or more phases until a stop command says the work is
+  done, and will stop early when a progress number, such as the count of failing tests, stops
+  improving or the loop reaches its cap.
+- **Run trace.** Each run will export one OpenTelemetry trace, with spans for the run and for each
+  phase, step and attempt, which any OpenTelemetry viewer can open.
+
 ## License
 
 ohflow is licensed under the Apache License, Version 2.0. The full text is in [LICENSE](LICENSE).

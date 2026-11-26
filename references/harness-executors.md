@@ -1,6 +1,6 @@
 # Harness executors: pi, claude, codex, durable, pi-cloud, claude-cloud, codex-cloud
 
-A harness executor launches, monitors, collects results from and stops one kind of harness for an agent step. `harness_executors.py` is the registry. Outside the harness executor modules, one other place names every harness executor: `HARNESS_EXECUTOR_FIX` in `preflight.py`, the fix hint for a failed harness executor check. The engine talks to the `HarnessExecutor` protocol in `harness_executor.py`. For `carry_context` it also calls `harness_executor_module(harness_executor).resume_target` directly, and before restarting a step whose execution is still open it calls `reattach_target` on the harness executors that have it. Test fixtures and live checks: [CONTRIBUTING](../CONTRIBUTING.md#add-a-harness-executor).
+A harness executor launches, monitors, collects results from and stops one kind of harness for an agent step. `harness_executors.py` is the registry. Outside the harness executor modules, these places name every harness executor: `HARNESS_EXECUTOR_FIX` in `preflight.py`, the fix hint for a failed harness executor check; `executor_for` in `construct.py`; `MODELS` and `STALL_S` in `workflows/rollcall.py`; and `tiers` in `ohflow.settings.json`. `_READERS` and `JOINS` in `actions.py` and `_NORMALIZERS` in `dashboard_data.py` name every harness executor except `durable`. The engine talks to the `HarnessExecutor` protocol in `harness_executor.py`. For `carry_context` it also calls `harness_executor_module(harness_executor).resume_target` directly, and before restarting a step whose execution is still open it calls `reattach_target` on the harness executors that have it. Test fixtures and live checks: [CONTRIBUTING](../CONTRIBUTING.md#add-a-harness-executor).
 
 Every agent step names its harness executor in `AgentSpec.harness_executor`. ohflow has no default: `validate` refuses an agent step that names none.
 
@@ -17,7 +17,7 @@ A local harness executor (`pi`, `claude`, `codex`) sees this machine's real file
 
 In a workflow with several [workspaces](ohflow.md#workspaces), a local step reads every workspace on this machine and writes in its own. A step on an ssh box or a cloud box gets its own workspace alone: the transport carries one branch of that workspace's `origin` out and back, so the agent there cannot read the other workspaces. A step on an ssh box or a cloud box that writes in an owned workspace needs the `remote` of that workspace; `validate` refuses the workflow without one.
 
-Every harness executor starts its runner through `proc.spawn_managed`, with the environment from `proc.agent_env`. The runner and its descendants therefore enter a Windows kill-on-close Job Object, so cancelling a run removes the agent and its MCP children together.
+Every harness executor starts its runner through `proc.spawn_managed`, with the environment from `proc.agent_env`. On Windows the runner and its descendants enter a kill-on-close Job Object. On Linux and macOS the runner leads its own process group, and its descendants stay in that group. Cancelling a run therefore removes the agent and its MCP children together.
 
 Every harness executor takes a stall limit. `CliAgentRuntime` applies `Step.stall_timeout_s` and stops an agent whose event stream goes silent while no tool call is open. The attempt then records `stall`, which ends as an `agent_error` ([retry tokens](ohflow.md#retry)).
 
@@ -78,12 +78,12 @@ The signed-in harnesses (`claude` and `codex`) sign in with their own login, so 
 
 | | pi | claude | codex | durable | pi-cloud |
 |---|---|---|---|---|---|
-| Executable | pi CLI | `OHFLOW_CLAUDE_EXE`, else the npm `claude.cmd` target `claude.exe` | `OHFLOW_CODEX_EXE`, else `node` + `codex.js` | `OHFLOW_DURABLE_SSH`, else `C:\Windows\System32\OpenSSH\ssh.exe`; `node` + the host on the box | this Python + `ohflow/pi_cloud_client.py` over HTTPS |
+| Executable | pi CLI | `OHFLOW_CLAUDE_EXE`; else on Windows the npm `claude.cmd` target `claude.exe`, on Linux and macOS the first `claude` on PATH | `OHFLOW_CODEX_EXE`; else on Windows the npm `codex.cmd` target, `node` + `codex.js`, on Linux and macOS the first `codex` on PATH | an ssh box: `OHFLOW_DURABLE_SSH`, else `C:\Windows\System32\OpenSSH\ssh.exe` on Windows and the first `ssh` on PATH on Linux and macOS, then `node` + the host on the box; `local`: `OHFLOW_DURABLE_NODE`, else `node` | this Python + `ohflow/pi_cloud_client.py` over HTTPS |
 | Model params | `thinking` | `effort` | `reasoning_effort` | `thinking` | `thinking` |
 | `AgentSpec.agent_profile` | none | `None` or `"hermetic"` | `None` or `"hermetic"` | none; must be empty | none; must be empty |
-| `AgentSpec.box` | none | none | none | the box's ssh host alias, such as `buildbox`; required | none |
+| `AgentSpec.box` | none | none | none | the box's ssh host alias, such as `buildbox`, or `local` for this machine; required | none |
 | `retry.carry_context` | yes | yes (`--resume --fork-session`) | no | no; a reattach continues the attempt instead | no; a reattach continues the attempt instead |
-| Schema | the final message | native `--json-schema` | native `--output-schema` | the final message, from the box | the final message, from the Worker |
+| Schema | the final message | native `--json-schema` | native `outputSchema` on `turn/start` | the final message, from the box | the final message, from the Worker |
 | Announced tool policy | offered tools | the `system` `init` event | none; servers from `config.toml` plus `codex_apps` | the offered list from `tools.only` | the `tools` of the `pi_cloud_start` line |
 
 Each harness executor accepts only the model params in its row. Its `agent_errors` refuses any other param and a non-empty `ModelConfig.extra_body`.
@@ -126,7 +126,7 @@ Hermetic: `--tools <mapped list> --strict-mcp-config --mcp-config <file> --setti
 
 ## codex
 
-`exec --json -C <worktree> --skip-git-repo-check -s danger-full-access -o <out>/final.md -m <m>`. Always pass `-m`, so the agent runs the workflow's model and not the `config.toml` default. The base `tiers.heavy.codex` model at `reasoning_effort` `high` runs on the signed-in ChatGPT account with codex-cli 0.160.0; 0.157.1 gets a `model_not_found` 400 for it (both tried 2026-11-04). The npm shim is the CLI ohflow starts, so `codex.cmd --version` is the version that counts.
+`python -m ohflow.codex_appserver --codex <argv> --cwd <worktree> --final <out>/final.md --model <m> [--effort <e>] [--schema <file>] --prompt <bootstrap prompt>`. The bridge starts `codex app-server --listen stdio://` in the worktree and speaks JSON-RPC on its stdin. It opens one thread with `approvalPolicy` `never` and `sandbox` `danger-full-access`, and sends the bootstrap prompt as one `turn/start`. It passes the step's model to `thread/start` and `turn/start`, so the agent runs the workflow's model and not the `config.toml` default. It writes the `final_answer` message, else the last agent message, to `final.md`. The base `tiers.heavy.codex` model at `reasoning_effort` `high` runs on the signed-in ChatGPT account with codex-cli 0.160.0; 0.157.1 gets a `model_not_found` 400 for it (both tried 2026-11-04). The result's `codex_version` is the `--version` of the CLI that the [launch rules](#launch-rules-for-the-cli-harness-executors) resolve.
 
 A step `schema` reaches Codex as a strict `outputSchema`. The API refuses it with `invalid_json_schema` unless every object in it sets `additionalProperties: false` and lists all its properties as required. For open-ended report objects, leave `schema` off and gate the report file with a `command_exit` check.
 
@@ -296,12 +296,15 @@ commits (`remote_git.transport_position`). The `claude-cloud`, `codex-cloud` and
 `Authorization: Bearer <token>` and `User-Agent: ohflow-pi-cloud/1` -
 Cloudflare answers error 1010 with HTTP 403 to Python's default `User-Agent`,
 so every request sets its own. `POST step` carries the rewritten brief, the
-model (`provider/id`, the providers `zai` and `deepseek`), the thinking level,
-`max_iterations`, the remote URL, the branch, the start commit and the ohflow
-coordinate; a
+model (`provider/id`), the thinking level, `max_iterations`, the remote URL,
+the branch, the start commit and the ohflow coordinate; a
 repeat with the same operation id answers `accepted: false, reattach: true`
-and changes nothing. `GET events` is NDJSON: a `pi_cloud_start` line, the
-transcript replayed with `"replayed": true`, then live pi event shapes, a
+and changes nothing. The model's provider must be one that the
+`pi_cloud.providers` setting lists, the providers whose keys the Worker holds.
+`ohflow.settings.json` ships that list empty, so validation refuses every
+`pi-cloud` model until `ohflow.settings.local.json` names a provider.
+`GET events` is NDJSON: a `pi_cloud_start` line, the transcript replayed
+with `"replayed": true`, then live pi event shapes, a
 `pi_cloud_beat` every 15 s, and `pi_cloud_end` when the operation settles.
 `POST abort` stops the operation. `GET transcript` and `GET out/<file>` serve
 the agent's text. `GET /` answers 404 with both headers and 401 with a wrong
@@ -526,6 +529,6 @@ The Worker side is [the pi-cloud Worker](pi-cloud-worker.md#claude-code-and-code
 
 ## Launch rules for the CLI harness executors
 
-- **The npm shim resolves to its target.** No argument passes through `cmd.exe`, so quotes and `&` arrive intact and the 8191-character limit does not apply. PATH is never searched first.
+- **On Windows the npm shim resolves to its target.** ohflow reads `%APPDATA%\npm\<name>.cmd`, else the first `<name>.cmd` on PATH, and starts the `.exe` or the `node` script that the shim names. No argument passes through `cmd.exe`, so quotes and `&` arrive intact and the 8191-character limit does not apply. On Linux and macOS ohflow starts the first `<name>` on PATH. An `OHFLOW_CLAUDE_EXE` or `OHFLOW_CODEX_EXE` override comes first on every OS.
 - **One bootstrap prompt.** `Your brief is at <abs>/brief.md. Read it and follow it.`
 - **A clean environment.** Every `CLAUDE*` variable and `ANTHROPIC_BASE_URL` is removed. A desktop-app session exports 25 `CLAUDE*` names and an `ANTHROPIC_BASE_URL` that points at the app's own proxy.

@@ -50,11 +50,11 @@ For every run, follow [operate-a-run](references/operate-a-run.md), and read [mo
 | `claude`, `codex` | a step that needs that signed-in harness's model, memory or fleet |
 | `durable`, `pi-cloud`, `claude-cloud`, `codex-cloud` | a step that must survive this machine |
 
-ohflow has no default harness executor. Facts, tool policies and launch rules: [harness executors](references/harness-executors.md). An agent needing an MCP server: `mcp_config` on a `pi` step, in [ohflow](references/ohflow.md#narrow-an-mcp-tool-policy).
+ohflow has no default harness executor. Facts, tool policies and launch rules: [harness executors](references/harness-executors.md). An agent needing an MCP server: `mcp_config`, in [ohflow](references/ohflow.md#narrow-an-mcp-tool-policy).
 
 ## Verbs
 
-Run each from `~/.agents/skills/ohflow/scripts` as `PYTHONPATH=. python -m ohflow.cli <verb>`. Flags: `<verb> --help`. Verdict lines, `--json` and exit codes: [ohflow](references/ohflow.md#run-it).
+Run each from `scripts/` as `PYTHONPATH=. python3 -m ohflow.cli <verb>`. Flags: `<verb> --help`. Verdict lines, `--json` and exit codes: [ohflow](references/ohflow.md#run-it).
 
 | Verb | What it does |
 |---|---|
@@ -82,4 +82,4 @@ With `commit_checks.no_ai_attribution` on, the house check `no_ai_attribution` f
 
 ## Improve this skill
 
-Update verified operating guidance in its reference; keep run evidence in notes and open bugs in [docs/todo.md](docs/todo.md). Mark assumptions, and verify fixes before closing them.
+Update verified operating guidance in its reference; keep run evidence in notes, and open bugs where `references/local.md` says, else in GitHub issues. Mark assumptions; verify fixes before closing them.

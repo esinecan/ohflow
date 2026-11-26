@@ -6,8 +6,8 @@ a knowledge graph or a folder of specs. You write what you read as a bundle, and
 the bundle. ohflow carries no connector code.
 
 ```bash
-cd ~/.agents/skills/ohflow/scripts && export PYTHONPATH=.
-python -m ohflow.cli construct --bundle <bundle> --out <campaign> [--history DIR]
+cd <ohflow clone>/scripts && export PYTHONPATH=.
+python3 -m ohflow.cli construct --bundle <bundle> --out <campaign> [--history DIR]
 ```
 
 Done when the verb prints `CAMPAIGN OK` as its second-to-last line.
@@ -53,8 +53,9 @@ base: main
   `campaign/<name>`. `kind` is `delivery` (the default) or `empirical`, as
   [campaign](campaign.md#intervention-by-kind-of-objective) defines them; write the reason for
   the kind under `## Decisions already made`, which the charter carries beside it.
-  `judge harness` (`pi`, `claude` or `codex`) and `judge tier` name the judge; without them the
-  campaign takes `default_judge()`.
+  `judge harness` (`pi`, `claude` or `codex`) and `judge tier` name the judge. When the bundle
+  names one of the two, the other is `claude` or `heavy`. When it names neither, the judge is
+  `claude` on the tier that the `campaign.judge_model` setting names, `heavy` by default.
 - **`## The operator's words` is required.** Every section other than a workspace goes into the
   charter in its order, so write the bar, the decisions and the stop-and-ask points there.
 - **Each `## Workspace <name>` declares one [workspace](ohflow.md#workspaces).** `path` is the
@@ -99,7 +100,8 @@ review harness: claude
 `## Scope` is required. Its text and the whole milestone spec go into every brief, so a cloud step needs no
 local file. A pattern with pieces needs `## Steps`, with one `### <name>` part per step: the part
 opens with its own field lines (`workspace`, `writes`, `box`, `harness`, `tier`, `durable`), and its
-task follows. A step name is lowercase letters, digits and hyphens.
+task follows. A step name is lowercase letters, digits and hyphens. It starts with none of
+`merge-`, `check-` and `piece-`, and it is none of `agent`, `implement`, `review` and `consolidate`.
 
 ## The workflow patterns
 
@@ -154,7 +156,7 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
 - **A command tests the change, never the whole suite.** The full suite runs in CI after a push,
   as [ohflow](ohflow.md#gate-checks) states. `{base}` in a command is the commit the milestone
   started from, so a runner can select the tests the change reaches; for this repository the
-  line is `- command: python ohflow/tests/run_tests.py --changed {base}`. No workspace may
+  line is `- command: python3 tests/run_tests.py --changed {base}`. No workspace may
   be named `base`.
 - **`{<workspace>}` in a command is that workspace's output worktree.** `construct` writes it as a
   Git Bash path built from `$PWD`, so the same command finds the sibling worktree in the pilot.
@@ -187,11 +189,12 @@ CONSTRUCTED <campaign>: 3 milestones
 04-pi-cloud-transcript implement-and-review: VALID 04-pi-cloud-transcript: 2 phases, 2 steps; harness executors claude:1, codex:1
 04-pi-cloud-transcript: ESTIMATE 04-pi-cloud-transcript: ~17 min (p50) to 29 min (p80), ...
 CAMPAIGN OK
-start: python -m ohflow.cli campaign run --campaign <campaign>/campaign.py --pilot --detach
+start: python3 -m ohflow.cli campaign run --campaign <campaign>/campaign.py --pilot --detach
 ```
 
-Line one says the campaign is written. One line per milestone is its `validate` verdict, and with
-a history one line is its `estimate`; without one, one line says that no history was given. Then
+Line one says the campaign is written. One line per milestone is its `validate` verdict. A milestone
+that does not build prints `INVALID` and one indented line per fault. With a history, one line
+is its `estimate`; without one, one line says that no history was given. Then
 come the `campaign validate` problems and its verdict, and the command that starts the campaign.
 It exits 0 on `CAMPAIGN OK` and 2 when a milestone or the campaign does not validate.
 

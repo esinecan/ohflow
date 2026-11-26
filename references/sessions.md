@@ -8,7 +8,7 @@ Each turn is one process. A small wrapper starts `pi -p --mode json --session-di
 
 ## The verbs
 
-Run each from `~/.agents/skills/ohflow/scripts` as `PYTHONPATH=. python -m ohflow.cli session <verb> ... --dir <record dir>`. Every verb prints one JSON object, and exit code 2 means refused, with the reason in `refused`.
+Run each from the `scripts/` folder of your ohflow clone as `PYTHONPATH=. python3 -m ohflow.cli session <verb> ... --dir <record dir>`. Every verb prints one JSON object, and exit code 2 means refused, with the reason in `refused`.
 
 | Verb | What it does |
 |---|---|

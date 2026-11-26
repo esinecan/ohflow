@@ -12,7 +12,7 @@ Use this procedure for every fresh workflow run and campaign run.
 4. **Merge only with the user's go.** `git -C <checkout> merge <branch>` merges into the branch the checkout is on and changes its files under the other session. Git refuses the merge and changes nothing when an uncommitted file overlaps the branch (`Please commit your changes or stash them before you merge`); then leave the branch unmerged and name it to the user. Done when the branch is merged, or the user has its name and the reason it waits.
 5. **Take the run out of the clone.** Run `revert --run <run-dir>`: it removes the run's worktrees and branches from the clone. Keep the clone for the next run and refresh it with `git -C <clone> pull --ff-only`, or delete its folder. Done when `git -C <clone> worktree list` shows the clone alone.
 
-## Hand the user the dashboard
+## Keep hashed text artifacts byte for byte
 
 When a run transports hashed text artifacts between Windows and a cloud worktree,
 set their Git line-ending policy before capture. Use `-text` for hashed raw evidence
@@ -22,13 +22,15 @@ A checkout rule alone does not stop a Windows writer from emitting CRLF before t
 hash is taken. Verify the hash after an independent checkout, not only in the worktree
 that captured the file.
 
+## Hand the user the dashboard
+
 A run that `run` starts has a live dashboard. `--no-dashboard` and `--dry-run` start none, and roll-call test cases run without one. The user monitors the run there and gets its URL first.
 
 1. **Fire with `--hold`, or with `--pilot` when the workflow declares units, and hand over the URL.** Run `run --hold ...`. For a workflow with `Workflow.units`, run `run --pilot --history <runs root> ...` instead. The run writes its plan, serves the dashboard, passes preflight and waits; the page reads `held` and every step opens its plan (brief, tool policy, write scope, limits). Read `dashboard: <url>` on line one and send the user the link inside the bill that [monitor-a-run](monitor-a-run.md#at-hand-over-write-the-bill) describes. A detached run may print `dashboard: pending`; read `<run-dir>/dashboard.json` later. With `--pilot`, the smallest unit of each unit path runs first, in `<run-dir>\pilot`. Call `watch --run <run-dir>` until it prints `held: waiting for go`. Then put the projection into the bill: the `pilot:` line, each `pilot <path>:` line and the `ESTIMATE` line beside them. Wait for the user's go or revisions. Edit the workflow module when the user asks. After an edit, run `estimate --workflow <module> --args ... --pilot <run-dir>` and hand the user the new projection. `go` loads the module again. Then run `ohflow go --run <run-dir>`, and add `--predictions <file>` when you wrote an orchestrator calibration during the hold: `go` writes the file to `predictions.md`, logs it in `notes.md`, and refuses when `predictions.md` already holds predictions. Done when `go` has printed `go sent to <run-dir>`.
 2. **Watch the run by [monitor-a-run](monitor-a-run.md).** It covers each poll, each phase boundary and each of the user's replies. Done when `watch` exits with a code other than 10.
 3. **Close with the exit report.** Give the user the verdict and the `exit report:` path. Done when the user has both.
 
-For a campaign, call `campaign watch` and send the user each new dashboard URL. `campaign run --hold` holds the first fresh round only, and a later round whose estimate exceeds the first round's actual minutes by half ([campaign](campaign.md)).
+For a campaign, call `campaign watch` and send the user each new dashboard URL. `campaign run --hold` holds the first fresh round, and a later fresh round or a round after a judge's REVISE whose estimate exceeds the first round's actual minutes by half. A resume after an interruption never holds ([campaign](campaign.md)).
 
 ## Keep the run notes
 
