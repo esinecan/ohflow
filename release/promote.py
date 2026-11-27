@@ -40,8 +40,12 @@ class GitHub:
         if urllib.parse.urlsplit(url).hostname not in ("api.github.com", "uploads.github.com"):
             raise ValueError("unexpected GitHub API host")
         body = data if isinstance(data, bytes) else encoded(data) if data is not None else None
+        # Actions archives return a redirect through the JSON API. Only release
+        # asset downloads use octet-stream negotiation; decoding bytes is separate.
+        asset_download = binary and re.fullmatch(r"/repos/[^/]+/[^/]+/releases/assets/[0-9]+",
+                                                 urllib.parse.urlsplit(url).path)
         headers = {"Authorization": f"Bearer {self.token}",
-                   "Accept": "application/octet-stream" if binary else "application/vnd.github+json",
+                   "Accept": "application/octet-stream" if asset_download else "application/vnd.github+json",
                    "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "ohflow-release"}
         if body is not None:
             headers["Content-Type"] = "application/octet-stream" if isinstance(data, bytes) else "application/json"

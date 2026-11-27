@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import Mock
 from urllib.parse import parse_qs, urlsplit
 import zipfile
 
@@ -16,6 +17,35 @@ ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "example/ohflow"
 JOBS = ("suite (ubuntu-latest)", "suite (windows-latest)", "release candidate",
         "package smoke (ubuntu-latest)", "package smoke (windows-latest)")
+
+
+class GitHubTransportTests(unittest.TestCase):
+    def download(self, path):
+        api = promote.GitHub(REPOSITORY, "test-token")
+        api.opener = Mock()
+        api.opener.open.return_value = io.BytesIO(b"archive bytes")
+        self.assertEqual(api.request(path, binary=True), b"archive bytes")
+        return api.opener.open.call_args.args[0]
+
+    def test_actions_archive_negotiates_json_api_before_binary_redirect(self):
+        request = self.download("/actions/artifacts/7/zip")
+        self.assertEqual(request.get_header("Accept"), "application/vnd.github+json")
+
+    def test_release_asset_negotiates_octet_stream(self):
+        request = self.download("/releases/assets/7")
+        self.assertEqual(request.get_header("Accept"), "application/octet-stream")
+
+    def test_cross_host_download_redirect_removes_authorization(self):
+        request = self.download("/actions/artifacts/7/zip")
+        redirect = promote.Redirect()
+        redirected = redirect.redirect_request(request, None, 302, "Found", {},
+                                                 "https://release-assets.githubusercontent.com/archive.zip")
+        self.assertIsNone(redirected.get_header("Authorization"))
+        same_host = redirect.redirect_request(request, None, 302, "Found", {},
+                                                "https://api.github.com/another-path")
+        self.assertEqual(same_host.get_header("Authorization"), "Bearer test-token")
+        with self.assertRaisesRegex(ValueError, "outside HTTPS"):
+            redirect.redirect_request(request, None, 302, "Found", {}, "http://example.invalid/archive.zip")
 
 
 class GitHubFixture:
