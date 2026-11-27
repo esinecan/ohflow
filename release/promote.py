@@ -108,16 +108,29 @@ def validated_run(api, repository, run_id):
         if latest is None or latest.get("conclusion") != "success":
             raise ValueError(f"Required validation did not pass: {name}")
         if name == "release candidate":
-            run["candidate_attempt"] = latest["run_attempt"]
+            # GitHub copies successful jobs into a partial rerun with fresh IDs and
+            # the new attempt number, although their artifact was not rebuilt.
+            run["candidate_attempts"] = sorted({job["run_attempt"] for job in matches
+                                               if job.get("conclusion") == "success"
+                                               and job["run_attempt"] <= run["run_attempt"]}, reverse=True)
     return run
 
 
+def candidate_artifact(run, artifacts):
+    for attempt in run["candidate_attempts"]:
+        name = f"release-candidate-{run['id']}-{attempt}"
+        matches = [a for a in artifacts if a["name"] == name]
+        if len(matches) > 1:
+            raise ValueError(f"Ambiguous candidate artifact: {name}")
+        if matches and not matches[0].get("expired"):
+            return matches[0]
+    raise ValueError(f"Original candidate for run {run['id']} is missing/expired. "
+                     "Use retained GitHub release assets for channel retries.")
+
+
 def download_candidate(api, run, destination):
-    name = f"release-candidate-{run['id']}-{run['candidate_attempt']}"
-    matches = [a for a in api.pages(f"/actions/runs/{run['id']}/artifacts", "artifacts") if a["name"] == name]
-    if len(matches) != 1 or matches[0].get("expired"):
-        raise ValueError(f"Original candidate '{name}' is missing/expired. Use retained GitHub release assets for channel retries.")
-    raw = api.request(f"/actions/artifacts/{matches[0]['id']}/zip", binary=True)
+    artifact = candidate_artifact(run, api.pages(f"/actions/runs/{run['id']}/artifacts", "artifacts"))
+    raw = api.request(f"/actions/artifacts/{artifact['id']}/zip", binary=True)
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         names = archive.namelist()
         if len(names) != 2 or "manifest.json" not in names or not all(re.fullmatch(r"manifest\.json|ohflow-0\.0\.[1-9][0-9]*\.zip", n) for n in names):

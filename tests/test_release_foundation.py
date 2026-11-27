@@ -243,6 +243,13 @@ class ReleaseFoundation(unittest.TestCase):
         self.api.jobs.append({"id": 10, "run_attempt": 2, "name": JOBS[-1], "conclusion": "success"})
         self.assertEqual(self.promote()["result"], "create")
 
+    def test_github_copied_jobs_keep_the_original_candidate_artifact(self):
+        self.api.run["run_attempt"] = 2
+        self.api.jobs.extend({"id": 10 + i, "run_attempt": 2, "name": name, "conclusion": "success"}
+                             for i, name in enumerate(JOBS))
+        self.assertEqual(self.promote()["result"], "create")
+        self.assertEqual(self.api.artifact["name"], "release-candidate-100-1")
+
     def test_newer_failed_job_cannot_reuse_an_older_success(self):
         self.api.jobs.append({"id": 10, "run_attempt": 2, "name": JOBS[-1], "conclusion": "failure"})
         with self.assertRaisesRegex(ValueError, "Required validation"):
