@@ -3,8 +3,8 @@
 The `pi-cloud`, `claude-cloud` and `codex-cloud` harness executors drive one Cloudflare Worker,
 named `pi-cloud` unless the setting `name` says otherwise, which runs each step in a container in
 your own Cloudflare account. Its source is `worker/` in this skill. Its code mode scripts run in a
-second Worker, `<name>-codemode` (`worker/sandbox/`), which keeps pi-codemode's class name `CodemodeSandbox`. The executors are described in [harness executors](harness-executors.md#pi-cloud);
-this page deploys the Worker and describes its side.
+second Worker, `<name>-codemode` (`worker/sandbox/`), which keeps pi-codemode's class name `CodemodeSandbox`. The executors are described in [harness executors](harness-executors.md#pi-cloud),
+and this page deploys the Worker and describes its side.
 
 ## Deploy it to your Cloudflare account
 
@@ -15,7 +15,7 @@ Node 22.19 or newer. Containers bill their memory and disk for every second they
 2. **Sign in.** Run `node node_modules/wrangler/bin/wrangler.js login`, or export
    `CLOUDFLARE_API_TOKEN` with the Workers and Containers permissions.
 3. **Write your settings.** Create `worker/pi-cloud.settings.local.json`, which git ignores, with the
-   keys of the table below that you need. Your values override the shipped
+   keys of the table below that you need. Your values override the checked-in
    `worker/pi-cloud.settings.json`, which names the Worker `pi-cloud` and leaves every other value
    empty. Every Node script here takes `--settings <file>` to read another file in place of
    `pi-cloud.settings.local.json`. `set-secrets.ps1` takes no such flag and always reads
@@ -27,7 +27,7 @@ Node 22.19 or newer. Containers bill their memory and disk for every second they
 5. **Set the secrets.** For each of `OHFLOW_TOKEN` (a random string the supervisor sends as
    `PI_CLOUD_TOKEN`), `GITHUB_TOKEN` and `ZAI_API_KEY`, which serves the default model, run
    `node node_modules/wrangler/bin/wrangler.js secret put <NAME> --name <name>` from `worker/`.
-   `DEEPSEEK_API_KEY` serves the DeepSeek models and `BRAVE_API_KEY` the brave-search server; set them
+   `DEEPSEEK_API_KEY` serves the DeepSeek models and `BRAVE_API_KEY` the brave-search server. Set them
    when you use those. On Windows, `scripts/set-secrets.ps1` sets all of them at once on the Worker
    your local settings name, from your User environment (`PI_CLOUD_GITHUB_TOKEN` there becomes
    `GITHUB_TOKEN`), and makes `PI_CLOUD_TOKEN` when it is unset.
@@ -49,23 +49,23 @@ the repos your steps work in, and read on your skills repo.
 
 | Key | What it sets | Empty value |
 |---|---|---|
-| `name` | the Worker's name, shipped as `pi-cloud`: lowercase letters, digits and inner dashes, at most 54 characters. The code mode Worker is `<name>-codemode`, and the Worker's `CODEMODE_SANDBOX` binding names it | `pi-cloud` |
+| `name` | the Worker's name, checked in as `pi-cloud`: lowercase letters, digits and inner dashes, at most 54 characters. The code mode Worker is `<name>-codemode`, and the Worker's `CODEMODE_SANDBOX` binding names it | `pi-cloud` |
 | `account_id` | the Cloudflare account the deploy and `set-secrets.ps1` use | wrangler uses the account of its login |
-| `url` | the Worker's address for `snapshot.mjs` and `codex-login.mjs`; `PI_CLOUD_URL` wins | the address the deploy recorded for `name`; with none, both scripts stop and say so |
+| `url` | the Worker's address for `snapshot.mjs` and `codex-login.mjs`, and `PI_CLOUD_URL` wins | the address the deploy recorded for `name`. With none, both scripts stop and say so |
 | `git_owner` | the var `GIT_OWNER`: the GitHub account whose private repos a step may clone | every step's repo is refused |
-| `git_identity` | `{name, email}`: the default commit author and committer for cloud steps, installed as system Git config for both users and used by the pi workspace; repository config can override it | `ohflow <ohflow@users.noreply.github.com>` |
-| `skills_repo` | the var `SKILLS_REPO`, `<owner>/<name>`: a repo you control whose skills the steps mount; the Worker follows its `main` branch | the checkout's `origin` remote when `git_owner` owns it, as in your own fork; otherwise no skills repo |
+| `git_identity` | `{name, email}`: the default commit author and committer for cloud steps, installed as system Git config for both users and used by the pi workspace. Repository config can override it | `ohflow <ohflow@users.noreply.github.com>` |
+| `skills_repo` | the var `SKILLS_REPO`, `<owner>/<name>`: a repo you control whose skills the steps mount. The Worker follows its `main` branch | the checkout's `origin` remote when `git_owner` owns it, as in your own fork, and otherwise no skills repo |
 | `skills_root_skill` | the var `SKILLS_ROOT_SKILL`: the skill name when the repo root is one skill | read from `SKILL.md` when the checkout is that repo's root |
 | `snapshot.skills` | `{repo, sha}`: a skills repo the snapshot clones to `/opt/agent-skills`, which a Claude Code or Codex step that names no skill reads | `/opt/agent-skills` is an empty folder in the snapshot |
 | `snapshot.repos` | a list of `{repo, sha, name?, build?}`: repos the snapshot clones to `/opt/mcp/<name>` and builds with the `build` shell lines | no repo is cloned |
-| `snapshot.mcp_servers` | MCP server entries added to the box's server table, in the shape of `worker/snapshot/box/mcp-servers.json` | the shipped table: sequential-thinking, brave-search, Playwright MCP |
+| `snapshot.mcp_servers` | MCP server entries added to the box's server table, in the format of `worker/snapshot/box/mcp-servers.json` | the checked-in table: sequential-thinking, brave-search, Playwright MCP |
 
 `sha` is a full commit id. A box rules file of your own, `worker/snapshot/AGENTS.local.md`, which git
-ignores, is appended to the shipped `worker/snapshot/AGENTS.md` when it exists. Your snapshot
+ignores, is appended to the checked-in `worker/snapshot/AGENTS.md` when it exists. Your snapshot
 settings and that file are part of the recipe, so a change to either gives a new snapshot key and
 needs a snapshot build.
 
-Changing `git_identity` also needs a deploy and snapshot build. It controls commit metadata;
+Changing `git_identity` also needs a deploy and snapshot build. It controls commit metadata, while
 the existing GitHub token still controls access. Snapshot verification creates a temporary
 repository and checks a real commit's author and committer as both root and the agent user.
 
@@ -79,11 +79,11 @@ file as it is. The moved snapshot pins take effect with the next deploy and snap
 A `name` other than `pi-cloud` deploys a second pair of Workers, with their own Durable Objects,
 snapshot, secrets and address, beside the first. The deploy writes the two configs with that name
 to `wrangler.generated.json` beside `wrangler.jsonc` and `sandbox/wrangler.jsonc` and removes them
-when it ends; the Durable Object classes and migrations are those of the checked-in configs. With
+when it ends. The Durable Object classes and migrations are those of the checked-in configs. With
 the name `pi-cloud` the deploy uses the checked-in configs as they are. A second Worker builds or
 tests a snapshot without touching the Worker your steps use, whose steps would start from its
 earlier snapshot from the deploy until the build ends. Give the test its own settings file,
-for example the shipped values with `name` and `account_id`:
+for example the checked-in values with `name` and `account_id`:
 
 ```
 node scripts/deploy.mjs --settings <test settings>
@@ -94,8 +94,8 @@ node node_modules/wrangler/bin/wrangler.js delete --name <name>
 node node_modules/wrangler/bin/wrangler.js delete --name <name>-codemode
 ```
 
-With the shipped settings the build needs only `OHFLOW_TOKEN`. On 21.11.2026 this built the
-shipped-settings snapshot on `ohflow-newcomer-test` while `pi-cloud` kept its version and key.
+With the checked-in settings the build needs only `OHFLOW_TOKEN`. On 21.11.2026 this built the
+snapshot of the checked-in settings on `ohflow-newcomer-test` while `pi-cloud` kept its version and key.
 
 ## Routes
 
@@ -108,11 +108,11 @@ names its own.
   clones `branch` of an allowed repo into `/workspace/repo`, checks that HEAD is `start_sha`, sets the
   session's model and thinking level, makes `/workspace/out` and submits the brief as an
   `ohflow.brief` entry. A repeat with the same `operationId` changes nothing and answers
-  `accepted: false, reattach: true`; another `operationId` gets 409. `tools` is
+  `accepted: false, reattach: true`. Another `operationId` gets 409. `tools` is
   `{allow?, block?}`, two lists of `server.tool` globs over the box's MCP tools (`*` stays inside one
-  segment, `**` crosses the dot); an `allow` glob that matches no tool gets 400. The answer lists the
+  segment, `**` crosses the dot), and an `allow` glob that matches no tool gets 400. The answer lists the
   offered tools, with `codemode` and each MCP function, and `mcp_errors` names a server whose tool
-  list failed. `skills` names skill folders of the skills repo (section [Skills](#skills)); a name the
+  list failed. `skills` names skill folders of the skills repo (section [Skills](#skills)). A name the
   mirror does not hold gets 400, and the answer carries `skills: {sha, names}`. `max_iterations`, an
   integer 1 or more, becomes the session's `maxTurns`: the run ends after that many model calls, the
   tool calls of the last one included, and the operation settles `unanswered`, `turn_limit`. The answer and
@@ -129,16 +129,16 @@ names its own.
 - `POST abort` with `{operationId}`: stops the operation, which then settles `unanswered`, `aborted`,
   and stops the object's container. The answer carries `container` and `last_look`: the box as it
   was just before the stop, `{at, took_ms, exit, text, truncated}` (`worker/src/last-look.mjs`), with `text` cut at 8000 characters.
-  `text` reads without a second sample: the uptime, the load, the cores and the box's first
-  process; whether a lookup of the box's own hostname answers within 2 s, and whether the hosts
-  file names it; the machine's CPU shares since boot and over the look's own second, with the steal
-  share; the container's cgroup CPU use and throttling since boot and over that second, and its
-  limit; the memory; the count of live processes, of zombies and of processes blocked in the
-  kernel; the zombies by parent; and the live processes, oldest first. `last_look` is null when
+  `text` reads without a second sample. It holds the uptime, the load, the cores and the box's first
+  process. It says whether a lookup of the box's own hostname answers within 2 s, and whether the hosts
+  file names it. It gives the machine's CPU shares since boot and over the look's own second, with the steal
+  share, and the container's cgroup CPU use and throttling since boot and over that second, with its
+  limit. Then come the memory, the count of live processes, of zombies and of processes blocked in the
+  kernel, the zombies by parent, and the live processes, oldest first. `last_look` is null when
   the container was not running, and `{at, took_ms, error}` when the look failed. The whole look
   ends after 10 s at most, also when `exec` or the command's output never answers, and the stop
   follows in every case. ohflow writes `text` to `logs/box-last-look.txt` of the attempt, and
-  `pi_cloud.last_look` in `result.json` points at it; its `absent` says why an abort left no
+  `pi_cloud.last_look` in `result.json` points at it. Its `absent` says why an abort left no
   look.
 - `container` is the object's container chronometer: `durable_object_id`, `instance`, `seconds` (the
   container's running time summed over every launch in this object), `launches`, and `stopped` (the
@@ -155,7 +155,7 @@ names its own.
   `probe` prints the container's processes, the CA directory and the gateway logs.
 
 `MODEL` sets the default model. A step may clone a repo when `GIT_OWNER` owns it, GitHub reports it
-private, and `GITHUB_TOKEN` reaches it; the Worker asks `GET /repos/<repo>` with the token and keeps
+private, and `GITHUB_TOKEN` reaches it. The Worker asks `GET /repos/<repo>` with the token and keeps
 each answer for 60 seconds. The token's repository access on github.com is therefore the list of
 repos, and a change there needs no redeploy. `GITHUB_TOKEN` stays in the Durable Object. A step
 container has no general Internet: its outbound HTTP and HTTPS go through the Worker, which serves
@@ -166,14 +166,14 @@ only the hosts named under `secrets` in the box's server table and answers 403 t
 Every step's container starts from one default snapshot, with `computerd` as its entrypoint, so a
 step installs nothing. The recipe is `worker/snapshot/recipe.mjs`: setup steps run on the managed
 image `cloudflare/debian-trixie` (Node 24). The CLIs, the npm MCP servers and the repo commits
-are pinned; the image and the APT packages are not. The snapshot key is the first 16 bytes of
+are pinned, but the image and the APT packages are not. The snapshot key is the first 16 bytes of
 the SHA-256 of the image name and the steps, so the same recipe gives the same key, and a new snapshot pin or CLI version gives a new one. The box's rules file is `worker/snapshot/AGENTS.md` with your
 `AGENTS.local.md` appended: the snapshot links it into `~/.pi/agent`, `~/.codex` and
 `~/.claude/CLAUDE.md`, and `StepAgent` renders it as a system prompt section. `box-versions` prints
 the version of each program in the box, and `box-chromium` renders a `data:` URL with headless
 Chromium.
 
-With the shipped settings the snapshot clones no repo: it holds the Debian tools, the document tools,
+With the checked-in settings the snapshot clones no repo: it holds the Debian tools, the document tools,
 the `pi`, `codex` and `claude` CLIs, the npm MCP servers and headless Chromium. `snapshot.skills` and
 `snapshot.repos` add your own repos, cloned at their pinned commits.
 
@@ -197,7 +197,7 @@ commands run from `worker/`:
   machine in a WSL distro (default `boxtest`), which costs no Cloudflare build. Make the distro with
   `wsl --import` from the first layer of `node:24-trixie-slim`, untar the later layers into it, and
   set `appendWindowsPath=false` in its `/etc/wsl.conf`. Cloudflare documents
-  `cloudflare/debian-trixie` as built from that image; on 14.11.2026 it carried Node 24.22.1.
+  `cloudflare/debian-trixie` as built from that image. On 14.11.2026 it carried Node 24.22.1.
 
 A Claude Code or Codex step starts from the same snapshot through `ContainerHarness` (section
 [Claude Code and Codex steps](#claude-code-and-codex-steps)), so the snapshot also holds the user
@@ -221,7 +221,7 @@ the list. The model runs a skill's scripts with `exec`, because the box sees the
   commit is new to the mirror, and answers once the copy is complete. A step that names skills calls
   `sync()` when `POST step` first runs, so it pins the head of `main` of that moment. `current()`
   answers the stored commit, checks the head at most once a minute and leaves a new head to an
-  alarm; `GET /skills` and a Worker that only reads the mirror call it. The mirror keeps each
+  alarm. `GET /skills` and a Worker that only reads the mirror call it. The mirror keeps each
   top-level folder that holds a `SKILL.md`, or, with `SKILLS_ROOT_SKILL` set, the whole repo as that
   one skill. It leaves out every path with a segment that starts with a dot and every file above
   512 KB, and keeps the newest three commits. On 15.11.2026 one commit of a repo of 49 skills was
@@ -247,15 +247,15 @@ the box) serves every server of `/etc/agent-box/mcp-servers.json` on port 8800: 
 takes MCP JSON-RPC (one message or a batch) and answers with JSON, and `GET /health` lists the
 servers and the running ones. It starts each server as its own child on first use and keeps that
 child for the life of the container, so a server that holds state in memory keeps it between calls.
-The shipped table serves sequential-thinking, brave-search and Playwright MCP
-(`--browser chromium --headless --isolated`); `snapshot.mcp_servers` adds yours.
+The checked-in table serves sequential-thinking, brave-search and Playwright MCP
+(`--browser chromium --headless --isolated`), and `snapshot.mcp_servers` adds yours.
 
 `StepAgent` starts the gateway with `ctx.container.exec` on the first MCP request of a container,
 with the box `PATH` and `NODE_EXTRA_CA_CERTS`, and reaches it through
 `ctx.container.getTcpPort(8800).fetch()`. The first start from a freshly built snapshot can take
 longer than the backend's default 30 s connect deadline, so `StepAgent` sets `connectTimeoutMs` to
 120 s. On the first step of a snapshot key, `POST step` starts the container, lists every
-server's tools and keeps the list in `SnapshotBuilder` under `mcp-tools:<key>`; later steps reuse
+server's tools and keeps the list in `SnapshotBuilder` under `mcp-tools:<key>`, and later steps reuse
 it. The step applies `tools.allow` and `tools.block`, keeps the selection with the step, and
 installs each selected tool as a pi-durable tool named `mcp__<server>__<tool>` with
 `replay: "unsafe"` and `callers: ["tools"]`. The model reaches them through the `codemode` tool,
@@ -286,7 +286,7 @@ the skills pin `skills: {sha, names}`.
 `max_iterations` reaches Claude Code as `--max-turns`. Codex has no such flag, so `CliAgent` counts
 the tool calls and aborts the operation at the first call past the limit. Either way the end line
 says `unanswered`, `turn_limit`, and the answer and the `pi_cloud_start` line carry the limit.
-The events are pi's shapes: a `tool_execution_start` and a `tool_execution_end` per tool call while
+The events use pi's format: a `tool_execution_start` and a `tool_execution_end` per tool call while
 the CLI runs, the transcript as `message_end` lines without `replayed` when the operation settles, the token counts the
 CLI reports on the last one, then `pi_cloud_end`. The object announces no tool list, because the
 CLIs keep their own tools, and it announces the MCP servers of the box.
@@ -295,7 +295,7 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
   storage under `container-harness:snapshot`, keyed by its setup steps, and has no option to start
   from a given snapshot. Before the first start, `CliAgent` writes that record with the key of its
   setup steps (the CLI install pinned in the recipe) and the default snapshot's id. The harness then
-  restores the snapshot instead of running setup. The record format is internal to `agents`; the code
+  restores the snapshot instead of running setup. The record format is internal to `agents`. The code
   that writes and reads it is the same in 0.30.1 and 0.33.0, and an echo probe on 0.33.0 started from
   the default snapshot.
   The first start from a freshly built snapshot took 100 s, a warm one about 30 s.
@@ -323,7 +323,7 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
   The mirror keeps three commits, and the route answers 404 for
   a commit it has dropped. A step that names no skill gets no URL and reads the snapshot's own
   copy, which `snapshot.skills` clones, and which is an empty folder while `snapshot.skills` is `null`,
-  its shipped value. An attempt that started from a snapshot of an earlier
+  its checked-in value. An attempt that started from a snapshot of an earlier
   recipe, whose boot wrapper fetches nothing, keeps its skills pin in the step record and reads that
   snapshot's copy.
 - **Credentials.** The CLI signs in with the operator's subscription, and the box holds only
@@ -344,7 +344,7 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
   belongs to the Worker alone, so the refresh token rotates in one place. `CodexLogin` refreshes the
   access token at `https://auth.openai.com/oauth/token` with the Codex CLI's client id when it has
   less than three days left. `node scripts/codex-login.mjs status` prints its expiry.
-- **The Claude token.** `claude setup-token` prints a token that lasts one year;
+- **The Claude token.** `claude setup-token` prints a token that lasts one year, and
   `wrangler secret put CLAUDE_CODE_OAUTH_TOKEN` stores it.
 - **The end of a step.** When the operation settles, `CliAgent` pushes HEAD of `/workspace/repo` to
   `branch` as the user `agent`, keeps the files of `/workspace/out` in its storage for
@@ -353,7 +353,7 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
   push then carries the start commit.
 - **Usage.** The token counts come from the CLI's own `usage` event, which carries input and output
   tokens without the cache split. Claude Code also reports a notional API price, which the end line
-  keeps as `notional_cost_usd`; a subscription bills none of it. The object adds up the counts as
+  keeps as `notional_cost_usd`. A subscription bills none of it. The object adds up the counts as
   they arrive, and the answer of `POST abort` carries the sum so far as `usage`. `agents` 0.33.0
   passes a usage event only when the CLI ends, Codex on `turn.completed` and Claude Code on its
   result message, so the sum is empty for a step that is stopped while it runs, and `usage` is
@@ -363,7 +363,7 @@ CLIs keep their own tools, and it announces the MCP servers of the box.
 ## Tests
 
 `node --test worker/test/*.test.mjs` checks the recipe, the settings, the skills feed and the pin
-script with no network and no secret: the shipped settings clone no repo, Worker settings add
+script with no network and no secret: the checked-in settings clone no repo, Worker settings add
 their repos, servers and rules, a `name` renames both Workers and the code mode binding while the
 name `pi-cloud` gives the checked-in configs unchanged, a skills pin syncs the mirror before it reads the
 commit, the box module writes exactly the named skills that the skills route sends and keeps the
