@@ -43,7 +43,7 @@ The position block gives the producer an absolute path to `handover.md` in its a
 
 `handover_written` checks UTF-8 readability, heading order, one answer per heading and the size limit. It checks structure. The recipient verifies the answers. A missing or malformed required handover fails the producer's gate, so its consumers cannot start. An explicit `gate:handover_written` retry policy can retry that failure.
 
-The engine records the file path and SHA-256 digest. Downstream agents read that attempt file. A missing or changed file prevents trusting cached producer output. Consumed digests enter the consumer fingerprint. Each fingerprint version bump, currently at 6, invalidates earlier cache identities once. Paths and attempt numbers remain outside identity.
+The engine records the file path and SHA-256 digest. Downstream agents read that attempt file. A missing or changed file prevents trusting cached producer output. Consumed digests enter the consumer fingerprint. Each fingerprint version bump, currently at 7, invalidates earlier cache identities once. Paths and attempt numbers remain outside identity.
 
 A retry receives its previous attempt's handover, when present, alongside failed checks. Session continuation is an independent harness capability. A received handover supplies findings, while sharing a worktree or merging branches supplies code.
 
