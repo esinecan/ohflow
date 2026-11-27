@@ -39,18 +39,18 @@ The contract asks what a reader needs to carry on the work without the producer.
 
 ## Production and receipt
 
-The position block gives the producer an absolute path to `handover.md` in its attempt directory. Write it before the final message, within the default 6000-character limit. The file remains outside the product worktree; pi's editor permits that exact file while retaining its normal write scope.
+The position block gives the producer an absolute path to `handover.md` in its attempt directory. Write it before the final message, within the default 6000-character limit. The file remains outside the product worktree, and pi's editor permits that exact file while retaining its normal write scope.
 
-`handover_written` checks UTF-8 readability, heading order, one answer per heading and the size limit. It checks structure; the recipient verifies the answers. A missing or malformed required handover fails the producer's gate, so its consumers cannot start. An explicit `gate:handover_written` retry policy can retry that failure.
+`handover_written` checks UTF-8 readability, heading order, one answer per heading and the size limit. It checks structure. The recipient verifies the answers. A missing or malformed required handover fails the producer's gate, so its consumers cannot start. An explicit `gate:handover_written` retry policy can retry that failure.
 
-The engine records the file path and SHA-256 digest. Downstream agents read that attempt file; a missing or changed file prevents trusting cached producer output. Consumed digests enter the consumer fingerprint. Each fingerprint version bump, currently at 6, invalidates earlier cache identities once. Paths and attempt numbers remain outside identity.
+The engine records the file path and SHA-256 digest. Downstream agents read that attempt file. A missing or changed file prevents trusting cached producer output. Consumed digests enter the consumer fingerprint. Each fingerprint version bump, currently at 6, invalidates earlier cache identities once. Paths and attempt numbers remain outside identity.
 
-A retry receives its previous attempt's handover, when present, alongside failed checks. Session continuation is an independent harness capability. A received handover supplies findings; sharing a worktree or merging branches supplies code.
+A retry receives its previous attempt's handover, when present, alongside failed checks. Session continuation is an independent harness capability. A received handover supplies findings, while sharing a worktree or merging branches supplies code.
 
-The built-in relay, merge consolidation, implement/review and evidence-atlas workflows declare their handovers. Campaign judge packets include recorded step handovers and earlier judge handovers. A judge handover answers the same seven core headings under a title and a lead paragraph; its format is in the judge brief ([campaign](campaign.md)). Context passed between separate fix runs or milestone implementers is authored in their briefs and artifact references.
+The built-in relay, merge consolidation, implement/review and evidence-atlas workflows declare their handovers. Campaign judge packets include recorded step handovers and earlier judge handovers. A judge handover answers the same seven core headings under a title and a lead paragraph. Its format is in the judge brief ([campaign](campaign.md)). Context passed between separate fix runs or milestone implementers is authored in their briefs and artifact references.
 
 ## Mechanical proof
 
 Run `python3 tests/run_tests.py -k handover_01` from the root of your ohflow clone. The tests exercise actual engine preparation, gating, retries, cached resumes and deleted/modified evidence with fake agents.
 
-From `scripts`, run `python3 -m ohflow.cli rollcall --cases relay:pi,claude --out <proof-directory>` with `PYTHONPATH=.`. The successor must reproduce a token supplied only through its predecessor's handover; the gate verifies it in `ROLLCALL.md`.
+From `scripts`, run `python3 -m ohflow.cli rollcall --cases relay:pi,claude --out <proof-directory>` with `PYTHONPATH=.`. The successor must reproduce a token supplied only through its predecessor's handover, and the gate verifies it in `ROLLCALL.md`.
