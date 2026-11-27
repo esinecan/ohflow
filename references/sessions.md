@@ -12,16 +12,16 @@ Run each from the `scripts/` folder of your ohflow clone as `PYTHONPATH=. python
 
 | Verb | What it does |
 |---|---|
-| `open NAME --cwd C (--brief F \| --message T) [--model M] [--thinking L]` | starts a session and its first turn; refuses a fourth open session and a name used before |
-| `send NAME (TEXT \| --file F)` | starts the next turn; a message to a running session, or to one that already holds queued messages, waits in the record. When the session is idle again, the oldest queued message starts the next turn, one turn per message |
+| `open NAME --cwd C (--brief F \| --message T) [--model M] [--thinking L]` | starts a session and its first turn, and refuses a fourth open session and a name used before |
+| `send NAME (TEXT \| --file F)` | starts the next turn. A message to a running session, or to one that already holds queued messages, waits in the record. When the session is idle again, the oldest queued message starts the next turn, one turn per message |
 | `wait [--timeout S]` | blocks until a turn finishes and prints it once, the earliest finished first: `reply`, `error`, `interrupted`, `lost`, `tokens`, `cost`, `next_turn`. Exit 3 on timeout, exit 4 when no turn runs and every finished turn is delivered |
-| `status [NAME]` | each session's state (idle, running or closed), turn, undelivered and queued counts, age and cost; with a name, its last finished turn, not marked delivered |
-| `interrupt NAME` | ends the running turn's process tree, waits up to 30 s for it to end and records `interrupted` with whether it stopped; `wait` then delivers the turn with `interrupted: true`. A turn takes no message while it runs, so interrupt, then send |
-| `close NAME [--force]` | closes the session for good; `--force` interrupts a running turn first. `wait` still delivers a finished turn of a closed session |
+| `status [NAME]` | each session's state (idle, running or closed), turn, undelivered and queued counts, age and cost. With a name, it shows its last finished turn and does not mark it delivered |
+| `interrupt NAME` | ends the running turn's process tree, waits up to 30 s for it to end and records `interrupted` with whether it stopped. `wait` then delivers the turn with `interrupted: true`. A turn takes no message while it runs, so interrupt, then send |
+| `close NAME [--force]` | closes the session for good, and `--force` interrupts a running turn first. `wait` still delivers a finished turn of a closed session |
 
 ## Be woken, do not poll
 
-In Claude Code, run `session wait` as a background command: its exit starts your next turn. An orchestrator agent on pi or Codex runs `wait` in the foreground. Read the reply, then check the artifact it names, because the reply is a claim and the commit or file is the evidence. A reviewer's verdict covers only the commit it read, so ask the reviewer to name that commit, and before you land a branch whose tip has moved since, send the reviewer the diff from that commit to the tip. Your moves on a session that goes wrong, and when to make them: [steer-a-run](steer-a-run.md).
+In Claude Code, run `session wait` as a background command: its exit starts your next turn. An orchestrator agent on pi or Codex runs `wait` in the foreground. Read the reply, then check the artifact it names, because the reply is a claim and the commit or file is the evidence. A reviewer's verdict covers only the commit it read, so ask the reviewer to name that commit, and before you merge a branch whose tip has moved since, send the reviewer the diff from that commit to the tip. Your moves on a session that goes wrong, and when to make them: [steer-a-run](steer-a-run.md).
 
 ## The record
 

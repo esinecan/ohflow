@@ -3,9 +3,9 @@
 Workflow: [`workflows/implement_review.py`](../scripts/ohflow/workflows/implement_review.py). Briefs:
 [brief-templates](brief-templates.md).
 
-One `ohflow run` runs two agents back to back. Nobody looks between phases;
-the gates check each phase's exit condition mechanically. **The agent's final
-message is a claim; the artifact is the evidence.**
+One `ohflow run` runs two agents back to back. Nobody looks between phases.
+The gates check each phase's exit condition mechanically. **The agent's final
+message is a claim, and the artifact is the evidence.**
 
 `ohflow run --workflow ohflow/workflows/implement_review.py` builds the workflow from its
 `--args`, and the [ohflow](ohflow.md) engine runs the phases, applies the gates and keeps the
@@ -16,11 +16,11 @@ run log. The `run` flags apply as for any workflow: `--dry-run`, `--hold`, `--de
 
 | Phase | Tool policy | Gate |
 |---|---|---|
-| implement | `terminal`, `file_editor`, `task_tracker`; the skills `impl_skills` names; 150 iterations | ≥1 commit past base; `test_cmd` exits 0; `git status --porcelain` empty; the reviewer handover is complete |
-| review | `terminal` only, on `pi`, a hermetic `claude` or `durable`; no skills; 80 iterations | a `VERDICT: MERGEABLE` or `VERDICT: BLOCKED` in the final message; tree still clean; tests still green |
+| implement | `terminal`, `file_editor` and `task_tracker`, plus the skills `impl_skills` names, with 150 iterations | ≥1 commit past base, `test_cmd` exits 0, `git status --porcelain` is empty and the reviewer handover is complete |
+| review | `terminal` only, on `pi`, a hermetic `claude` or `durable`, with no skills and 80 iterations | a `VERDICT: MERGEABLE` or `VERDICT: BLOCKED` in the final message, the tree still clean and the tests still green |
 
 Phase 2 runs only when phase 1 passed. The gate on the reviewer's clean tree is
-what proves it obeyed the no-edit instruction; the tool policy alone cannot,
+what proves it obeyed the no-edit instruction. The tool policy alone cannot,
 because `terminal` can write files.
 
 ## Arguments
@@ -32,26 +32,26 @@ Pass each argument as `--args name=value`.
 | `repo`, `branch`, `worktree` | required | the repo, the feature branch to create, the worktree directory |
 | `base` | `main` | branch the worktree starts from |
 | `impl_brief`, `review_brief` | required | brief files |
-| `dimensions`, `brief_dir` | off | for `all` or `review`, replace the single reviewer with parallel named reviewers; the directory contains one `<dimension>.md` |
-| `harness_executors` | `harness_executor` | optional `dimension=pi` overrides, comma-separated; a dimension reviewer runs on `pi` only |
+| `dimensions`, `brief_dir` | off | for `all` or `review`, replace the single reviewer with parallel named reviewers. The directory contains one `<dimension>.md` |
+| `harness_executors` | `harness_executor` | optional `dimension=pi` overrides, comma-separated. A dimension reviewer runs on `pi` only |
 | `schema_retry` | 1 | automatic retries of a dimension reviewer's `schema_valid` check |
 | `install_cmd` | `npm ci --no-audit --no-fund` | run once in the fresh worktree |
-| `test_cmd` | `npm test` | the test gate; exit 0 is pass. It runs the tests the change reaches, never the full suite: `{base}` in it is the step's base commit, as in `python3 tests/run_tests.py --changed {base}` ([ohflow](ohflow.md#gate-checks)) |
+| `test_cmd` | `npm test` | the test gate, where exit 0 is pass. It runs the tests the change reaches, never the full suite: `{base}` in it is the step's base commit, as in `python3 tests/run_tests.py --changed {base}` ([ohflow](ohflow.md#gate-checks)) |
 | `impl_iter`, `review_iter` | 150, 80 | `max_iterations` per phase |
 | `mode=all` | | create worktree, implement, gate, review, gate |
 | `mode=review` | | reuse the worktree, gate it, review only |
 | `mode=fix` with `fix_brief=F` | | implementer again with brief F in the worktree, gate, review, gate |
 | `impl_skills` | none | the skills the implementer loads, comma-separated, such as `impl_skills=codebase-design` |
-| `skills_dir` | none | the directory that holds the skills `impl_skills` names; a pi agent fails validation when one is missing there |
+| `skills_dir` | none | the directory that holds the skills `impl_skills` names. A pi agent fails validation when one is missing there |
 | `harness_executor` | required | `pi` or `durable`: the implementer's harness executor, and the reviewer's unless `review_harness_executor` names another |
-| `model` | the `light` tier on pi and durable | both agents' tier, `heavy` or `light`, or a model id; `review_model` overrides the reviewer's |
+| `model` | the `light` tier on pi and durable | both agents' tier, `heavy` or `light`, or a model id. `review_model` overrides the reviewer's |
 | `review_harness_executor` | `harness_executor` | `pi`, `claude` or `durable`: the reviewer's harness executor |
-| `review_model` | `model` on the same harness executor, else that harness executor's default | the reviewer's tier or model; a `claude` reviewer needs it |
-| `box` | the `durable.box` setting | where a durable agent runs, its `AgentSpec.box`: `local` for this machine, else the ssh host alias of an ssh box; ignored for other harness executors |
-| `base_url` | `https://api.z.ai/api/coding/paas/v4` | the provider endpoint; refused when an agent runs on `durable`, whose host holds its keys on its own box |
-| `api_key_env` | `ZAI_CODING_CN_API_KEY` | the name of the variable that holds the key; the key never enters a spec; refused when an agent runs on `durable` |
+| `review_model` | `model` on the same harness executor, else that harness executor's default | the reviewer's tier or model. A `claude` reviewer needs it |
+| `box` | the `durable.box` setting | where a durable agent runs, its `AgentSpec.box`: `local` for this machine, else the ssh host alias of an ssh box. It is ignored for other harness executors |
+| `base_url` | `https://api.z.ai/api/coding/paas/v4` | the provider endpoint. It is refused when an agent runs on `durable`, whose host holds its keys on its own box |
+| `api_key_env` | `ZAI_CODING_CN_API_KEY` | the name of the variable that holds the key. The key never enters a spec, and the argument is refused when an agent runs on `durable` |
 | `thinking` | `high` | pi thinking level: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` |
-| `fork_session` | none | a prior pi session file that the implementer forks; use it with `mode=fix` |
+| `fork_session` | none | a prior pi session file that the implementer forks. Use it with `mode=fix` |
 | `execution_timeout_s` | 5400 | the execution timeout of each agent step |
 
 A `claude` agent gets a `ModelConfig` with the model alone: no `base_url`, no `api_key_env` and no params.
@@ -62,7 +62,7 @@ The reviewer runs with the terminal alone, so it runs only where a harness execu
 that. `pi` can. `claude` can when hermetic, and the workflow makes a `claude` reviewer
 hermetic. `durable` can, with the box named by `box` and the model keys it
 needs already on that machine. `codex` refuses `tools.only` even when hermetic, so the workflow refuses
-it as the reviewer. `review_harness_executor` and `review_model` set the single reviewer; dimensional reviewers take `harness_executors`.
+it as the reviewer. `review_harness_executor` and `review_model` set the single reviewer, and dimensional reviewers take `harness_executors`.
 
 When `dimensions` is present, each reviewer runs read-only with the
 same structured schema and one automatic retry for `schema_valid`. The engine
