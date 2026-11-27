@@ -66,7 +66,7 @@ Smaller modules:
 
 `ohflow.settings.json` at the skill root names every setting with the value a new operator starts with. Your own values go in `ohflow.settings.local.json` beside it, which git ignores and which is merged over the base file. Your house rules for agents go in `references/local.md`, which git also ignores. `OHFLOW_SETTINGS` names another local file. [examples/setups/](examples/setups/) holds one operator's whole setup to copy from, and [the boundary](docs/release/boundary.md) lists each setting and what reads it.
 
-The suite reads `tests/operator.settings.json` instead of your local file, so your values never change a result. `tests/test_boundary_01_no_local_values.py` fails when a file that ohflow distributes holds a real home path or a token from your private list at `~/.config/ohflow/leak-tokens.txt`.
+The suite reads `tests/operator.settings.json` instead of your local file, so your values never change a result. `tests/test_boundary_01_no_local_values.py` fails when a file that git tracks, outside the recorded evidence, holds a real home path or a token from your private list at `~/.config/ohflow/leak-tokens.txt`.
 
 ## Running the suite
 

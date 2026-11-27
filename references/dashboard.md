@@ -85,7 +85,7 @@ The dashboard derives one display state per card. The rules apply in this order.
 | `waiting` / cooldown | The phase started, the step has no `attempt_started`, and `run.cooldown_until` is later than now. | "waits for provider cooldown until HH:MM:SS" |
 | `waiting` / slot | The phase started, the step has no `attempt_started`, and no cooldown is active. | "waits for a free slot (K of L busy)" |
 | `running` | The newest attempt has `attempt_started` and no `attempt_finished`. | "attempt N, <start_kind>" |
-| `waiting` / auto-resume | Engine status is `deferred`, the run is not paused, and the auto-resume budget is not spent. | "deferred: <error first line>" and "an auto-resume pass reruns it", joined by a semicolon |
+| `waiting` / auto-resume | Engine status is `deferred`, the run is not paused, and the auto-resume budget is not spent. | "deferred: <error first line>; an auto-resume pass reruns it" |
 | `waiting` / resume | Engine status is `deferred` and the run status is `paused`. | "paused: run `<resume_command>`" |
 | `done` | Any other terminal status. | the engine status, plus "excluded" when a `work_excluded` names it |
 
@@ -180,7 +180,7 @@ The page keeps one row per running invocation under the graph: role and attempt,
 
 ## Digest
 
-`/api/workflow` carries `digest`: one entry per `attempt_finished`, `retry_decided` (a decision not to retry a passed attempt is left out), `work_excluded`, `phase_settled` and `run_finished`, in run-log order. Fields: `ts`, `kind`, `coord`, `attempt`, `id` (the invocation, when one is recorded), `text`, `tone`, `tokens`, `wall_s`, `handover_first_line`, `evidence` (`path`, `line`). An `attempt_finished` reads as one sentence, its parts joined by semicolons: "Implement attempt 2 passed in 4 m 12 s, 31 k tokens", "gate command_exit ok", "handover: <first prose line>". Tokens come from the attempt's `result.json`. The handover line comes through `handover.recorded`, so a file whose bytes changed since the finish is not quoted. The evidence packet's digest takes its numbers from `case.json` and has no handover. The page lists the entries under the retry story, newest first, each linking to its invocation.
+`/api/workflow` carries `digest`: one entry per `attempt_finished`, `retry_decided` (a decision not to retry a passed attempt is left out), `work_excluded`, `phase_settled` and `run_finished`, in run-log order. Fields: `ts`, `kind`, `coord`, `attempt`, `id` (the invocation, when one is recorded), `text`, `tone`, `tokens`, `wall_s`, `handover_first_line`, `evidence` (`path`, `line`). An `attempt_finished` reads as one sentence: "Implement attempt 2 passed in 4 m 12 s, 31 k tokens; gate command_exit ok; handover: <first prose line>". Tokens come from the attempt's `result.json`. The handover line comes through `handover.recorded`, so a file whose bytes changed since the finish is not quoted. The evidence packet's digest takes its numbers from `case.json` and has no handover. The page lists the entries under the retry story, newest first, each linking to its invocation.
 
 ## Plan view
 

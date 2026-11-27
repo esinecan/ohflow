@@ -63,16 +63,16 @@ Run each from `scripts/` as `PYTHONPATH=. python3 -m ohflow.cli <verb>`. Verdict
 | `validate` | checks a workflow without a run |
 | `estimate` / `campaign estimate` | forecasts minutes, tokens and cost from history |
 | `run` | fires a workflow: `--dry-run` rehearses, `--detach` backgrounds, `--hold` waits for `go`, `--pilot` prices each unit path, then holds |
-| `go` / `kill` | releases a held run, or stops one step |
+| `go` / `kill` | releases a held run / stops one step |
 | `status` / `watch` | reads a run now, or waits for news |
-| `campaign watch` / `history` | `watch` for a campaign, or its rounds |
+| `campaign watch` / `history` | `watch` for a campaign / its rounds |
 | `notes log` / `check` | appends to or audits run notes |
 | `table` | totals the runs' cost and tokens |
 | `transcript` / `explain` / `actions` | one step's attempt: its transcript, triage or model calls |
 | `compare` | diffs two runs |
 | `position` | prints a step's position block |
 | `revert` | removes a run's worktrees |
-| `dashboard` / `report` | serves a finished run, or rebuilds a dead supervisor's exit report |
+| `dashboard` / `report` | serves a finished run / rebuilds a dead supervisor's exit report |
 | `cloud-spend` | reads Cloudflare's container bill |
 | `rollcall` | runs the live-agent matrix |
 

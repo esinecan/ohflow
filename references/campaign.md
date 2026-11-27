@@ -78,7 +78,7 @@ The charter is the first thing every judge reads. It is the bar they judge again
 ## Write the contracts
 
 Two steps in one phase run in parallel, and neither sees the other's work. The contracts file
-fixes the interfaces they share, so each step builds against the same names and signatures and the
+fixes the interfaces they share, so each step builds against the same names and interfaces and the
 branches fit at the merge.
 
 1. Write `contracts.md` in the campaign root. `Campaign.contracts` names another path, relative

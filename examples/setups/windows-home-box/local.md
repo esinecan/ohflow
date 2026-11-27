@@ -1,7 +1,7 @@
 # House rules on this box
 
 This file is the operator layer of the ohflow references. git ignores it at
-`references/local.md`. The references of ohflow core hold the product, and this file adds the rules
+`references/local.md`. The references in the repository hold the product, and this file adds the rules
 of this box.
 
 ## Campaign escalation reaches the operator through the team board

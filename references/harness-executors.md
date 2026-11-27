@@ -86,7 +86,7 @@ The signed-in harnesses (`claude` and `codex`) sign in with their own login, so 
 | Model params | `thinking` | `effort` | `reasoning_effort` | `thinking` | `thinking` |
 | `AgentSpec.agent_profile` | none | `None` or `"hermetic"` | `None` or `"hermetic"` | none, and it must be empty | none, and it must be empty |
 | `AgentSpec.box` | none | none | none | the box's ssh host alias, such as `buildbox`, or `local` for this machine, and required | none |
-| `retry.carry_context` | yes | yes (`--resume --fork-session`) | no | no, because a reattach continues the attempt instead | no, because a reattach continues the attempt instead |
+| `retry.carry_context` | yes | yes (`--resume --fork-session`) | no | no. A reattach continues the attempt instead | no. A reattach continues the attempt instead |
 | Schema | the final message | native `--json-schema` | native `outputSchema` on `turn/start` | the final message, from the box | the final message, from the Worker |
 | Announced tool policy | offered tools | the `system` `init` event | none, only servers from `config.toml` plus `codex_apps` | the offered list from `tools.only` | the `tools` of the `pi_cloud_start` line |
 
