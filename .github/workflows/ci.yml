@@ -62,6 +62,8 @@ jobs:
   candidate:
     name: release candidate
     needs: suite
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -75,6 +77,7 @@ jobs:
       - name: Build complete portable package from this exact commit
         run: python -m release.package build --source "$GITHUB_SHA" --out dist
       - uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: release-candidate-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/*
@@ -102,7 +105,8 @@ jobs:
           node-version: "22"
       - uses: actions/download-artifact@v4
         with:
-          name: release-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          artifact-ids: ${{ needs.candidate.outputs.artifact-id }}
+          merge-multiple: true
           path: dist
       - name: Verify and install the same candidate on a clean path
         run: python -m release.package smoke --bundle dist
