@@ -128,7 +128,6 @@ python -m release.channels retry --bundle bundle --records status --channel skil
 
 `install` writes `installed-skills/ohflow/`, preserves executable permissions and refuses to
 overwrite an existing destination. Point the harness's skill loader at that installed directory.
-Read `installed-skills/ohflow/RELEASE.json` to check its version and source SHA.
 
 `retry` prints the original artifact path and expected checksums after verifying both the bundle
 and the channel's desired source. It performs no vendor request. A channel adapter consumes
