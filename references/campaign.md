@@ -3,7 +3,7 @@
 A **campaign** delivers a design document end to end. It is a list of milestones. Each
 milestone is one ohflow workflow run. After each run, a **judge** reads a judge packet and
 returns a judge decision: PASS, REVISE or ESCALATE. On REVISE the judge has already changed the
-milestone's inputs; the campaign controller commits that change and resumes the run. On PASS the
+milestone's inputs. The campaign controller commits that change and resumes the run. On PASS the
 campaign's integration branch moves forward (the milestone landing) and the next milestone
 starts. Nobody from the authoring session is needed at a milestone boundary.
 
@@ -78,11 +78,11 @@ The charter is the first thing every judge reads. It is the bar they judge again
 ## Write the contracts
 
 Two steps in one phase run in parallel, and neither sees the other's work. The contracts file
-fixes the interfaces they share, so each step builds against the same names and shapes and the
+fixes the interfaces they share, so each step builds against the same names and signatures and the
 branches fit at the merge.
 
 1. Write `contracts.md` in the campaign root. `Campaign.contracts` names another path, relative
-   to the root; a named file that is missing, or a path that leaves the root, fails
+   to the root. A named file that is missing, or a path that leaves the root, fails
    `campaign validate`. A campaign without the file runs as before.
 2. State each interface one step makes and another uses: function signatures, file formats,
    CLI verbs and flags, schema fields, error codes. Name the owner of each.
@@ -191,10 +191,10 @@ documents pass or a parity milestone only when the operator asks.
 
 `Campaign.judge` defaults to `default_judge()`: the claude harness executor, the judge model, effort
 high, `max_iterations=400`, the signed-in harness's usual setup. The judge model is the operator setting
-`campaign.judge_model`; its base value is the tier `heavy`, which the claude harness executor
+`campaign.judge_model`. Its base value is the tier `heavy`, which the claude harness executor
 resolves through the setting `tiers.heavy.claude`. It also takes the tier `light` or a model id. A value that is not a non-empty
 string is refused when the campaign file is loaded, before any milestone runs. The usual setup gives the
-judge the operator's skills and MCP servers; the judge needs none of them to write its handover. A milestone may name its own judge in `Milestone.judge`; a codex or
+judge the operator's skills and MCP servers, but the judge needs none of them to write its handover. A milestone may name its own judge in `Milestone.judge`. A codex or
 pi judge is an `AgentSpec` with that harness executor, and it does not read the setting.
 
 Each round's judge runs in a workflow run of its own, under `Campaign.judge_execution_timeout_s`.
@@ -231,7 +231,7 @@ spec is not the judge's to change.
 
 The decision JSON follows `DECISION_SCHEMA`: `decision` (PASS, REVISE or ESCALATE),
 `summary`, `findings`, `revisions` and `question_for_operator`. The findings are fields of
-that JSON, each with a severity, a cause word and evidence; the judge writes no findings
+that JSON, each with a severity, a cause word and evidence. The judge writes no findings
 file. Its file edits are revisions to the milestone's briefs, `workflow.py` and other inputs,
 each named in `revisions` with its reason.
 
@@ -253,7 +253,7 @@ deterministic: a feature, a fix, a document. Search, research and producing a sp
 count as delivery.
 
 - A deviation or a design flaw aborts the run at once for a fix. A deviation is work that left
-  its plan, such as a step that ignored its brief; a design flaw is a wrong plan, such as a
+  its plan, such as a step that ignored its brief. A design flaw is a wrong plan, such as a
   workflow that checks the wrong thing, a gate that tests the wrong file or an experiment that
   measures the wrong quantity.
 - After a miss, where the plan was right and followed and the result still misses the goal, an
@@ -282,7 +282,7 @@ the end is the buy-in the experiment requires. It fixes its procedure up front.
 Each refusal writes `ESCALATION.md`, opens with the `operator.escalation_marker` setting (`ACTION NEEDED FROM THE OPERATOR` in the base settings), runs
 `Campaign.on_escalate`, or the command in the `operator.on_escalate` setting when the campaign
 names none, and exits 3. An ESCALATE decision takes the same path. Every
-refusal and every ESCALATE leaves the milestone in the one state `escalated`; the `why`
+refusal and every ESCALATE leaves the milestone in the one state `escalated`, and the `why`
 string in the campaign log and in `campaign-status.json` carries the reason.
 
 **A run that did not start is not judged.** When a milestone's run fails preflight (or its run
@@ -315,7 +315,7 @@ budget. No `grant` is needed. Example: cdp-mode m1b on
 | The judge did this | Why it is refused |
 |---|---|
 | edited a path outside `milestones/<id>/`, or `spec.md` | the target and the other milestones are not its to change |
-| edited `contracts.md`, under any decision | every step of every milestone builds against it; a contract change is the operator's. The controller restores the file and stashes the edit |
+| edited `contracts.md`, under any decision | every step of every milestone builds against it. A contract change is the operator's. The controller restores the file and stashes the edit |
 | REVISE with no changed file | the resume would repeat the last run |
 | REVISE after the budget (`max_revisions`, default 2) is spent | the edit is kept on branch `campaign-proposal/<id>-rNN` for the operator |
 | PASS while an acceptance check failed or a step did not pass | the decision is a claim and the check is the evidence |
@@ -339,10 +339,10 @@ python3 -m ohflow.cli campaign grant --campaign <root>/campaign.py --milestone <
 ```
 
 `validate` builds every milestone's workflow with first-round arguments, so a workflow error
-shows before anything runs. `run` continues from the first milestone that has not passed;
-a milestone that was mid-run resumes its run directory. After an escalation, act on
+shows before anything runs. `run` continues from the first milestone that has not passed,
+and a milestone that was mid-run resumes its run directory. After an escalation, act on
 `ESCALATION.md`, then `grant` one revision and `run` again. A grant adds to the milestone's
-revision budget and reopens it; it resets no spent revision and no step's execution allowance.
+revision budget and reopens it. It resets no spent revision and no step's execution allowance.
 
 `run --hold` holds the campaign's first fresh round for `ohflow go --run <run-dir>`. The first
 round of a later milestone, and a round that a judge's revision starts, go ahead unless the
@@ -360,9 +360,9 @@ controller writes `held` and the `go` command into `campaign-status.json`, says
 
 `run --pilot` implies `--hold`. A fresh round whose workflow declares
 [units](ohflow.md#units-and-unit-paths) runs its [pilot](ohflow.md#pilot-a-run-over-many-units)
-first, then holds; a fresh round of a workflow without units holds. The campaign log says
+first, then holds. A fresh round of a workflow without units holds. The campaign log says
 `the pilot runs first, then held; release it with ...`. A round that a revision starts runs no
-pilot, because its run resumes; it only holds. A resume after an interruption neither pilots
+pilot, because its run resumes. It only holds. A resume after an interruption neither pilots
 nor holds.
 
 `campaign watch` prints the campaign's one-line status, then one line per campaign log event and
@@ -377,7 +377,7 @@ counts as a judge's stray edit: poll with this verb while a judge runs. It exits
 is delivered, `1` when it ended otherwise and `10` when it returns with the campaign still
 going.
 
-`campaign history` lists every judged round, read from the campaign's files only; it starts
+`campaign history` lists every judged round, read from the campaign's files only, and it starts
 nothing. `--campaign` takes the campaign module or the campaign folder, so a campaign whose
 module no longer imports still reads. It reads both spellings of the campaign log: `round`,
 `decision` and `milestone_landed`, and the older `attempt`, `verdict` and `milestone_passed`.
@@ -394,14 +394,14 @@ milestone's rounds and events print together, in campaign log order:
 
 The checks come from the round's `packet.md`: `checks none` when the milestone defines none,
 `checks unknown` when the packet is missing. `NO DECISION` is a judge that gave none. A reason
-is cut to 300 characters; its path is never cut. The whole text stops at 8,000 characters
+is cut to 300 characters, but its path is never cut. The whole text stops at 8,000 characters
 with `(cut at 8,000 characters; narrow with --milestone or read --json)`. `--json` carries
 every round in full. It exits `1` when the folder has no campaign log or `--milestone` names
 a milestone with no round or event.
 
 `run --detach` starts the controller through the same helper as `ohflow run --detach`, and prints the
 launch method it used (`direct`, `breakaway` or `wmi`) in a `"launch_method"` key. When no launch
-method works it prints guidance and exits `1`; the launch methods are in [ohflow](ohflow.md#run-it).
+method works it prints guidance and exits `1`. The launch methods are in [ohflow](ohflow.md#run-it).
 
 The process that runs the campaign writes its own pid to `campaign.pid` when it starts, and the
 printed `"pid"` is the pid of that record. The process that `run --detach` launches is a wrapper
@@ -418,7 +418,7 @@ both every twenty minutes: a status file older than the current run's execution 
 campaign log that stops growing across two polls, is a stall.
 
 The campaign log moves only between runs. A quiet campaign log is normal while a run goes. The stall
-signal inside a run is that run's own `ohflow watch --run <run dir>`; the run directory is in
+signal inside a run is that run's own `ohflow watch --run <run dir>`. The run directory is in
 the first line of `campaign watch`. The campaign-level stall is a `campaign watch` whose first
 line names the same run and state across polls for longer than that run's execution timeout.
 
@@ -431,13 +431,13 @@ git. The forecast is the sum over the milestones of `(1 + r) x E(m)`.
 `E(m)` is the [run estimate](ohflow.md#estimate-a-run) of the milestone's workflow, built with
 the arguments its round 1 receives and an empty `integration_sha`, as `campaign validate`
 builds it. `--history DIR` (repeatable, else `OHFLOW_HISTORY`) names where the finished runs
-are; with neither, the verb prints `estimate: no history given (--history DIR or
+are. With neither, the verb prints `estimate: no history given (--history DIR or
 OHFLOW_HISTORY)` and exits 0, as `ohflow estimate` does. The `checks p50` column is the
 milestone's gate-check time from the same run estimate.
 
 `r` is the median number of REVISE rounds one milestone takes. One REVISE decision resumes
 the milestone's run once, so a milestone's sample is the count of its `judged` rounds whose
-decision was REVISE; a milestone that passed at its first judging counts 0. Only a milestone
+decision was REVISE. A milestone that passed at its first judging counts 0. Only a milestone
 that reached a PASS or an escalation is a sample: one still running has spent an unknown part
 of its revisions. The samples come from every `campaign.jsonl` up to four levels under the
 `--history` directories and from the campaign's own log. With no finished milestone anywhere,
@@ -458,7 +458,7 @@ It exits 0, the no-history line included.
 ## Limits
 
 - Every new try at a milestone resumes its one run directory. A judge that wants a step to
-  start over changes that step's brief or adds a step; there is no fresh-run decision.
+  start over changes that step's brief or adds a step. There is no fresh-run decision.
 - A step that needs the operator's hands cannot run unattended. Put it in the milestone spec as an
   ESCALATE point with the one action the operator must take. Example: route B of the CDP design
   needs a person to click "Allow" per connection.

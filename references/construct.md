@@ -22,7 +22,7 @@ Done when the verb prints `CAMPAIGN OK` as its second-to-last line.
 ```
 
 A milestone id is lowercase letters, digits and hyphens, such as `04-pi-cloud-transcript`. A field
-line is `key: value`; a value in backticks loses them.
+line is `key: value`. A value in backticks loses them.
 
 ### bundle.md
 
@@ -51,7 +51,7 @@ base: main
 - **The title names the campaign.** Its slug is the campaign's name and the stem of its branches.
 - **The fields above the first `##` section are optional.** `integration branch` defaults to
   `campaign/<name>`. `kind` is `delivery` (the default) or `empirical`, as
-  [campaign](campaign.md#intervention-by-kind-of-objective) defines them; write the reason for
+  [campaign](campaign.md#intervention-by-kind-of-objective) defines them. Write the reason for
   the kind under `## Decisions already made`, which the charter carries beside it.
   `judge harness` (`pi`, `claude` or `codex`) and `judge tier` name the judge. When the bundle
   names one of the two, the other is `claude` or `heavy`. When it names neither, the judge is
@@ -61,7 +61,7 @@ base: main
 - **Each `## Workspace <name>` declares one [workspace](ohflow.md#workspaces).** `path` is the
   repository, absolute or relative to the bundle. `base` defaults to `main`. `remote` is the URL of
   the workspace's `origin`, and `baseline` is a command that must exit 0 at the base. `owned: yes`
-  makes ohflow create the repository; its `path` defaults to `workspaces/<name>` in the campaign.
+  makes ohflow create the repository, and its `path` defaults to `workspaces/<name>` in the campaign.
 
 ### spec.md
 
@@ -90,11 +90,11 @@ review harness: claude
 | Field | What it holds |
 |---|---|
 | `source` | required: the issue URL, the ticket key or the file path the milestone serves |
-| `pattern` | the workflow pattern, one of the six below; none gives `implement-and-review` |
-| `workspaces` | the workspaces the milestone uses, comma-separated, the default one first; optional when the bundle declares one |
+| `pattern` | the workflow pattern, one of the six below. None gives `implement-and-review` |
+| `workspaces` | the workspaces the milestone uses, comma-separated, the default one first. It is optional when the bundle declares one |
 | `box`, `harness`, `tier` | required for every agent step: the defaults of the milestone's steps |
 | `durable` | `yes` runs a `pi` step on box `local` through the durable executor, so it survives a restart |
-| `writes` | the write scope of the one agent of `single-agent` and the implementer, comma-separated globs; default `**` |
+| `writes` | the write scope of the one agent of `single-agent` and the implementer, comma-separated globs, `**` by default |
 | `<role> <field>` | a role's own `box`, `harness`, `tier`, `durable` or `workspace`, such as `review harness: codex` |
 
 `## Scope` is required. Its text and the whole milestone spec go into every brief, so a cloud step needs no
@@ -111,7 +111,7 @@ worktree in each workspace a step writes in, so the campaign lands the milestone
 | Pattern | Pattern roles | What `construct` builds |
 |---|---|---|
 | `single-agent` | `agent` | one agent step |
-| `relay` | a step per `### ` part, in order | one phase per step; each step consumes the handover of the step before it, and may write in another workspace |
+| `relay` | a step per `### ` part, in order | one phase per step. Each step consumes the handover of the step before it, and may write in another workspace |
 | `fan-out` | a step per `### ` part | the steps in parallel, each on its own branch, then one merge per step into its workspace's output worktree |
 | `fan-out-with-consolidation` | parts and `consolidate` | the fan-out, then a consolidator in the output worktree that makes the pieces fit |
 | `fan-out-under-contracts` | parts and `review` | the fan-out against `contracts.md`, then one reviewer with a terminal only, whose gate fails on a blocking finding |
@@ -119,10 +119,10 @@ worktree in each workspace a step writes in, so the campaign lands the milestone
 
 The three fan-out patterns declare each part as a unit on the unit path `piece`, so
 [`run --pilot`](ohflow.md#pilot-a-run-over-many-units) runs one part end to end first. The other
-three patterns have one unit of work, so a pilot would run the whole milestone twice; they hold
+three patterns have one unit of work, so a pilot would run the whole milestone twice. They hold
 instead.
 
-A writing step gets `max_iterations=150` and a reviewer 80; the judge that `construct` writes gets 400.
+A writing step gets `max_iterations=150` and a reviewer 80, and the judge that `construct` writes gets 400.
 
 A change across repositories is `fan-out-under-contracts` with one part per repository: each part
 names its workspace, `contracts.md` fixes the interface between them, and a mechanical check that
@@ -148,7 +148,7 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
 ## Acceptance checks
 
 - **A mechanical check passes when its command exits 0.** `- command: <cmd>` runs in the output worktree of
-  the milestone's first written workspace; `- command in <workspace>: <cmd>` names another. In
+  the milestone's first written workspace, and `- command in <workspace>: <cmd>` names another. In
   `single-agent`, `relay` and `implement-and-review` the command gates the step that writes last
   in its workspace, and the reviewer. In the three fan-out patterns it runs as a `check-` step after
   the merges. The campaign runs it as an acceptance check before the judge. Any command counts, such as `grep`, a linter or a grading script, so prose work has mechanical checks too. The command runs
@@ -157,7 +157,7 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
   only the tests of the files it changes, and the reviewer and the judge read the logs.
 - **A command tests the change, never the whole suite.** The full suite runs in CI after a push,
   as [ohflow](ohflow.md#gate-checks) states. `{base}` in a command is the commit the milestone
-  started from, so a runner can select the tests the change reaches; for this repository the
+  started from, so a runner can select the tests the change reaches. For this repository the
   line is `- command: python3 tests/run_tests.py --changed {base}`. No workspace may
   be named `base`.
 - **`{<workspace>}` in a command is that workspace's output worktree.** `construct` writes it as a
@@ -180,7 +180,7 @@ and its endpoint from `pi.base_url.<provider>` when that is set.
     briefs/<step>.md         one brief per agent step
 ```
 
-The campaign is a new git repository with nothing committed; the first `campaign run` commits the
+The campaign is a new git repository with nothing committed, and the first `campaign run` commits the
 inputs. Its `.gitignore` covers `worktrees/` and `workspaces/`, where the runs put their worktrees
 and the owned workspaces. A judge's REVISE edits `milestone.json` and the briefs, and the next round
 builds the workflow from them. `construct` refuses an `--out` folder that exists and is not empty.
@@ -197,7 +197,7 @@ start: python3 -m ohflow.cli campaign run --campaign <campaign>/campaign.py --pi
 
 Line one says the campaign is written. One line per milestone is its `validate` verdict. A milestone
 that does not build prints `INVALID` and one indented line per fault. With a history, one line
-is its `estimate`; without one, one line says that no history was given. Then
+is its `estimate`. Without one, one line says that no history was given. Then
 come the `campaign validate` problems and its verdict, and the command that starts the campaign.
 It exits 0 on `CAMPAIGN OK` and 2 when a milestone or the campaign does not validate.
 
@@ -209,6 +209,6 @@ declare, and a missing `source:` line.
 ## Start the campaign
 
 `campaign run --pilot` runs the pilot of each fresh milestone round whose workflow declares units,
-then holds; a round without units holds. `ohflow go --run <run dir>` releases it, as
+then holds. A round without units holds. `ohflow go --run <run dir>` releases it, as
 [campaign](campaign.md#run-it) describes. Read the briefs and the estimate first, and run
 `campaign estimate` for the whole forecast.
