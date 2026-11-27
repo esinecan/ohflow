@@ -1,15 +1,15 @@
 # House rules on this box
 
 This file is the operator layer of the ohflow references. git ignores it at
-`references/local.md`. The shipped references hold the product; this file adds the rules of
-this box.
+`references/local.md`. The references of ohflow core hold the product, and this file adds the rules
+of this box.
 
 ## Campaign escalation reaches the operator through the team board
 
 Set `operator.on_escalate` in `ohflow.settings.local.json` to a command that posts the
 escalation file to the team board, with `{file}` where the escalation file's path goes. Every
 campaign then reaches the board, including the ones `ohflow construct` writes, which name no
-`on_escalate` of their own; a campaign that sets one overrides the setting. The post's subject
+`on_escalate` of their own. A campaign that sets one overrides the setting. The post's subject
 and first body line open with `CRUCIAL INFORMATION FOR ALEX:`, which is the
 `operator.escalation_marker` setting. Every agent reads the board, and the marker tells them
 the post is for a person.
