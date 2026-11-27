@@ -1,0 +1,74 @@
+name: release
+
+on:
+  workflow_run:
+    workflows: [suite]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      validation_run_id:
+        description: Original successful push-to-main suite run ID (retry without rebuilding)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: release-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Run trusted publisher code from the default branch, never from an artifact.
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Require the dedicated release app
+        env:
+          APP_ID: ${{ vars.OHFLOW_RELEASE_APP_ID }}
+          APP_KEY: ${{ secrets.OHFLOW_RELEASE_APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APP_ID" ] || [ -z "$APP_KEY" ]; then
+            echo '::error::Configure the dedicated release App and ref rulesets. See docs/release/automation.md.'
+            exit 1
+          fi
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ vars.OHFLOW_RELEASE_APP_ID }}
+          private-key: ${{ secrets.OHFLOW_RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-administration: read
+          permission-workflows: write
+      - name: Verify original validation, publish immutable assets, advance release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TOKEN: ${{ steps.app.outputs.token }}
+          RELEASE_APP_ID: ${{ vars.OHFLOW_RELEASE_APP_ID }}
+          VALIDATION_RUN_ID: ${{ inputs.validation_run_id || github.event.workflow_run.id }}
+        run: python -m release.promote --run-id "$VALIDATION_RUN_ID" --out release-result
+      - name: Initialize four independent channel records
+        if: success()
+        run: python -m release.channels init --bundle release-result --records release-result/channels
+      - name: Preserve promotion and channel evidence, including partial failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: release-result/
+          if-no-files-found: ignore
+          retention-days: 90

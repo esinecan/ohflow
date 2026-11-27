@@ -3,12 +3,8 @@ name: suite
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
   workflow_dispatch:
 
 permissions:
@@ -34,6 +30,8 @@ jobs:
         run: git config --global core.autocrlf false
 
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v6
         with:
@@ -60,3 +58,51 @@ jobs:
       - name: Real-process tests
         if: ${{ !cancelled() }}
         run: python tests/run_tests.py --real-process
+
+  candidate:
+    name: release candidate
+    needs: suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Build complete portable package from this exact commit
+        run: python -m release.package build --source "$GITHUB_SHA" --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 90
+
+  package-smoke:
+    name: package smoke (${{ matrix.os }})
+    needs: candidate
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+      - name: Verify and install the same candidate on a clean path
+        run: python -m release.package smoke --bundle dist

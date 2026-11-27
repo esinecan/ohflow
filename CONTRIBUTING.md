@@ -1,5 +1,8 @@
 # Contributing to ohflow
 
+Release source, package identity, promotion and recovery are documented in
+[validated releases](docs/release/automation.md).
+
 ## What ohflow is
 
 ohflow is a Python workflow engine for agent work. You define ordered phases of steps, and the engine starts agents through their harnesses, runs commands, checks results and merges contributions. A campaign coordinates these workflows to deliver a larger design through accepted milestones.
