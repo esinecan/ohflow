@@ -93,6 +93,14 @@ Retry the original suite run ID after correcting the reported configuration or u
 gh workflow run release.yml -f validation_run_id=123456789
 ```
 
+Use this dispatch, not Re-run on the failed `release` run. A re-run keeps the commit of its
+original event, so it repeats the old publisher code after a fix reaches `main`. The dispatch
+runs the publisher from the current `main`.
+
+The concurrency group holds one waiting publisher. A newly queued run cancels the one that
+waits, so a retry dispatched behind a running publisher can cancel a newer commit's promotion.
+When a promotion run shows as cancelled, dispatch it again with its suite run ID.
+
 Existing tags must match the original source SHA, and existing assets must match its original
 bytes. The publisher refuses to replace either. A repeated successful promotion makes no writes.
 If a newer source has already reached `release`, the older retry reports `stale`.
