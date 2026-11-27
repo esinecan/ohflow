@@ -7,17 +7,17 @@ description: Deliver a feature, or a whole design document milestone by mileston
 
 **IF A PART OF THIS TEXT APPLIES TO YOUR PROCEDURE, READ THE REFERENCE IT POINTS TO BEFORE YOU ACT. OTHERWISE THE REFERENCE IS OPTIONAL.**
 
-Write briefs, set tool policies, fire the command and read the result. **Tool policy is the gate**: an agent calls only the tools it was built with. **The agent's final message is a claim; the artifact is the evidence.** Terms: grep [CONTEXT](CONTEXT.md) after its core table.
+Write briefs, set tool policies, fire the command and read the result. **Tool policy is the gate**: an agent calls only the tools it was built with. **The agent's final message is a claim. The artifact is the evidence.** Terms: grep [CONTEXT](CONTEXT.md) after its core table.
 
 ## The attitude
 
-Own the result. Check artifacts, tools and documentation; explain failed runs. Wire for the transcript first. Read [orchestrator guidance](references/orchestrator.md) before constructing or revising a run.
+Own the result. Check artifacts, tools and documentation. Explain failed runs. Wire for the transcript first. Read [orchestrator guidance](references/orchestrator.md) before constructing or revising a run.
 
-**Pilot first, whatever the pattern.** Send one small representative subset through every phase first, and change the workflow on what it shows; `run --pilot` does this for a workflow that declares units.
+**Pilot first, whatever the pattern.** Send one small representative subset through every phase first, and change the workflow on what it shows. `run --pilot` does this for a workflow that declares units.
 
 **You stay in charge during the run.** Give each step one change, a stop rule and a gate that tests only that change ([ohflow](references/ohflow.md#gate-checks)), judge its result before the next step starts, and in a delivery kill a step the moment it stops producing value. A workflow that can run unattended does not make you unattended: packing the remaining work into a few multi-task steps and waiting for the run to end is the failure.
 
-**The objective kind limits intervention.** A delivery, search and research included, is open to revision; an empirical procedure, such as an A/B test, stops only for a deviation, and changing its procedure restarts every arm. The bill names the kind and why; rules: [campaign](references/campaign.md#intervention-by-kind-of-objective).
+**The objective kind limits intervention.** A delivery, search and research included, is open to revision. An empirical procedure, such as an A/B test, stops only for a deviation, and changing its procedure restarts every arm. The bill names the kind and why. Rules: [campaign](references/campaign.md#intervention-by-kind-of-objective).
 
 ## Route by the work
 
@@ -58,21 +58,21 @@ Run each from `scripts/` as `PYTHONPATH=. python3 -m ohflow.cli <verb>`. Verdict
 
 | Verb | What it does |
 |---|---|
-| `preflight` | checks Git Bash, the workflow and each harness executor; run it first |
+| `preflight` | checks Git Bash, the workflow and each harness executor. Run it first |
 | `construct` | writes a campaign from milestone specs |
 | `validate` | checks a workflow without a run |
 | `estimate` / `campaign estimate` | forecasts minutes, tokens and cost from history |
-| `run` | fires a workflow; `--dry-run` rehearses, `--detach` backgrounds, `--hold` waits for `go`, `--pilot` prices each unit path, then holds |
-| `go` / `kill` | releases a held run; stops one step |
+| `run` | fires a workflow: `--dry-run` rehearses, `--detach` backgrounds, `--hold` waits for `go`, `--pilot` prices each unit path, then holds |
+| `go` / `kill` | releases a held run, or stops one step |
 | `status` / `watch` | reads a run now, or waits for news |
-| `campaign watch` / `history` | `watch` for a campaign; its rounds |
+| `campaign watch` / `history` | `watch` for a campaign, or its rounds |
 | `notes log` / `check` | appends to or audits run notes |
 | `table` | totals the runs' cost and tokens |
 | `transcript` / `explain` / `actions` | one step's attempt: its transcript, triage or model calls |
 | `compare` | diffs two runs |
 | `position` | prints a step's position block |
 | `revert` | removes a run's worktrees |
-| `dashboard` / `report` | serves a finished run; rebuilds a dead supervisor's exit report |
+| `dashboard` / `report` | serves a finished run, or rebuilds a dead supervisor's exit report |
 | `cloud-spend` | reads Cloudflare's container bill |
 | `rollcall` | runs the live-agent matrix |
 
@@ -82,4 +82,4 @@ With `commit_checks.no_ai_attribution` on, the house check `no_ai_attribution` f
 
 ## Improve this skill
 
-Update verified operating guidance in its reference; keep run evidence in notes, and open bugs where `references/local.md` says, else in GitHub issues. Mark assumptions; verify fixes before closing them.
+Update verified operating guidance in its reference. Keep run evidence in notes, and open bugs where `references/local.md` says, else in GitHub issues. Mark assumptions. Verify fixes before closing them.
