@@ -55,7 +55,13 @@ read for validation evidence.
    creation, updates and deletion of `refs/heads/release`, with only this App allowed to bypass.
    `ohflow release tag creation` restricts creation of `refs/tags/ohflow-v*` to the App.
    `ohflow immutable release tags` restricts updates and deletion of those tags with no bypass.
-   The publisher reads back the rules and rejects missing protections or additional bypass actors.
+   Audit them with an owner token using `GITHUB_REPOSITORY=owner/repo`, `GH_TOKEN` and
+   `python -m release.promote --attest-rulesets 123456`. Store the resulting JSON in the
+   repository variable `OHFLOW_RELEASE_RULESET_POLICY`.
+   The audit requires visible bypass actors and rejects additional actors. GitHub omits these
+   lists from the release App's response, so the publisher checks the audited ruleset IDs and
+   server update timestamps alongside their live protections. Any edit requires another audit.
+   The App keeps Administration read. An audit created from redacted actor lists is rejected.
 3. Enable release immutability in repository Settings, General, Releases. Verify it with
    `gh api repos/esinecan/ohflow/immutable-releases`, which must report `enabled: true`.
    [GitHub documents the setting and its effect on assets and tags](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).

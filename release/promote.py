@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import io
 import json
 import os
@@ -76,18 +77,55 @@ def rulesets(app_id):
             rule("ohflow immutable release tags", "tag", "refs/tags/ohflow-v*", ["update", "deletion"], [])]
 
 
-def check_rules(api, app_id):
+def rule_time(value):
+    if not isinstance(value, str):
+        raise ValueError("Ruleset update timestamp is missing")
+    instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        raise ValueError("Ruleset update timestamp requires a timezone")
+    return instant
+
+
+def check_rules(api, app_id, policy=None):
+    if policy is not None and (policy.get("schema") != 1 or policy.get("app_id") != app_id):
+        raise ValueError("Ruleset policy does not match this release App")
     available = api.pages("/rulesets")
+    snapshots = []
     for expected in rulesets(app_id):
         match = next((r for r in available if r["name"] == expected["name"]), None)
         if not match:
             raise ValueError(f"Install active ruleset '{expected['name']}' before promotion")
         actual = api.request(f"/rulesets/{match['id']}")
-        for key in ("target", "enforcement", "conditions", "bypass_actors"):
+        for key in ("target", "enforcement", "conditions"):
             if actual.get(key) != expected[key]:
                 raise ValueError(f"Ruleset '{expected['name']}' has unexpected {key}")
+        if "bypass_actors" in actual:
+            if actual["bypass_actors"] != expected["bypass_actors"]:
+                raise ValueError(f"Ruleset '{expected['name']}' has unexpected bypass_actors")
+        elif policy is None:
+            raise ValueError("Ruleset actor data is redacted. Configure OHFLOW_RELEASE_RULESET_POLICY using an owner audit.")
+        if policy is not None:
+            entries = [p for p in policy.get("rulesets", []) if p.get("id") == match["id"]]
+            if (len(entries) != 1 or not actual.get("updated_at")
+                    or entries[0].get("name") != expected["name"]
+                    or rule_time(entries[0].get("updated_at")) != rule_time(actual["updated_at"])
+                    or entries[0].get("bypass_actors") != expected["bypass_actors"]):
+                raise ValueError(f"Ruleset '{expected['name']}' differs from its owner audit. Re-audit before promotion.")
         if not {r["type"] for r in expected["rules"]} <= {r["type"] for r in actual["rules"]}:
             raise ValueError(f"Ruleset '{expected['name']}' does not protect the required operations")
+        snapshots.append({"id": match["id"], "name": expected["name"], "updated_at": actual.get("updated_at"),
+                          "bypass_actors": expected["bypass_actors"]})
+    return snapshots
+
+
+def attest_rules(api, app_id):
+    # This path requires actual actor visibility, never a previous attestation.
+    snapshots = check_rules(api, app_id)
+    if not all(row["updated_at"] for row in snapshots):
+        raise ValueError("Ruleset update timestamps are missing")
+    for row in snapshots:
+        row["updated_at"] = rule_time(row["updated_at"]).astimezone(timezone.utc).isoformat()
+    return {"schema": 1, "app_id": app_id, "rulesets": snapshots}
 
 
 def validated_run(api, repository, run_id):
@@ -199,10 +237,10 @@ def publish_assets(api, manifest, bundle):
     return release["html_url"]
 
 
-def promote(reader, writer, repository, run_id, app_id, bundle):
+def promote(reader, writer, repository, run_id, app_id, bundle, ruleset_policy=None):
     run = validated_run(reader, repository, run_id)
     manifest = download_candidate(reader, run, bundle)
-    check_rules(writer, app_id)
+    check_rules(writer, app_id, ruleset_policy)
     if writer.request("/immutable-releases").get("enabled") is not True:
         raise ValueError("Enable immutable releases in repository Settings > General > Releases before promotion")
     decision = forward(reader, manifest["source_sha"])
@@ -225,11 +263,19 @@ def promote(reader, writer, repository, run_id, app_id, bundle):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rulesets", type=int, metavar="APP_ID", help="print ruleset import templates")
+    parser.add_argument("--attest-rulesets", type=int, metavar="APP_ID", help="audit with an owner token and print pinned ruleset policy")
     parser.add_argument("--run-id", type=int)
     parser.add_argument("--out", type=Path, default=Path("release-result"))
     args = parser.parse_args()
     if args.rulesets:
         print(encoded(rulesets(args.rulesets)).decode(), end="")
+        return
+    if args.attest_rulesets:
+        try:
+            api = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"])
+            print(encoded(attest_rules(api, args.attest_rulesets)).decode(), end="")
+        except (ValueError, OSError, KeyError) as error:
+            parser.exit(1, f"POLICY FAIL: {error}\n")
         return
     if not args.run_id:
         parser.error("--run-id is required")
@@ -240,7 +286,8 @@ def main():
         app_id = int(os.environ["RELEASE_APP_ID"])
         args.out.mkdir(parents=True, exist_ok=True)
         # Keep original bundle for downstream channel jobs, with no rebuild.
-        result = promote(reader, writer, repository, args.run_id, app_id, args.out)
+        policy = json.loads(os.environ.get("RELEASE_RULESET_POLICY", "null"))
+        result = promote(reader, writer, repository, args.run_id, app_id, args.out, policy)
         (args.out / "promotion.json").write_bytes(encoded(result))
         print(encoded(result).decode(), end="")
         if os.environ.get("GITHUB_STEP_SUMMARY"):

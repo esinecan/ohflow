@@ -59,6 +59,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TOKEN: ${{ steps.app.outputs.token }}
           RELEASE_APP_ID: ${{ vars.OHFLOW_RELEASE_APP_ID }}
+          RELEASE_RULESET_POLICY: ${{ vars.OHFLOW_RELEASE_RULESET_POLICY }}
           VALIDATION_RUN_ID: ${{ inputs.validation_run_id || github.event.workflow_run.id }}
         run: python -m release.promote --run-id "$VALIDATION_RUN_ID" --out release-result
       - name: Initialize four independent channel records

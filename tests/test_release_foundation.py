@@ -173,8 +173,13 @@ class ReleaseFoundation(unittest.TestCase):
         self.download = self.directory / "download"
         self.download.mkdir()
 
-    def promote(self):
-        return promote.promote(self.api, self.api, REPOSITORY, 100, 42, self.download)
+    def promote(self, policy=None):
+        return promote.promote(self.api, self.api, REPOSITORY, 100, 42, self.download, policy)
+
+    def audited_policy(self):
+        for i, rule in enumerate(self.api.rules):
+            rule['updated_at'] = f'2026-11-27T12:00:0{i}.001Z'
+        return promote.attest_rules(self.api, 42)
 
     def test_exact_committed_source_and_deterministic_bytes(self):
         other = self.directory / "other"
@@ -274,6 +279,60 @@ class ReleaseFoundation(unittest.TestCase):
         self.api.immutable = False
         with self.assertRaisesRegex(ValueError, "Enable immutable"):
             self.promote()
+        self.assertEqual(self.api.writes, [])
+
+    def test_redacted_actors_require_an_owner_audit(self):
+        policy = self.audited_policy()
+        for rule in self.api.rules:
+            del rule['bypass_actors']
+        with self.assertRaisesRegex(ValueError, 'redacted'):
+            self.promote()
+        self.assertEqual(self.api.writes, [])
+        self.assertEqual(self.promote(policy)['result'], 'create')
+
+    def test_changed_ruleset_timestamp_rejects_old_audit(self):
+        policy = self.audited_policy()
+        for rule in self.api.rules:
+            del rule['bypass_actors']
+        self.api.rules[0]['updated_at'] = '2026-11-27T12:00:00.002Z'
+        with self.assertRaisesRegex(ValueError, 'differs from its owner audit'):
+            self.promote(policy)
+        self.assertEqual(self.api.writes, [])
+
+    def test_rule_audit_compares_instants_across_api_timezones(self):
+        policy = self.audited_policy()
+        for i, rule in enumerate(self.api.rules):
+            del rule['bypass_actors']
+            rule['updated_at'] = f'2026-11-27T13:00:0{i}.001+01:00'
+        self.assertEqual(self.promote(policy)['result'], 'create')
+
+    def test_rule_audit_rejects_a_timestamp_without_timezone(self):
+        policy = self.audited_policy()
+        for rule in self.api.rules:
+            del rule['bypass_actors']
+        policy['rulesets'][0]['updated_at'] = '2026-11-27T12:00:00.001'
+        with self.assertRaisesRegex(ValueError, 'requires a timezone'):
+            self.promote(policy)
+        self.assertEqual(self.api.writes, [])
+
+    def test_audit_requires_visible_actors(self):
+        self.audited_policy()
+        del self.api.rules[0]['bypass_actors']
+        with self.assertRaisesRegex(ValueError, 'redacted'):
+            promote.attest_rules(self.api, 42)
+
+    def test_audit_cannot_authorize_another_app_or_added_actor(self):
+        policy = self.audited_policy()
+        for rule in self.api.rules:
+            del rule['bypass_actors']
+        wrong_app = deepcopy(policy)
+        wrong_app['app_id'] = 43
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            self.promote(wrong_app)
+        wrong_actor = deepcopy(policy)
+        wrong_actor['rulesets'][0]['bypass_actors'].append({'actor_type': 'RepositoryRole', 'actor_id': 5, 'bypass_mode': 'always'})
+        with self.assertRaisesRegex(ValueError, 'differs from its owner audit'):
+            self.promote(wrong_actor)
         self.assertEqual(self.api.writes, [])
 
     def test_success_initializes_release_only_after_immutable_assets(self):
