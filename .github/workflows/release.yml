@@ -54,7 +54,7 @@ jobs:
           permission-contents: write
           permission-administration: read
           permission-workflows: write
-      - name: Verify original validation, publish immutable assets, advance release
+      - name: Verify original validation, publish immutable assets, advance release and claude-plugin
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TOKEN: ${{ steps.app.outputs.token }}
@@ -65,6 +65,11 @@ jobs:
       - name: Initialize four independent channel records
         if: success()
         run: python -m release.channels init --bundle release-result --records release-result/channels
+      - name: Record the claude-plugin commit in the Anthropic channel record
+        if: success()
+        run: >-
+          python -m release.claude_plugin record --bundle release-result
+          --records release-result/channels --promotion release-result/promotion.json
       - name: Preserve promotion and channel evidence, including partial failure
         if: always()
         uses: actions/upload-artifact@v4

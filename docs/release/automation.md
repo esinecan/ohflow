@@ -7,9 +7,10 @@ Feature work goes through a pull request to `main`.
 The suite runs on every push to `main` and every pull request, including changes to Markdown.
 It runs the source suite and Worker tests on Ubuntu and Windows, builds one portable ZIP,
 then installs that same ZIP in a temporary directory on both systems. The install check loads
-the CLI, constructs the quickstart campaign and checks the companion Node entry points.
-It needs no model login and starts no agents. Host deployment and vendor installation checks
-belong to the packages that use those services.
+the CLI, constructs the quickstart campaign and checks the companion Node entry points. The same
+jobs generate the Claude plugin from that ZIP, validate it with a pinned Claude Code CLI and run
+the same check from the plugin's skill folder. It needs no model login and starts no agents. Host
+deployment and vendor installation checks belong to the packages that use those services.
 
 ## Source and package identity
 
@@ -36,8 +37,8 @@ of every required job must pass.
 ## Enable the publisher
 
 The publisher requires a dedicated GitHub App installed only on this repository. Give it
-Contents write, Workflows write and Administration read. Contents writes tags, release assets
-and the release branch. Workflows permits advancing a ref when the validated commit includes
+Contents write, Workflows write and Administration read. Contents writes tags, release assets,
+the release branch and the `claude-plugin` branch. Workflows permits advancing a ref when the validated commit includes
 workflow files. Administration read checks that release immutability is enabled. It has no
 administration write permission. The workflow's ordinary token has Contents read and Actions
 read for validation evidence.
@@ -45,7 +46,7 @@ read for validation evidence.
 1. Create and install the App. Store its numeric App ID in the repository variable
    `OHFLOW_RELEASE_APP_ID` and its private key in the Actions secret
    `OHFLOW_RELEASE_APP_PRIVATE_KEY`. The workflow requests a short-lived token for this repository.
-2. Generate the three ref ruleset templates, substituting the App's ID:
+2. Generate the four ref ruleset templates, substituting the App's ID:
 
    ```bash
    python -m release.promote --rulesets 123456
@@ -55,13 +56,16 @@ read for validation evidence.
    creation, updates and deletion of `refs/heads/release`, with only this App allowed to bypass.
    `ohflow release tag creation` restricts creation of `refs/tags/ohflow-v*` to the App.
    `ohflow immutable release tags` restricts updates and deletion of those tags with no bypass.
-   Audit them with an owner token using `GITHUB_REPOSITORY=owner/repo`, `GH_TOKEN` and
+   `ohflow claude-plugin branch` restricts creation, updates and deletion of
+   `refs/heads/claude-plugin`, with only this App allowed to bypass. Audit them with an owner token using `GITHUB_REPOSITORY=owner/repo`, `GH_TOKEN` and
    `python -m release.promote --attest-rulesets 123456`. Store the resulting JSON in the
    repository variable `OHFLOW_RELEASE_RULESET_POLICY`.
    The audit requires visible bypass actors and rejects additional actors. GitHub omits these
    lists from the release App's response, so the publisher checks the audited ruleset IDs and
    server update timestamps alongside their live protections. Any edit requires another audit.
    The App keeps Administration read. An audit created from redacted actor lists is rejected.
+   A change that adds a ruleset to `release.promote` stops every promotion until that ruleset
+   exists, so import it and run the audit from the change's branch before the change merges.
 3. Enable release immutability in repository Settings, General, Releases. Verify it with
    `gh api repos/esinecan/ohflow/immutable-releases`, which must report `enabled: true`.
    [GitHub documents the setting and its effect on assets and tags](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
@@ -85,7 +89,10 @@ publisher also checks ancestry and rejects a delayed older commit. It creates th
 uploads both assets to a draft release, checks the uploaded bytes and publishes the release.
 It verifies that the published release is immutable, re-reads the managed branch, then advances
 it without force. The branch never points at a version whose assets are still being uploaded.
-An interrupted publisher can leave a draft or a complete release awaiting branch advancement.
+Then it writes the Claude plugin generated from the same bundle to `claude-plugin`, as
+[the Anthropic directory section](#anthropic-directory) describes. An interrupted publisher can
+leave a draft, a complete release awaiting branch advancement, or an advanced `release` whose
+plugin commit is missing. A retry of the original run completes each of them.
 
 Retry the original suite run ID after correcting the reported configuration or upload failure:
 
@@ -163,7 +170,7 @@ Publication, review and indexing can finish at different times.
 |---|---|
 | SkillsMP | Listing, refresh mechanism and supported branch selection. Default-branch-only indexing requires an explicit source exception. |
 | skills.sh | A tag install whose locked commit equals the manifest source SHA, complete companion files and an update that follows `release`. [The skills.sh section](#skillssh) gives the commands and the results. |
-| Anthropic | Supported plugin format, tracked Git source, review settings and actual automatic update support. |
+| Anthropic | A generated plugin on `claude-plugin` that Claude Code validates and loads, the directory's own validation and review, its publish setting, and an update that reaches the listing. [The Anthropic directory section](#anthropic-directory) gives the format and the steps. |
 | OpenAI | Eligibility, supported package format and verified submission/update controls. Portal-only steps stay manual. |
 
 These adapters own their credentials and vendor manifests. Package creation alone proves no
@@ -224,6 +231,69 @@ python -m release.channels record --bundle bundle --records status --channel ski
 Use `published` when `https://skills.sh/esinecan/ohflow/ohflow` shows the skill. A Git install
 exposes no package SHA-256, so the alignment of this channel stays `unknown` under the rule above.
 
+### Anthropic directory
+
+Anthropic's directory at claude.ai lists plugin bundles. It reads one plugin folder from a
+branch or tag of a public GitHub repository, and the folder must hold `.claude-plugin/plugin.json`,
+a README of at least 40 words and a license. A plugin of more than 512 files, or one with a
+non-image file over 256 KiB, is held for a reviewer on every version. `main` has more than 512
+files and test fixtures over 256 KiB, so the directory reads a generated plugin from the branch
+`claude-plugin` instead. `main` and `release` keep `SKILL.md` at the root, and the skills.sh
+install stays as it is.
+
+`release.claude_plugin` generates the plugin from the verified bundle alone:
+
+| Path in the plugin | Content |
+|---|---|
+| `.claude-plugin/plugin.json` | `release/claude/plugin.json` with `version` set to the release version |
+| `README.md` | `release/claude/README.md`, which names what ohflow runs, sends and fetches |
+| `LICENSE` | the repository license |
+| `skills/ohflow/` | every bundle file except `tests/`, `.github/` and `release/`, with `RELEASE.json` |
+
+The generator checks the directory's documented limits and stops on a breach: the file count,
+file sizes, binary files, incomplete images, names that Windows or macOS refuse, names that differ
+only by case, a top-level `bin/`, a lockfile beside `package.json` at the root, rewriting
+`.gitattributes` entries, the README length, the license and the manifest name. To rehearse it:
+
+```bash
+python -m release.claude_plugin build --bundle bundle --out claude-plugin
+claude plugin validate --strict claude-plugin
+python -m release.claude_plugin smoke --tree claude-plugin
+```
+
+After `release` advances, the publisher writes the tree as one commit on `claude-plugin` through
+the Git data API. The commit's parent is the previous tip, the message names the version and the
+source SHA, and the ref moves without force. Files that match blobs of the source commit are not
+uploaded again. The publisher compares the tree it created with the tree hash it computed
+locally. A retry that finds the same version and tree makes no write. A tip with a newer version
+makes the write `stale`, and a tip with the same version and other content stops the publisher.
+The plugin's `skills/ohflow/RELEASE.json` names the release version and source SHA of each commit.
+
+`release.claude_plugin record` adds the write to the `anthropic` channel record with status
+`unknown`, ref `claude-plugin` and the commit URL as evidence. The directory's scan, review and
+publish state shows only in its developer portal at https://claude.ai/directory/manage, so the
+listing's version stays null until someone reads it there.
+
+The listing itself needs the repository owner's claude.ai account and is submitted once:
+
+1. In the claude.ai organization that will own the listing, connect GitHub with an account that
+   can push to this repository.
+2. In the developer portal, select Submit new, then Plugin bundle. Enter the repository, leave the
+   plugin path empty and enter `claude-plugin` as the branch. Select Validate and fix each
+   blocking finding in the generator.
+3. Check the listing details, answer the data handling questions, accept the directory terms and
+   policy, choose GitHub push webhook, turn on Auto-publish passing versions and submit.
+4. Select Set up push updates, which needs admin access to the repository.
+
+Anthropic's documentation describes what follows the submission, and no ohflow listing has
+confirmed it yet. A person at Anthropic reviews the first version. Anthropic decides the publish
+setting, and the Auto-publish row of the plugin's Overview tab shows it. By default a reviewer
+publishes each version. When Anthropic lets passing versions publish themselves, a new `claude-plugin` commit
+goes live after its scan, unless the scan holds it for a reviewer. The listing serves the last
+published version until then. People who add ohflow on claude.ai get it in chat, in Cowork and,
+as `ohflow@synced`, in Claude Code sessions signed in with the same account. The skill's
+commands need a computer with Python, git, bash and the harness tools, which Claude Code has.
+
 ## Local rehearsal
 
 Run `python tests/run_tests.py -k release_foundation`. Its isolated git history contains a small
@@ -231,6 +301,9 @@ change and a revert. An API fixture rehearses successful initialization, forward
 failed and cancelled validation, missing smoke checks, wrong source, stale and racing jobs,
 partial upload recovery, immutable identity conflicts and independent channel retries. The same
 tests install the archive outside the checkout and check deterministic bytes despite local edits.
+They also generate the Claude plugin, compare its tree hash with `git write-tree`, break each
+directory limit, run the skill from the plugin, and write, retry, advance and refuse
+`claude-plugin` commits through the fixture.
 
 These checks cover the publisher's decisions. The production acceptance check follows merge:
 observe the actual Actions run, immutable release and protected branch, install its downloaded
