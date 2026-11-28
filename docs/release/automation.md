@@ -162,12 +162,67 @@ Publication, review and indexing can finish at different times.
 | Channel | What its adapter must prove |
 |---|---|
 | SkillsMP | Listing, refresh mechanism and supported branch selection. Default-branch-only indexing requires an explicit source exception. |
-| skills.sh | A tag or SHA-qualified install, complete companion files and the actual update path. |
+| skills.sh | A tag install whose locked commit equals the manifest source SHA, complete companion files and an update that follows `release`. [The skills.sh section](#skillssh) gives the commands and the results. |
 | Anthropic | Supported plugin format, tracked Git source, review settings and actual automatic update support. |
 | OpenAI | Eligibility, supported package format and verified submission/update controls. Portal-only steps stay manual. |
 
 These adapters own their credentials and vendor manifests. Package creation alone proves no
 directory listing, and a listing without source evidence proves no alignment.
+
+### skills.sh
+
+skills.sh has no submission step. Its CLI, `npx skills`, installs a skill from a Git repository,
+and the directory lists a public repository after the CLI's anonymous install telemetry reports
+installs of it. The CLI sends that report unless `DISABLE_TELEMETRY` or `DO_NOT_TRACK` is set, so
+the installs of a test run set `DISABLE_TELEMETRY=1` and add nothing to the count. The results
+below come from skills CLI 1.9.1 on Windows and Linux, for the agents `claude-code` and `codex`.
+
+| Source given to `npx skills add` | `ref` in `skills-lock.json` | `npx skills update` |
+|---|---|---|
+| `https://github.com/esinecan/ohflow/tree/release` | `release` | moves `commit` to the source SHA of the newest promotion |
+| `https://github.com/esinecan/ohflow/tree/ohflow-v0.0.N` | the tag | keeps `commit` at that release |
+| `esinecan/ohflow@<full source SHA>` | the SHA | keeps `commit` at that SHA |
+| `esinecan/ohflow` | none | follows `main` |
+| `esinecan/ohflow@ohflow-v0.0.N` | none | installs nothing, because the CLI reads `ohflow-v0.0.N` as a skill name |
+
+`esinecan/ohflow#release` and `esinecan/ohflow#ohflow-v0.0.N` behave like the two URL forms. The
+README documents the URL forms, because some shells treat `#` as a special character. Each form
+with a ref runs `git clone --depth 1 --branch <ref>` against GitHub. Only the bare
+`esinecan/ohflow` form may install a snapshot that skills.sh serves. The lock keeps the ref and
+the commit that the clone checked out. `npx skills check` exits 1 when the content at the ref
+differs from the lock, and `npx skills update` reinstalls it and records the new commit. A global
+install with `-g` keeps its ref and commit in `~/.agents/.skill-lock.json` and updates the same way.
+
+The install contains every path in the manifest's `source_files` and no other file. The CLI leaves
+out `.git`, `__pycache__`, `__pypackages__` and `metadata.json`, and the repository commits none of
+them. A Git install has no `RELEASE.json`. On Linux every file matches its manifest SHA-256, and
+`scripts/ohflow/shell_tee.sh` keeps mode 755. Git for Windows sets `core.autocrlf=true` by
+default, so a checkout there writes CRLF line endings into text files other than `*.sh`, and most
+files match their manifest SHA-256 only after CRLF is converted back to LF. The install check of
+`ci.yml` passes on the installed folder on both systems.
+
+With one agent the CLI copies the skill into that agent's folder, `.claude/skills/ohflow` for
+Claude Code or `.agents/skills/ohflow` for Codex. With both agents it keeps one copy in
+`.agents/skills/ohflow` and links `.claude/skills/ohflow` to it, as a junction on Windows. `--copy`
+writes a full copy for each agent.
+
+The CLI also installs from an archive URL, but it refuses an archive larger than 10 MiB unless
+`SKILLS_DOWNLOAD_MAX_BYTES` raises the limit. `ohflow-0.0.29.zip` has 10,512,985 bytes, so the
+CLI refuses the release asset by default.
+
+For a channel attempt, install the release tag with telemetry off and compare the locked `commit`
+with the manifest `source_sha`:
+
+```bash
+DISABLE_TELEMETRY=1 npx skills add https://github.com/esinecan/ohflow/tree/ohflow-v0.0.N -a claude-code -y --json
+python -m release.channels record --bundle bundle --records status --channel skills-sh \
+  --status pending_indexing --evidence https://skills.sh/esinecan/ohflow/ohflow \
+  --observed-version 0.0.N --observed-source-sha <locked commit> --observed-ref release \
+  --note "Listing not yet indexed. A Git install exposes no package checksum."
+```
+
+Use `published` when `https://skills.sh/esinecan/ohflow/ohflow` shows the skill. A Git install
+exposes no package SHA-256, so the alignment of this channel stays `unknown` under the rule above.
 
 ## Local rehearsal
 

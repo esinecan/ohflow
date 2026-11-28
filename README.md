@@ -141,10 +141,31 @@ and read 30 k.
 
 ## With your agent
 
-ohflow is an Agent Skill, and [SKILL.md](SKILL.md) is its entry point for your agent. Clone it where
-your harness loads skills, such as `~/.claude/skills/ohflow` for Claude Code. Then give your
-agent the goal, the limits and the specs, and ask it to deliver them with ohflow. The agent
-writes the bundle, shows you what `construct` prints, and runs and watches the campaign.
+ohflow is an Agent Skill, and [SKILL.md](SKILL.md) is its entry point for your agent. Install it
+with the [skills CLI](https://skills.sh) from the `release` branch. That branch only moves to a
+commit from `main` after the commit passes the test suite and the package checks, as
+[validated releases](docs/release/automation.md) explains.
+
+```bash
+npx skills add https://github.com/esinecan/ohflow/tree/release
+```
+
+The CLI needs Node 22.20 or later. It asks which agents to install for, or you name them with
+`-a claude-code`, `-a codex` or both. It installs into the current project, and `-g` installs for
+your user instead. Later, `npx skills update` moves the install to the newest release. To stay on
+one release, install its tag from [the releases page](https://github.com/esinecan/ohflow/releases),
+such as `https://github.com/esinecan/ohflow/tree/ohflow-v0.0.29`, and `update` leaves it there.
+
+Two shorter forms do something else. `npx skills add esinecan/ohflow` installs the newest commit on
+`main`, which may not have passed the release checks yet. `esinecan/ohflow@ohflow-v0.0.29` installs
+nothing, because the CLI reads the part after `@` as a skill name.
+
+You can also clone the `release` branch where your harness loads skills, for example
+`git clone -b release https://github.com/esinecan/ohflow ~/.claude/skills/ohflow` for Claude Code.
+
+With ohflow installed, give your agent the goal, the limits and the specs, and ask it to deliver
+them with ohflow. The agent writes the bundle, shows you what `construct` prints, and runs and
+watches the campaign.
 
 ## Glossary
 
