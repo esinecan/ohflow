@@ -104,7 +104,7 @@ When a promotion run shows as cancelled, dispatch it again with its suite run ID
 Existing tags must match the original source SHA, and existing assets must match its original
 bytes. The publisher refuses to replace either. A repeated successful promotion makes no writes.
 If a newer source has already reached `release`, the older retry reports `stale`.
-Candidate artifacts are retained for 90 days. A missing or expired candidate stops promotion.
+Candidate artifacts are retained for 90 days, and a missing or expired candidate stops promotion.
 Published release assets remain the source for later channel retries.
 
 To recover from a bad release, revert the change on `main` through a pull request. Its validation

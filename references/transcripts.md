@@ -12,9 +12,9 @@ Each harness executor module answers `transcript` for its own steps:
 
 | Harness executor | `transcript` gives |
 |---|---|
-| pi | runs `pi --export` as a windowless child and writes `<run-dir>/<step-id>.transcript.html`; `--out <file>` picks the path |
+| pi | runs `pi --export` as a windowless child and writes `<run-dir>/<step-id>.transcript.html`, and `--out <file>` picks the path |
 | claude, codex | the path of the attempt's event log under `logs/` |
-| pi-cloud, claude-cloud, codex-cloud | the path of `transcript.md`, the Worker's transcript the runner copies down when the attempt settles; before that, and on a killed attempt that never copies it, the path of the attempt's event log under `logs/` |
+| pi-cloud, claude-cloud, codex-cloud | the path of `transcript.md`, the Worker's transcript the runner copies down when the attempt settles. Before that, and on a killed attempt that never copies it, the path of the attempt's event log under `logs/` |
 
 A short step id must identify one step. Use the full coordinate, such as `02.review/01.review`, when ids repeat. The command opens the run through `rundir.open_run`, so the run needs `run-log.jsonl`. It does not read `summary.json`. The newest attempt that really started decides which session is exported, so retries and cached finishes never export stale work.
 
@@ -59,7 +59,7 @@ It fails closed on missing or malformed usage. A mismatch prints the run, coordi
 | `durable-host` | the `durable` harness executor's figure, from the pi session on the host |
 | `pi-cloud-worker` | the `pi-cloud` harness executor's figure, from the pi events the Worker streams |
 | `subscription` | `codex`, `claude-cloud` and `codex-cloud`: a subscription bills no tokens, so `cost` is a known `0.0`, which the estimate counts as a measurement |
-| `unpriced` | a model with no known price; `cost` is `0.0` |
+| `unpriced` | a model with no known price, so `cost` is `0.0` |
 
 A pi model behind a custom `base_url` reads `unpriced`, because `ModelConfig` carries no price. Token counts stay real. This costs nothing on the Z.AI flat quota. It matters on DeepSeek, which bills per token.
 

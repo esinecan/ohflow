@@ -516,11 +516,11 @@ These terms come from [monitor-a-run](references/monitor-a-run.md), which the or
 
 **upper rank** — whoever may stop or change work in flight: the orchestrator agent, a judge or the operator. The kind of objective sets how far it may go ([campaign](references/campaign.md#intervention-by-kind-of-objective)). (A step's own agent is never an upper rank.)
 
-**operator settings** — the shipped `ohflow.settings.json` with the operator's git-ignored `ohflow.settings.local.json` merged over it (`settings.py`); `OHFLOW_SETTINGS` names another local file ([boundary](docs/release/boundary.md#the-settings)). (Operator settings configure ohflow; Worker settings configure the Worker pair.)
+**operator settings** — the checked-in `ohflow.settings.json` with the operator's git-ignored `ohflow.settings.local.json` merged over it (`settings.py`); `OHFLOW_SETTINGS` names another local file ([boundary](docs/release/boundary.md#the-settings)). (Operator settings configure ohflow; Worker settings configure the Worker pair.)
 
 **pi provider settings** — the operator settings `pi.api_key_env` and `pi.base_url`, keyed by provider: the key's variable (else `<PROVIDER>_API_KEY`) and the endpoint, for `pi` steps that `construct` builds (`patterns.model_config`). (A hand-written workflow sets both in its model configuration; `durable` and the pi-cloud Worker hold their own keys.)
 
-**Worker settings** — the shipped `worker/pi-cloud.settings.json` with the operator's git-ignored `worker/pi-cloud.settings.local.json` over it: `name`, `account_id`, `url`, `git_owner`, `git_identity`, `skills_repo`, `skills_root_skill` and `snapshot` ([settings](references/pi-cloud-worker.md#settings)). (Worker settings configure the Worker pair; operator settings configure ohflow.)
+**Worker settings** — the checked-in `worker/pi-cloud.settings.json` with the operator's git-ignored `worker/pi-cloud.settings.local.json` over it: `name`, `account_id`, `url`, `git_owner`, `git_identity`, `skills_repo`, `skills_root_skill` and `snapshot` ([settings](references/pi-cloud-worker.md#settings)). (Worker settings configure the Worker pair; operator settings configure ohflow.)
 
 **house rules** — `references/local.md`: the operator's own git-ignored instructions for agents, which `SKILL.md` tells an agent to read when present. (House rules are text an agent reads; house checks are gate checks.)
 

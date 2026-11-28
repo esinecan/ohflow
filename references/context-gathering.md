@@ -2,7 +2,7 @@
 
 Use this branch when the deliverable is a high-fidelity map of an unfamiliar
 repository, system, incident, or architecture rather than a code change. The
-reusable shape is **scout → synthesize → challenge → cartograph**. Start from
+reusable sequence is **scout → synthesize → challenge → cartograph**. Start from
 [`scripts/ohflow/workflows/evidence_atlas_template.py`](../scripts/ohflow/workflows/evidence_atlas_template.py).
 
 ## 1. Price the evidence
@@ -20,16 +20,16 @@ named in the briefs.
 Give each scout one end-to-end seam, not a keyword bucket. Useful seams include
 runtime topology, lifecycle/orchestration, data movement, security boundaries,
 observability, domain flows, and change provenance. Each scout traces at least
-one representative flow; a directory inventory is incomplete.
+one representative flow. A directory inventory is incomplete.
 
 Every scout emits the same atomic units:
 
-- components with responsibilities and edges;
-- ordered flows with triggers, terminal states, and failures;
+- components with responsibilities and edges
+- ordered flows with triggers, terminal states, and failures
 - falsifiable claims with path/line/symbol evidence, provenance, confidence,
-  limits, and related claim IDs;
-- unknowns naming bounded searches already performed;
-- contradictions kept side by side.
+  limits, and related claim IDs
+- unknowns naming bounded searches already performed
+- contradictions kept side by side
 
 Done when overlap exists only at deliberate cross-layer edges and every scout
 has an explicit trace obligation.
@@ -48,9 +48,9 @@ seeing each other's conclusions.
 
 Run three reviewers in parallel:
 
-1. **provenance** — source class, ownership, citation strength, inference;
-2. **consistency** — cross-layer lifecycle and identity/data context;
-3. **coverage** — omitted runtimes, negative evidence, failure paths, and facts
+1. **provenance**: source class, ownership, citation strength, inference.
+2. **consistency**: cross-layer lifecycle and identity/data context.
+3. **coverage**: omitted runtimes, negative evidence, failure paths, and facts
    the available checkout cannot establish.
 
 Findings name claim IDs and give a replacement, deletion, or confidence
@@ -61,7 +61,7 @@ Done when a validator can falsify claims without reconstructing scout scope.
 
 ## 5. Deliver map and ledger
 
-The atlas explains the architecture; the claim ledger makes it auditable and
+The atlas explains the architecture, and the claim ledger makes it auditable and
 updateable. Add diagrams only after claims stabilize, and map every edge to
 claim IDs. Keep gaps and contradictions as a first-class deliverable.
 
@@ -79,7 +79,7 @@ every diagram edge maps to evidence.
   only when the evidence requires them.
 - Give parallel scouts separate worktrees. An accidental write then fails one
   agent's `tree_clean` gate without contaminating peers.
-- A shared findings directory uses the named-file exception in every brief; create
+- A shared findings directory uses the named-file exception in every brief. Create
   it before launch.
 - Keep the Z.AI reserve ([ohflow](ohflow.md#concurrency)). After a burst-rate
   failure, lower the semaphore without deleting assignments.

@@ -21,9 +21,9 @@ bash --version
 | `codex` | the Codex CLI on PATH and its login |
 | `pi` | the pi CLI, `npm install -g @earendil-works/pi-coding-agent`, and a provider key in its variable (`ZAI_CODING_CN_API_KEY` for the roll call's `pi` cases, and `ZAI_API_KEY` for a `pi` step that `construct` builds on the default model) |
 
-`npm install -g` writes to Node's own prefix. A Node from the Linux distribution's packages has its prefix in `/usr`, and the install fails there with `EACCES`. Install Node 22.19 or newer through [nvm](https://github.com/nvm-sh/nvm) or from [nodejs.org](https://nodejs.org) instead, so the prefix is yours; that Node also serves `durable`.
+`npm install -g` writes to Node's own prefix. A Node from the Linux distribution's packages has its prefix in `/usr`, and the install fails there with `EACCES`. Install Node 22.19 or newer through [nvm](https://github.com/nvm-sh/nvm) or from [nodejs.org](https://nodejs.org) instead, so the prefix is yours. That Node also serves `durable`.
 
-`durable` needs Node 22.19 or newer and a Z.AI key in `ZAI_API_KEY`: with `durable.box` set to `local` its steps run on this machine and survive a restart of the supervisor, and with a box's ssh host alias they run on that machine. ohflow installs the host from `host/` on that machine at the first step. `pi-cloud` needs a deployed Worker, which [the pi-cloud Worker](pi-cloud-worker.md) deploys to your Cloudflare account. Leave a second machine and the Worker for later; [the example setup](../examples/setups/windows-home-box/README.md) shows both.
+`durable` needs Node 22.19 or newer and a Z.AI key in `ZAI_API_KEY`: with `durable.box` set to `local` its steps run on this machine and survive a restart of the supervisor, and with a box's ssh host alias they run on that machine. ohflow installs the host from `host/` on that machine at the first step. `pi-cloud` needs a deployed Worker, which [the pi-cloud Worker](pi-cloud-worker.md) deploys to your Cloudflare account. Leave a second machine and the Worker for later. [The example setup](../examples/setups/windows-home-box/README.md) shows both.
 
 ## 2. Clone
 
@@ -48,7 +48,7 @@ Your own values go in `ohflow.settings.local.json` beside it. git ignores that f
 }
 ```
 
-[The boundary](../docs/release/boundary.md#the-settings) lists each setting and what reads it. `examples/setups/windows-home-box/ohflow.settings.local.json` is a full file to copy the shape from; leave `pi_cloud` out until you have a Worker. For `durable` on this machine, the file needs both keys below: `durable.box` names the machine, and `durable.providers` names the providers whose keys that machine holds. Without `durable.providers` the preflight passes, but every `durable` workflow fails to build with `durable model must be provider/id with the provider one of []`.
+[The boundary](../docs/release/boundary.md#the-settings) lists each setting and what reads it. `examples/setups/windows-home-box/ohflow.settings.local.json` is a full file to copy the layout from. Leave `pi_cloud` out until you have a Worker. For `durable` on this machine, the file needs both keys below: `durable.box` names the machine, and `durable.providers` names the providers whose keys that machine holds. Without `durable.providers` the preflight passes, but every `durable` workflow fails to build with `durable model must be provider/id with the provider one of []`.
 
 ```json
 {
@@ -74,7 +74,7 @@ Line one is the verdict. The verb checks bash and every harness executor, and ea
 PYTHONPATH=. python3 -m ohflow.cli preflight --harness-executors claude -v
 ```
 
-This must read `PREFLIGHT PASS: 2 checks`, with one `PASS` line for the bash check, which is named `Git Bash` on every system, and one for the harness executor. A missing sign-in shows here; fix it as the line says before you go on.
+This must read `PREFLIGHT PASS: 2 checks`, with one `PASS` line for the bash check, which is named `Git Bash` on every system, and one for the harness executor. A missing sign-in shows here, so fix it as the line says before you go on.
 
 ## 5. A first roll call
 

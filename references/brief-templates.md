@@ -5,12 +5,12 @@ Three briefs drive the implement-review loop. Copy the template, fill every
 
 Three rules apply to every acceptance item in every brief.
 
-- **Command-shaped.** An item is a command the agent can run plus the exact
+- **Written as a command.** An item is a command the agent can run plus the exact
   output that means pass. "Tests pass" is a slot, `npm test` exits 0 with every
   test passing is an item.
 - **Hold the field constant.** A check varies the one property under test and
   nothing else. The first run's rarity check compared a name-field hit with a
-  body-field hit and measured field weight instead of rarity; the reviewer
+  body-field hit and measured field weight instead of rarity. The reviewer
   reported a false BLOCKED in good faith.
 - **Combine the rules.** A rule is one sentence that names a condition and what
   the code does under it. When a change claims two rules that can fire on the
@@ -26,15 +26,15 @@ because the implementer's tests prove only the cases the implementer thought of.
 
 The workflow owns the harness executor, tools, skills, thinking level, timeouts, and context
 carry. Keep those controls out of the brief. For a pi agent, set them in the
-`AgentSpec` and read [harness executors](harness-executors.md#pi); the brief still describes only the
+`AgentSpec` and read [harness executors](harness-executors.md#pi). The brief still describes only the
 work and its acceptance checks.
 
 Every agent brief must account for its command time cap, as [ohflow](ohflow.md#command-time-caps) states it.
 
 For findings another agent needs, declare `Step.consumes` and the producer's
 `HandoverSpec` in the workflow. The engine supplies questions and the exact
-attempt-file path in the position block. Keep the brief focused on the work;
-see [step handovers](step-handover.md) for the shared question contract.
+attempt-file path in the position block. Keep the brief focused on the work.
+See [step handovers](step-handover.md) for the shared question contract.
 
 ## Four rules from the retire-dsh run
 
@@ -279,7 +279,7 @@ When the acceptance checks pass, reply with the commit hash and finish.
 ## contract_fanout briefs
 
 [`workflows/contract_fanout.py`](../scripts/ohflow/workflows/contract_fanout.py)
-writes these two briefs from its arguments; the braces are its slots. The
+writes these two briefs from its arguments, and the braces are its slots. The
 orchestrator agent writes the spec, with one section per piece, and `contracts.md`, as
 [campaign](campaign.md#write-the-contracts) describes it. The template names
 each child step after its piece, so the dashboard row reads as the piece. Each

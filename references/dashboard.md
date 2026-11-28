@@ -96,7 +96,7 @@ The dashboard derives one display state per card. The rules apply in this order.
 - An attempt row carries its cause: the failed gate check names, or the `failure_class` and first error line. The `retry_decided.retry_decision` text follows it.
 - Phase states: `waiting` (no `phase_started`), `running`, then the status of `phase_settled`. A `phase_resumed` event sets the phase back to `running` and adds one to `auto_resumes`.
 - Run states before the run log exists: `held` (a live supervisor waits behind `.ohflow-hold`), `starting` (a live supervisor, no hold), the status `exit.json` records, else `not started`. `held` and `starting` are live: the page polls.
-- A step with zero invocations opens the inspector in its planned view. `/api/workflow` gives each step a `plan` (`brief`, `tool_policy`, `harness_executor`, `model`, `write_scope`, `worktree`, `retry`, `consumes`, `depends_on`, `gate`, `limits`, `handover`) and each phase a `plan` (`on_step_failure`, `min_success`, `max_parallel`), read from `workflow.json`. The brief there is capped at 2,000 characters; the whole plan is the Plan view below. The invocation inspector is unchanged.
+- A step with zero invocations opens the inspector in its planned view. `/api/workflow` gives each step a `plan` (`brief`, `tool_policy`, `harness_executor`, `model`, `write_scope`, `worktree`, `retry`, `consumes`, `depends_on`, `gate`, `limits`, `handover`) and each phase a `plan` (`on_step_failure`, `min_success`, `max_parallel`), read from `workflow.json`. The brief there is capped at 2,000 characters. The whole plan is the Plan view below. The invocation inspector is unchanged.
 
 ## Agent activity
 
@@ -133,9 +133,9 @@ A card shows two lines that answer two questions.
 | Agent model calls | above 75 % of `max_iterations` | above 90 % |
 | Run activity | no run log event and no agent activity for 300 s | the same for 600 s, or `supervisor_alive` is false |
 
-`limits.max_iterations` is the declared limit. `limits.max_iterations_effective` and `limits.max_iterations_enforced_by` come from the newest attempt's `result.json` (`settings.effective`), so they are null until it finishes; the cloud executors fill them ([harness executors](harness-executors.md#pi-cloud)).
+`limits.max_iterations` is the declared limit. `limits.max_iterations_effective` and `limits.max_iterations_enforced_by` come from the newest attempt's `result.json` (`settings.effective`), so they are null until it finishes. The cloud executors fill them ([harness executors](harness-executors.md#pi-cloud)).
 
-The ETA is on `/api/workflow` and `/api/read-out` alike, as `run.eta_s` and `run.eta_basis`, computed by `live.eta`. Phases are barriers, so the ETA adds them in order. The current phase adds `ceil(waiting / max_parallel) × wave` plus the longest remaining time of its running steps. Each later phase adds `ceil(agents / max_parallel) × wave`. A wave lasts the median wall time of the run's own finished agent steps once one has finished. Before that, a run started with `--history` uses each step's p50 from `estimate.json`; a run without one reads "unknown until one agent step finishes". The basis names the source. The page header shows `ETA ~N (basis)` while the run is live and `Predicted N · actual M` when it is over.
+The ETA is on `/api/workflow` and `/api/read-out` alike, as `run.eta_s` and `run.eta_basis`, computed by `live.eta`. Phases are barriers, so the ETA adds them in order. The current phase adds `ceil(waiting / max_parallel) × wave` plus the longest remaining time of its running steps. Each later phase adds `ceil(agents / max_parallel) × wave`. A wave lasts the median wall time of the run's own finished agent steps once one has finished. Before that, a run started with `--history` uses each step's p50 from `estimate.json`, and a run without one reads "unknown until one agent step finishes". The basis names the source. The page header shows `ETA ~N (basis)` while the run is live and `Predicted N · actual M` when it is over.
 
 **Estimate fields.** When `estimate.json` exists, `/api/workflow` carries `run.estimate` (`wall_s` and `tokens` as `{p50, p80}`, `cost_usd`, `confidence`, `basis`), `run.actual` (`wall_s`, `tokens` recorded so far), and an `estimate` block on every phase and step (`wall_s`, `tokens`, `cost_usd`, `n`, `basis`, `confidence`). Without the file every one of them is null. The Workflow view's phase header shows `~N · p80 M · n samples`, a running invocation shows `expected N` beside its elapsed time, and the digest shows predicted against actual minutes and tokens. The estimate itself: [ohflow](ohflow.md#estimate-a-run).
 
@@ -147,16 +147,16 @@ A failed fetch shows "lost contact with the run" and keeps the last answer on sc
 
 ## Attention
 
-`/api/workflow` carries `attention`, a list derived by `attention.py` from the same run-log replay and invocation rows the graph uses. One item per condition, in consequence order. A healthy run has none; an evidence packet, such as `tests/fixtures/dashboard-basis`, has none, because it is historical evidence. The page draws the list as a strip above the map and hides it when it is empty.
+`/api/workflow` carries `attention`, a list derived by `attention.py` from the same run-log replay and invocation rows the graph uses. One item per condition, in consequence order. A healthy run has none. An evidence packet, such as `tests/fixtures/dashboard-basis`, has none, because it is historical evidence. The page draws the list as a strip above the map and hides it when it is empty.
 
 | `group` | `kind` | Condition |
 |---|---|---|
-| `intervention` | `failed_step` | the step's status is `failed`, `timeout` or `quarantined`; `next.text` repeats the recorded `retry_decision` |
+| `intervention` | `failed_step` | the step's status is `failed`, `timeout` or `quarantined`, and `next.text` repeats the recorded `retry_decision` |
 | `intervention` | `excluded` | a `work_excluded` event names the work |
-| `intervention` | `killed_step` | a deferred step in a live run that `ohflow kill` ended; `next.text` names `run --resume` |
+| `intervention` | `killed_step` | a deferred step in a live run that `ohflow kill` ended, and `next.text` names `run --resume` |
 | `intervention` | `budget_spent` | a deferred step in a live run that `attempts.may_start` refuses an auto-resume pass |
 | `intervention` | `token_overshoot` | a `token_budget` event of kind `overshoot`: an attempt settled past the run's token budget |
-| `intervention` | `paused_run`, `orphaned_run`, `crashed_run`, `interrupted_run` | the run status; `next.command` is `live.resume_command` when `run.json` records it; a run the token budget or an attempt kill paused says so in `observed` |
+| `intervention` | `paused_run`, `orphaned_run`, `crashed_run`, `interrupted_run` | the run status. `next.command` is `live.resume_command` when `run.json` records it, and a run the token budget or an attempt kill paused says so in `observed` |
 | `recovering` | `deferred_cooldown` | a deferred step with a pass left while `cooldown_until` is in the future |
 | `recovering` | `deferred_auto_resume` | a deferred step with a pass left and no cooldown |
 | `recovering` | `retry_running` | the step's latest invocation is running and its `start_kind` is `retry` or `auto_resume` |
@@ -164,23 +164,23 @@ A failed fetch shows "lost contact with the run" and keeps the last answer on sc
 | `signal` | `deadline` | a running invocation past 75 % of its `execution_timeout_s` |
 | `signal` | `checks_over_agent` | a step whose last attempt's `command_exit` checks (`duration_s`) ran longer than its agent: the attempt's `wall_seconds` less those checks. A cached step and a step with no agent raise none |
 
-Each item: `coord`, `attempt`, `step_id`, `role`, `phase`; `observed` (`text`, `ts`); `expected`; `impact` (`phase`, `phase_name`, `dependants` from `depends_on`, `text`); `next` (`command` or null, `text`); `evidence` (`id` of the invocation, `coord`, `attempt`, `event`, `line` in `run-log.jsonl`, `ts`). A paused run is one item that owns the resume command; its deferred steps are its impact, not an item each.
+Each item: `coord`, `attempt`, `step_id`, `role`, `phase`, `observed` (`text`, `ts`), `expected`, `impact` (`phase`, `phase_name`, `dependants` from `depends_on`, `text`), `next` (`command` or null, `text`) and `evidence` (`id` of the invocation, `coord`, `attempt`, `event`, `line` in `run-log.jsonl`, `ts`). A paused run is one item that owns the resume command. Its deferred steps are its impact, not an item each.
 
 ## Lanes
 
 Each phase on `/api/workflow` carries `lanes`: `running` (steps whose `display` is `running`), `waiting_by` (counts by `waiting_on`: `hold`, `slot`, `cooldown`, `auto_resume`, `resume`, `phase`, `dependency`, `stopped`), `waiting_words` (`live.waiting_words`), `max_parallel`, and `text`, the line the page shows above the graph and in the Workflow view's phase header: "2 running · 1 for a free slot (2 of 2 busy) · 3 for their phase". A step that waits for a dependency names it in its own `reason`. The graph draws the `depends_on` edges that touch the selected invocation's step stronger, and the inspector's details list "depends on X · feeds Y".
 
-Two step rules `/api/workflow` shares with the read-out: a pending step waits for `cooldown` while `cooldown_until` is in the future, and a deferred step in a live run waits for `auto_resume` only while a pass is left and no attempt kill ended it; otherwise it is `done`, and its `reason` names the budget or the kill.
+Two step rules `/api/workflow` shares with the read-out: a pending step waits for `cooldown` while `cooldown_until` is in the future, and a deferred step in a live run waits for `auto_resume` only while a pass is left and no attempt kill ended it. Otherwise it is `done`, and its `reason` names the budget or the kill.
 
 ## Peek
 
-The page keeps one row per running invocation under the graph: role and attempt, elapsed time, the running tool, the idle age and its signal, the last 5 transcript lines, and the command the agent waits on with its last 20 output lines (`activity.command_output`, from the tool-output contract). While that call is open, the health note says the stall clock waits for it. The inspector's overview lists every call of the attempt with its output tail (`/api/evidence` `tool_output`), and opens the call that was open when the attempt stopped (`open_tool_call`). The first look asks `/api/transcript?coord=C&attempt=N&tail=5`; every later poll continues from the returned `next_cursor`, so the tail costs one page per tick. A line is the record's tool call, else its text, else its reasoning, with its UTC time and role. Clicking a row selects the invocation and opens its transcript. The panel is hidden when nothing runs, and an offline report shows the rows without lines.
+The page keeps one row per running invocation under the graph: role and attempt, elapsed time, the running tool, the idle age and its signal, the last 5 transcript lines, and the command the agent waits on with its last 20 output lines (`activity.command_output`, from the tool-output contract). While that call is open, the health note says the stall clock waits for it. The inspector's overview lists every call of the attempt with its output tail (`/api/evidence` `tool_output`), and opens the call that was open when the attempt stopped (`open_tool_call`). The first look asks `/api/transcript?coord=C&attempt=N&tail=5`, and every later poll continues from the returned `next_cursor`, so the tail costs one page per tick. A line is the record's tool call, else its text, else its reasoning, with its UTC time and role. Clicking a row selects the invocation and opens its transcript. The panel is hidden when nothing runs, and an offline report shows the rows without lines.
 
 `tail=N` on `/api/transcript` returns the last N complete records with their real ids, sizes the page N, ignores `limit` and `cursor`, and hands back the cursor the top-down pager would hold at the end. `tail` must be between 1 and 400.
 
 ## Digest
 
-`/api/workflow` carries `digest`: one entry per `attempt_finished`, `retry_decided` (a decision not to retry a passed attempt is left out), `work_excluded`, `phase_settled` and `run_finished`, in run-log order. Fields: `ts`, `kind`, `coord`, `attempt`, `id` (the invocation, when one is recorded), `text`, `tone`, `tokens`, `wall_s`, `handover_first_line`, `evidence` (`path`, `line`). An `attempt_finished` reads as one sentence: "Implement attempt 2 passed in 4 m 12 s, 31 k tokens; gate command_exit ok; handover: <first prose line>". Tokens come from the attempt's `result.json`; the handover line comes through `handover.recorded`, so a file whose bytes changed since the finish is not quoted. The evidence packet's digest takes its numbers from `case.json` and has no handover. The page lists the entries under the retry story, newest first, each linking to its invocation.
+`/api/workflow` carries `digest`: one entry per `attempt_finished`, `retry_decided` (a decision not to retry a passed attempt is left out), `work_excluded`, `phase_settled` and `run_finished`, in run-log order. Fields: `ts`, `kind`, `coord`, `attempt`, `id` (the invocation, when one is recorded), `text`, `tone`, `tokens`, `wall_s`, `handover_first_line`, `evidence` (`path`, `line`). An `attempt_finished` reads as one sentence: "Implement attempt 2 passed in 4 m 12 s, 31 k tokens; gate command_exit ok; handover: <first prose line>". Tokens come from the attempt's `result.json`. The handover line comes through `handover.recorded`, so a file whose bytes changed since the finish is not quoted. The evidence packet's digest takes its numbers from `case.json` and has no handover. The page lists the entries under the retry story, newest first, each linking to its invocation.
 
 ## Plan view
 
@@ -188,8 +188,14 @@ The view button `Plan` opens the third view. It shows the declared plan of the r
 
 The view has three parts.
 
-- A summary strip of six tiles: phases and steps by kind; agent steps per harness executor, model and effort; the forecast (p50, p80, tokens, cost, confidence, samples) or the reason there is none; the timeout bound; parallelism, worktrees, base branch, auto-resume and backoff; gate checks, retries, handover contracts and schemas.
-- A collapsible phase tree. One `details` line per phase: name, state chip, step kinds and waves, the failure policy, and the phase forecast. Open, it shows the barrier sentence and one table row per step: kind, role and step objective, harness executor and model, agent tool policy, write scope, worktree, dependencies and consumed handovers, limits, retry, gate check count, forecast. A gate step reads `gate only, no agent` where the model goes. A step the estimate calls `mechanical` or `cached` shows that word as its forecast. A plan of at most 8 steps opens every phase; a longer plan opens phase 1. The search box filters the rows by id, role, objective, model, harness executor, worktree, write scope, command and brief text; a search opens every phase that has a match. `Expand all phases` and `Collapse all` set every phase at once.
+- A summary strip of six tiles:
+  - phases and steps by kind
+  - agent steps per harness executor, model and effort
+  - the forecast (p50, p80, tokens, cost, confidence, samples) or the reason there is none
+  - the timeout bound
+  - parallelism, worktrees, base branch, auto-resume and backoff
+  - gate checks, retries, handover contracts and schemas
+- A collapsible phase tree. One `details` line per phase: name, state chip, step kinds and waves, the failure policy, and the phase forecast. Open, it shows the barrier sentence and one table row per step: kind, role and step objective, harness executor and model, agent tool policy, write scope, worktree, dependencies and consumed handovers, limits, retry, gate check count, forecast. A gate step reads `gate only, no agent` where the model goes. A step the estimate calls `mechanical` or `cached` shows that word as its forecast. A plan of at most 8 steps opens every phase, and a longer plan opens phase 1. The search box filters the rows by id, role, objective, model, harness executor, worktree, write scope, command and brief text. A search opens every phase that has a match. `Expand all phases` and `Collapse all` set every phase at once.
 - A drawer per step, opened by the row's `Open` button, with seven tabs: `Brief` (the full text, under the artifact cap of 32,000 characters), `Position` (the block `coords.render_position` writes to `position.md`, rendered with an empty run state, so it is the hold-time preview), `Gate` (every check in the words its `describe` function uses, with its name and arguments), `Handover`, `Schema`, `Command` (the shell command, or the `git merge --no-ff` a merge step runs), `Limits` (timeouts, model calls, the command time cap, retry, agent profile, box, unit, agent tool policy, worktree path and branch, write scope, dependencies, objective). A gate step opens on `Gate`, and its `Brief` and `Command` tabs say it starts no agent and has no command.
 
 A held run shows a banner above the strip: held since when, the `go` command, and that an edit to the module while held is what runs. The `Inspect the plan` button of the Workflow view opens the step's drawer in the Plan view and keeps the planned inspector as it is. On an evidence packet's page, and on a report that embeds no plan, the button opens the planned inspector in place, because there is no plan to show.
@@ -200,7 +206,7 @@ A held run shows a banner above the strip: held since when, the `go` command, an
 |---|---|
 | `run` | `id`, `workflow`, `status`, `repo`, `base_branch`, `max_parallel`, `auto_resume`, `transient_backoff_s`, `baseline_cmd`, `held_since` and `hold_pid` from `.ohflow-hold`, `go_command`, `dashboard_url` from `dashboard.json`, `plan_stamp` |
 | `totals` | `phases`, `steps`, `kinds` (`agent`, `command`, `merge`, `gate`), `by_model` (`harness_executor`, `model`, `effort`, `n` per agent group), `gate_checks`, `gated_steps`, `retry_steps`, `handovers`, `schemas`, `worktrees`, `timeout_bound_s` (waves × longest execution timeout per phase, phases added) |
-| `estimate` | `wall_s` and `tokens` as `{p50, p80}`, `cost_usd`, `n` (the history's samples), `basis`, `confidence`, `generated`, `history`, from `estimate.json`; every field null without the file |
+| `estimate` | `wall_s` and `tokens` as `{p50, p80}`, `cost_usd`, `n` (the history's samples), `basis`, `confidence`, `generated`, `history`, from `estimate.json`. Every field is null without the file |
 | `worktrees` | `name`, `path`, `branch`, `base` per declared worktree |
 | `phases[]` | `index`, `coord`, `name`, `max_parallel` (the effective limit), `declared_max_parallel` (null means the workflow default), `min_success`, `on_step_failure`, `waves`, `worst_timeout_s`, `timeout_bound_s`, `estimate`, `steps` |
 | `steps[]` | `coord`, `id`, `kind`, `role`, `objective`, `note`, `harness_executor`, `model`, `effort` (`params.effort`, else `extra_body.thinking.reasoning_effort`), `profile`, `box`, `tools`, `max_iterations`, `command_time_cap_s`, `worktree`, `unit`, `write_scope`, `depends_on`, `consumes`, `execution_timeout_s`, `stall_timeout_s`, `retry`, `gate` (`name`, `args`, `text` per check), `handover`, `schema`, `command`, `shell`, `merge_branch`, `merge_message`, `brief`, `position`, `estimate` |
@@ -209,7 +215,7 @@ Every string passes the same redaction as the other routes and a cap of 32,000 c
 
 `/api/workflow` carries `run.plan_stamp`, the `mtime_ns` and `size` of `workflow.json`. The page fetches `/api/plan` again when the stamp changes between two polls, which is how the rewrite after `go` reaches the view. The estimate is written before the hold wait and again after the reload, so the held page shows a forecast.
 
-`exit-report.html` embeds the plan payload as `plan` beside the read-out, with the read-out's final run status in `run.status`. The Plan view opens from disk for a finished run; `exit.json` and `exit-report.md` do not carry it.
+`exit-report.html` embeds the plan payload as `plan` beside the read-out, with the read-out's final run status in `run.status`. The Plan view opens from disk for a finished run, but `exit.json` and `exit-report.md` do not carry it.
 
 ## Page
 
@@ -232,7 +238,7 @@ Every string passes the same redaction as the other routes and a cap of 32,000 c
 | `/api/read-out` | the run state read-out as JSON |
 | `/api/agent?coord=C&attempt=N&limit=20` | the activity block of one attempt |
 | `/api/workflow` | the graph truth the page polls: run (with `plan_stamp`), phases with `lanes`, steps, invocations, edges, segments, events, `attention`, `digest` |
-| `/api/plan` | the declared plan, whole, for the Plan view: run, totals, estimate, worktrees, phases with their steps; fetched once, never polled; 404 for an evidence packet |
+| `/api/plan` | the declared plan, whole, for the Plan view: run, totals, estimate, worktrees, phases with their steps. It is fetched once and never polled, and answers 404 for an evidence packet |
 | `/api/transcript?coord=C&attempt=N&limit=150&cursor=…` or `&tail=5` | one attempt's transcript, paged from the top, or its last N records |
 | `/api/evidence?coord=C&attempt=N[&id=…]` | one attempt's gate, final message, events and whitelisted files |
 
@@ -248,7 +254,7 @@ Every exit path that runs code writes three files into the run directory.
 |---|---|---|
 | `exit.json` | tools | `status`, `at`, `error`, `traceback_tail` (last 20 lines), `run_id`, `verdict` (the verdict sentence), `reports` (the names of the two report files) |
 | `exit-report.md` | agents, forum posts, the terminal | the exit report as Markdown |
-| `exit-report.html` | people | the page template with the final read-out and the plan payload embedded; opens from disk, Plan view included |
+| `exit-report.html` | people | the page template with the final read-out and the plan payload embedded. It opens from disk, Plan view included |
 
 | Exit path | Written by | `exit.json` status |
 |---|---|---|
@@ -279,12 +285,12 @@ The exit report reads in this order:
 | Verb | Effect |
 |---|---|
 | `ohflow run` | starts the dashboard, runs the workflow, writes the exit report on every exit path |
-| `ohflow run --no-dashboard` | no server; the exit report is still written |
+| `ohflow run --no-dashboard` | no server, but the exit report is still written |
 | `ohflow run --dry-run` | no dashboard and no exit report |
-| `ohflow run --hold` | writes the plan and `.ohflow-hold`, starts the dashboard, passes preflight, then waits for `go`; the page reads `held` and opens on the Plan view |
-| `ohflow go --run DIR [--predictions FILE]` | writes FILE to `predictions.md` when given, then `<run-dir>/go`; exits 1 when no hold exists, its supervisor is dead, or `predictions.md` already holds predictions |
-| `ohflow dashboard --run DIR [--port N] [--open]` | serves the page for a finished, orphaned or detached run; when the run's own dashboard still serves, prints its URL and starts nothing |
+| `ohflow run --hold` | writes the plan and `.ohflow-hold`, starts the dashboard, passes preflight, then waits for `go`. The page reads `held` and opens on the Plan view |
+| `ohflow go --run DIR [--predictions FILE]` | writes FILE to `predictions.md` when given, then `<run-dir>/go`. It exits 1 when no hold exists, its supervisor is dead, or `predictions.md` already holds predictions |
+| `ohflow dashboard --run DIR [--port N] [--open]` | serves the page for a finished, orphaned or detached run. When the run's own dashboard still serves, it prints its URL and starts nothing |
 | `ohflow report --run DIR` | writes the three exit-report files from the run directory |
-| `ohflow run --history DIR` | writes `estimate.json` before the first agent starts; the page, the exit report and the retro draft read it |
+| `ohflow run --history DIR` | writes `estimate.json` before the first agent starts, and the page, the exit report and the retro draft read it |
 | `ohflow status --watch` | the terminal view: redraws the status sentence every 3 s, prints no ANSI codes when stdout is not a terminal |
 | `ohflow watch --run DIR` | the agent view: prints only what changed since its last call |
