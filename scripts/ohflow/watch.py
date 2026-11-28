@@ -455,13 +455,20 @@ def _controller_alive(root: Path) -> bool | None:
     return proc.pid_alive(pid, started_before=written)
 
 
-def _held_go(root: Path, current) -> str | None:
-    """The go command of the round the controller holds now, else None."""
+def _campaign_status(root: Path) -> dict:
     from . import campaign as ohcamp
 
+    try:
+        return ohcamp.read_status(Path(root)) or {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _held_go(root: Path, current) -> str | None:
+    """The go command of the round the controller holds now, else None."""
     if current is None:
         return None
-    rec = _read_json(Path(root) / ohcamp.STATUS) or {}
+    rec = _campaign_status(root)
     if rec.get("state") == "held" and rec.get("milestone") == current.id:
         return rec.get("go") or None
     return None
@@ -472,11 +479,9 @@ def _judging_round(root: Path, current, states) -> int | None:
 
     The campaign log has no judging event. A status file that names a round other
     than the next one to judge is left over from an earlier state."""
-    from . import campaign as ohcamp
-
     if current is None:
         return None
-    rec = _read_json(Path(root) / ohcamp.STATUS) or {}
+    rec = _campaign_status(root)
     round_no = rec.get("round")
     if rec.get("state") == "judging" and rec.get("milestone") == current.id \
             and round_no == states[current.id].judgements + 1:
