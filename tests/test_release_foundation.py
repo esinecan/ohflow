@@ -1,5 +1,7 @@
 """Rehearse packaging and promotion against isolated git history and an API fixture."""
+import base64
 from copy import deepcopy
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -11,7 +13,7 @@ from unittest.mock import Mock
 from urllib.parse import parse_qs, urlsplit
 import zipfile
 
-from release import channels, package, promote
+from release import channels, claude_plugin, package, promote
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "example/ohflow"
@@ -58,6 +60,8 @@ class GitHubFixture:
         self.immutable = True
         self.fail_upload = False
         self.race_to = None
+        self.plugin_ref = None
+        self.blobs, self.trees, self.commits = {}, {}, {}
         self.rules = promote.rulesets(42)
         self.jobs = [{"id": i + 1, "run_attempt": 1, "name": name, "conclusion": "success"}
                      for i, name in enumerate(JOBS)]
@@ -75,6 +79,53 @@ class GitHubFixture:
     def ancestor(self, older, newer):
         return subprocess.run(["git", "-C", str(self.repo), "merge-base", "--is-ancestor", older, newer],
                               capture_output=True).returncode == 0
+
+    def blob(self, sha):
+        if sha not in self.blobs:
+            try:
+                self.blobs[sha] = package.git(self.repo, "cat-file", "blob", sha)
+            except subprocess.CalledProcessError:
+                raise ValueError(f"GitHub POST /git/trees: HTTP 422, no blob {sha}") from None
+        return self.blobs[sha]
+
+    def git_request(self, path, method, data):
+        if path == f"/git/ref/heads/{claude_plugin.BRANCH}":
+            return {"object": {"sha": self.plugin_ref}} if self.plugin_ref else None
+        if path.startswith("/git/commits/") and method == "GET":
+            sha = path.rsplit("/", 1)[1]
+            tree = (self.commits[sha]["tree"] if sha in self.commits
+                    else package.git(self.repo, "rev-parse", f"{sha}^{{tree}}").decode().strip())
+            return {"sha": sha, "tree": {"sha": tree}}
+        if path.startswith("/git/trees/") and method == "GET":
+            sha = path.split("/")[3].split("?")[0]
+            if sha in self.trees:
+                return {"sha": sha, "tree": deepcopy(self.trees[sha]), "truncated": False}
+            rows = package.git(self.repo, "ls-tree", "-r", sha).decode().splitlines()
+            return {"sha": sha, "truncated": False,
+                    "tree": [{"mode": m, "type": t, "sha": s, "path": p}
+                             for m, t, s, p in (r.split(None, 3) for r in rows)]}
+        if path.startswith("/git/blobs/"):
+            return {"content": base64.b64encode(self.blob(path.rsplit("/", 1)[1])).decode(), "encoding": "base64"}
+        if path == "/git/blobs" and method == "POST":
+            content = base64.b64decode(data["content"])
+            sha = claude_plugin.blob_sha(content)
+            self.blobs[sha] = content
+            return {"sha": sha}
+        if path == "/git/trees" and method == "POST":
+            files = {e["path"]: (self.blob(e["sha"]), 0o755 if e["mode"] == "100755" else 0o644) for e in data["tree"]}
+            sha = claude_plugin.tree_sha(files)
+            self.trees[sha] = sorted(deepcopy(data["tree"]), key=lambda e: e["path"])
+            return {"sha": sha}
+        if path == "/git/commits" and method == "POST":
+            sha = hashlib.sha1(json.dumps([data, len(self.commits)]).encode()).hexdigest()
+            self.commits[sha] = deepcopy(data)
+            return {"sha": sha}
+        if path == f"/git/refs/heads/{claude_plugin.BRANCH}" and method == "PATCH":
+            if data["force"] or self.commits.get(data["sha"], {}).get("parents") != [self.plugin_ref]:
+                raise ValueError("GitHub rejected a non-fast-forward plugin write")
+            self.plugin_ref = data["sha"]
+            return {}
+        return NotImplemented
 
     def pages(self, path, key=None):
         if path == "/rulesets":
@@ -113,11 +164,18 @@ class GitHubFixture:
         if path.startswith("/git/ref/tags/"):
             sha = self.tags.get(path.rsplit("/", 1)[1])
             return {"object": {"sha": sha}} if sha else None
+        handled = self.git_request(path, method, data)
+        if handled is not NotImplemented:
+            return handled
         if path == "/git/refs" and method == "POST":
             if data["ref"] == "refs/heads/release":
                 if self.release_ref:
                     raise ValueError("concurrent creation rejected")
                 self.release_ref = data["sha"]
+            elif data["ref"] == f"refs/heads/{claude_plugin.BRANCH}":
+                if self.plugin_ref:
+                    raise ValueError("concurrent creation rejected")
+                self.plugin_ref = data["sha"]
             else:
                 self.tags[data["ref"].rsplit("/", 1)[1]] = data["sha"]
             return {}
@@ -371,12 +429,18 @@ class ReleaseFoundation(unittest.TestCase):
         self.assertEqual(self.api.release_ref, self.new)
         self.assertTrue(self.api.releases[self.manifest["tag"]]["immutable"])
         self.assertEqual(len(self.api.assets), 2)
-        self.assertEqual(self.api.writes[-1][2]["ref"], "refs/heads/release")
+        refs = [data["ref"] for path, method, data in self.api.writes if path == "/git/refs"]
+        self.assertEqual(refs[-2:], ["refs/heads/release", f"refs/heads/{claude_plugin.BRANCH}"])
+        uploads = [i for i, (path, _, _) in enumerate(self.api.writes) if path.startswith("https://uploads.")]
+        release = next(i for i, (_, _, data) in enumerate(self.api.writes)
+                       if isinstance(data, dict) and data.get("ref") == "refs/heads/release")
+        self.assertLess(max(uploads), release)
 
     def test_forward_update_is_not_forced(self):
         self.api.release_ref = self.old
         self.assertEqual(self.promote()["result"], "advance")
-        self.assertEqual(self.api.writes[-1][2], {"sha": self.new, "force": False})
+        patches = [data for path, method, data in self.api.writes if path == "/git/refs/heads/release"]
+        self.assertEqual(patches, [{"sha": self.new, "force": False}])
 
     def test_late_older_job_cannot_regress_newer_release(self):
         self.api.release_ref = self.revert
@@ -460,6 +524,147 @@ class ReleaseFoundation(unittest.TestCase):
         self.assertEqual(channels.alignment({"desired": expected, "observed": observed}), "verified")
         observed["source_sha"] = self.old
         self.assertEqual(channels.alignment({"desired": expected, "observed": observed}), "drift")
+
+    def plugin_tree(self, bundle=None):
+        return claude_plugin.generate(bundle or self.bundle)[1]
+
+    def test_claude_plugin_is_generated_from_the_bundle_alone(self):
+        tree = self.plugin_tree()
+        self.assertEqual(tree, self.plugin_tree())
+        self.assertEqual(claude_plugin.check(tree), [])
+        meta = json.loads(tree[".claude-plugin/plugin.json"][0])
+        self.assertEqual((meta["name"], meta["version"]), ("ohflow", self.manifest["version"]))
+        identity = json.loads(tree[f"{claude_plugin.SKILL}/RELEASE.json"][0])
+        self.assertEqual(identity["source_sha"], self.new)
+        source = claude_plugin.bundle_files(self.bundle)[1]
+        self.assertEqual(tree["README.md"], source["release/claude/README.md"])
+        self.assertEqual(tree["LICENSE"], source["LICENSE"])
+        skill = {name[len(claude_plugin.SKILL) + 1:] for name in tree if name.startswith(claude_plugin.SKILL + "/")}
+        kept = {name for name in self.manifest["source_files"]
+                if Path(name).parts[0] not in claude_plugin.LEFT_OUT}
+        self.assertEqual(skill, kept | {"RELEASE.json"})
+        self.assertEqual(tree[f"{claude_plugin.SKILL}/scripts/ohflow/shell_tee.sh"][1], 0o755)
+        self.assertLessEqual(len(tree), claude_plugin.MAX_FILES)
+
+    def test_claude_plugin_tree_hash_matches_git(self):
+        repo = self.directory / "hash"
+        package.git(self.directory, "init", "-q", str(repo))
+        tree = self.plugin_tree()
+        staging = self.directory / "objects"
+        lines = []
+        for i, (name, (data, mode)) in enumerate(tree.items()):
+            path = staging / str(i)
+            path.parent.mkdir(exist_ok=True)
+            path.write_bytes(data)
+            lines.append((name, mode, path))
+        shas = subprocess.run(["git", "-C", str(repo), "hash-object", "-w", "--no-filters", "--stdin-paths"],
+                              input="\n".join(str(p) for _, _, p in lines).encode(), capture_output=True,
+                              check=True).stdout.decode().split()
+        index = "".join(f"{claude_plugin.git_mode(mode)} {sha}\t{name}\n" for (name, mode, _), sha in zip(lines, shas))
+        subprocess.run(["git", "-C", str(repo), "update-index", "--add", "--index-info"], input=index.encode(),
+                       check=True, capture_output=True)
+        written = package.git(repo, "write-tree").decode().strip()
+        self.assertEqual(claude_plugin.tree_sha(tree), written)
+
+    def test_claude_plugin_check_names_each_directory_rule(self):
+        base = self.plugin_tree()
+        meta = json.loads(base[".claude-plugin/plugin.json"][0])
+        breaks = {
+            "more than 512": {f"skills/ohflow/extra/{i}.md": (b"x", 0o644) for i in range(400)},
+            "over 256 KiB": {"skills/ohflow/big.md": (b"x" * (256 * 1024 + 1), 0o644)},
+            "binary file": {"skills/ohflow/icon.ico": (b"\x00\x01", 0o644)},
+            "incomplete image": {"skills/ohflow/shot.png": (b"\x89PNG\r\n\x1a\n" + b"cut", 0o644)},
+            "top-level bin/": {"bin/ohflow": (b"#!/bin/sh\n", 0o755)},
+            "Windows or macOS refuses": {"skills/ohflow/con.md": (b"x", 0o644)},
+            "differ only by case": {"Skills/other.md": (b"x", 0o644)},
+            "40 words": {"README.md": (b"# ohflow\n\nToo short.\n", 0o644)},
+            "lowercase letters": {".claude-plugin/plugin.json": (package.encoded({**meta, "name": "OhFlow"}), 0o644)},
+            "export-ignore": {"skills/ohflow/.gitattributes": (b"docs/ export-ignore\n", 0o644)},
+            "lockfile": {"package.json": (b"{}", 0o644), "package-lock.json": (b"{}", 0o644)},
+        }
+        for words, change in breaks.items():
+            with self.subTest(rule=words):
+                problems = claude_plugin.check({**base, **change})
+                self.assertTrue(any(words in problem for problem in problems), problems)
+        unlicensed = {name: entry for name, entry in base.items() if name != "LICENSE"}
+        unlicensed[".claude-plugin/plugin.json"] = (package.encoded({k: v for k, v in meta.items() if k != "license"}), 0o644)
+        self.assertTrue(any("LICENSE" in p for p in claude_plugin.check(unlicensed)))
+        self.assertFalse(claude_plugin.rewriting_attributes("# a filter comment\n*.sh text eol=lf\n*.bin -filter\n"))
+        with self.assertRaisesRegex(ValueError, "leave version"):
+            claude_plugin.metadata(package.encoded({**meta}), "0.0.9")
+
+    def test_claude_plugin_skill_runs_from_a_clean_path(self):
+        out = self.directory / "plugin"
+        claude_plugin.write(self.plugin_tree(), out)
+        claude_plugin.smoke(out)
+        with self.assertRaisesRegex(ValueError, "already holds"):
+            claude_plugin.write(self.plugin_tree(), out)
+
+    def test_promotion_writes_the_claude_plugin_branch_after_release(self):
+        result = self.promote()["claude_plugin"]
+        self.assertEqual(result["result"], "create")
+        self.assertEqual(self.api.plugin_ref, result["commit"])
+        commit = self.api.commits[result["commit"]]
+        self.assertEqual(commit["parents"], [])
+        self.assertEqual(commit["tree"], claude_plugin.tree_sha(self.plugin_tree()))
+        self.assertTrue(commit["message"].startswith(f"ohflow {self.manifest['version']} from {self.new}"))
+        uploaded = [data for path, _, data in self.api.writes if path == "/git/blobs"]
+        self.assertLess(len(uploaded), len(self.plugin_tree()))
+
+    def test_promotion_retry_keeps_the_claude_plugin_commit(self):
+        first = self.promote()["claude_plugin"]
+        count = len(self.api.writes)
+        second = self.promote()["claude_plugin"]
+        self.assertEqual((second["result"], second["commit"]), ("same", first["commit"]))
+        self.assertEqual(len(self.api.writes), count)
+
+    def test_claude_plugin_branch_moves_forward_and_never_back(self):
+        old = self.directory / "old"
+        package.build(self.repo, self.old, old)
+        first = claude_plugin.publish(self.api, self.api, REPOSITORY, old)
+        second = claude_plugin.publish(self.api, self.api, REPOSITORY, self.bundle)
+        self.assertEqual((first["result"], second["result"]), ("create", "advance"))
+        self.assertEqual(self.api.commits[second["commit"]]["parents"], [first["commit"]])
+        self.assertIn((f"/git/refs/heads/{claude_plugin.BRANCH}", "PATCH", {"sha": second["commit"], "force": False}),
+                      self.api.writes)
+        count = len(self.api.writes)
+        late = claude_plugin.publish(self.api, self.api, REPOSITORY, old)
+        self.assertEqual((late["result"], self.api.plugin_ref), ("stale", second["commit"]))
+        self.assertEqual(len(self.api.writes), count)
+
+    def test_same_version_with_other_content_is_never_overwritten(self):
+        claude_plugin.publish(self.api, self.api, REPOSITORY, self.bundle)
+        changed = self.plugin_tree()
+        changed["README.md"] = (changed["README.md"][0] + b"\nHand edit.\n", 0o644)
+        entries = []
+        for name, (data, mode) in changed.items():
+            self.api.blobs[claude_plugin.blob_sha(data)] = data
+            entries.append({"path": name, "mode": claude_plugin.git_mode(mode), "type": "blob",
+                            "sha": claude_plugin.blob_sha(data)})
+        tree = self.api.request("/git/trees", "POST", {"tree": entries})["sha"]
+        self.api.plugin_ref = self.api.request("/git/commits", "POST", {"tree": tree, "parents": [self.api.plugin_ref],
+                                                                       "message": "hand edit"})["sha"]
+        with self.assertRaisesRegex(ValueError, "other content"):
+            claude_plugin.publish(self.api, self.api, REPOSITORY, self.bundle)
+
+    def test_missing_claude_plugin_ruleset_stops_promotion_before_writes(self):
+        self.api.rules = [r for r in self.api.rules if r["name"] != "ohflow claude-plugin branch"]
+        with self.assertRaisesRegex(ValueError, "Install active ruleset 'ohflow claude-plugin branch'"):
+            self.promote()
+        self.assertEqual(self.api.writes, [])
+
+    def test_anthropic_record_names_the_plugin_commit_and_keeps_unknowns(self):
+        result = self.promote()
+        promotion = self.directory / "promotion.json"
+        promotion.write_bytes(package.encoded(result))
+        records = self.directory / "status"
+        channels.initialize(self.bundle, records)
+        record = claude_plugin.record(self.bundle, records, promotion)
+        self.assertEqual((record["status"], record["alignment"]), ("unknown", "unknown"))
+        self.assertEqual(record["observed"]["ref"], claude_plugin.BRANCH)
+        self.assertEqual(record["attempts"][-1]["evidence"], result["claude_plugin"]["url"])
+        promotion.write_bytes(package.encoded({"result": "stale"}))
+        self.assertIsNone(claude_plugin.record(self.bundle, records, promotion))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+{
+  "author": {
+    "name": "ohflow",
+    "url": "https://github.com/esinecan/ohflow"
+  },
+  "description": "Runs agent work as a plan that you can inspect, measure, resume and improve. Gated steps run on Claude Code, Codex or pi, and a fresh judge agent checks each milestone.",
+  "displayName": "ohflow",
+  "homepage": "https://github.com/esinecan/ohflow",
+  "keywords": [
+    "agents",
+    "orchestration",
+    "workflow",
+    "code-review",
+    "multi-agent"
+  ],
+  "license": "Apache-2.0",
+  "name": "ohflow",
+  "repository": "https://github.com/esinecan/ohflow"
+}

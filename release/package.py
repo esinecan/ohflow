@@ -167,29 +167,32 @@ def install(bundle: Path, destination: Path):
     return destination / "ohflow"
 
 
+def smoke_installed(installed: Path, root: Path):
+    # No checkout, network, model login, inherited import path or local settings.
+    import os
+    env = dict(os.environ, PYTHONPATH=str(installed / "scripts"), PYTHONUTF8="1",
+               OHFLOW_SETTINGS=str(installed / "ohflow.settings.json"))
+    app = installed / "examples/quickstart/app"
+    git(app, "init", "-q", "-b", "main")
+    git(app, "add", ".")
+    git(app, "-c", "user.name=Release smoke", "-c", "user.email=release@example.invalid",
+        "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "Quickstart fixture")
+    subprocess.run([sys.executable, "-m", "ohflow.cli", "--help"], cwd=root,
+                   env=env, check=True, capture_output=True, timeout=60)
+    subprocess.run([sys.executable, "-m", "ohflow.cli", "construct", "--bundle",
+                    str(installed / "examples/quickstart/specs"), "--out", str(root / "campaign")],
+                   cwd=root, env=env, check=True, capture_output=True, timeout=60)
+    subprocess.run(["node", "--check", str(installed / "host/install.cjs")],
+                   check=True, capture_output=True, timeout=60)
+    subprocess.run(["node", "--check", str(installed / "worker/snapshot/recipe.mjs")],
+                   check=True, capture_output=True, timeout=60)
+
+
 def smoke(bundle: Path):
     manifest = verify(bundle)
     with tempfile.TemporaryDirectory(prefix="ohflow-install-") as directory:
         root = Path(directory)
-        installed = install(bundle, root / "skills")
-        # No checkout, network, model login, inherited import path or local settings.
-        import os
-        env = dict(os.environ, PYTHONPATH=str(installed / "scripts"), PYTHONUTF8="1",
-                   OHFLOW_SETTINGS=str(installed / "ohflow.settings.json"))
-        app = installed / "examples/quickstart/app"
-        git(app, "init", "-q", "-b", "main")
-        git(app, "add", ".")
-        git(app, "-c", "user.name=Release smoke", "-c", "user.email=release@example.invalid",
-            "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "Quickstart fixture")
-        subprocess.run([sys.executable, "-m", "ohflow.cli", "--help"], cwd=root,
-                       env=env, check=True, capture_output=True, timeout=60)
-        subprocess.run([sys.executable, "-m", "ohflow.cli", "construct", "--bundle",
-                        str(installed / "examples/quickstart/specs"), "--out", str(root / "campaign")],
-                       cwd=root, env=env, check=True, capture_output=True, timeout=60)
-        subprocess.run(["node", "--check", str(installed / "host/install.cjs")],
-                       check=True, capture_output=True, timeout=60)
-        subprocess.run(["node", "--check", str(installed / "worker/snapshot/recipe.mjs")],
-                       check=True, capture_output=True, timeout=60)
+        smoke_installed(install(bundle, root / "skills"), root)
     return manifest
 
 

@@ -13,6 +13,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+from release import claude_plugin
 from release.package import encoded, verify
 
 
@@ -78,7 +79,9 @@ def rulesets(app_id):
     app = [{"actor_id": app_id, "actor_type": "Integration", "bypass_mode": "always"}]
     return [rule("ohflow release branch", "branch", "refs/heads/release", ["creation", "update", "deletion"], app),
             rule("ohflow release tag creation", "tag", "refs/tags/ohflow-v*", ["creation"], app),
-            rule("ohflow immutable release tags", "tag", "refs/tags/ohflow-v*", ["update", "deletion"], [])]
+            rule("ohflow immutable release tags", "tag", "refs/tags/ohflow-v*", ["update", "deletion"], []),
+            rule("ohflow claude-plugin branch", "branch", f"refs/heads/{claude_plugin.BRANCH}",
+                 ["creation", "update", "deletion"], app)]
 
 
 def rule_time(value):
@@ -259,9 +262,12 @@ def promote(reader, writer, repository, run_id, app_id, bundle, ruleset_policy=N
         writer.request("/git/refs/heads/release", "PATCH", {"sha": manifest["source_sha"], "force": False})
     if decision != "stale" and reader.request("/git/ref/heads/release")["object"]["sha"] != manifest["source_sha"]:
         raise ValueError("Release ref readback differs. Retry the original run.")
-    return {"result": decision, "version": manifest["version"], "source_sha": manifest["source_sha"],
-            "package_sha256": manifest["package"]["sha256"], "release_url": release_url,
-            "validation_url": run["html_url"]}
+    result = {"result": decision, "version": manifest["version"], "source_sha": manifest["source_sha"],
+              "package_sha256": manifest["package"]["sha256"], "release_url": release_url,
+              "validation_url": run["html_url"]}
+    if decision != "stale":
+        result["claude_plugin"] = claude_plugin.publish(reader, writer, repository, bundle)
+    return result
 
 
 def main():

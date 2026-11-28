@@ -110,3 +110,14 @@ jobs:
           path: dist
       - name: Verify and install the same candidate on a clean path
         run: python -m release.package smoke --bundle dist
+      - name: Generate the Claude plugin from the same candidate
+        run: python -m release.claude_plugin build --bundle dist --out claude-plugin
+      - name: Install the pinned Claude Code CLI
+        run: npm install --global @anthropic-ai/claude-code@2.1.296
+      - name: Validate the Claude plugin with Claude Code
+        env:
+          DISABLE_TELEMETRY: "1"
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+        run: claude plugin validate --strict claude-plugin
+      - name: Run the plugin's skill from a clean path
+        run: python -m release.claude_plugin smoke --tree claude-plugin
