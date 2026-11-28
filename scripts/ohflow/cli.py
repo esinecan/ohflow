@@ -1277,9 +1277,9 @@ def cmd_campaign(ns) -> int:
             s = states[m.id]
             print(f"{m.id:<24} {s.status:<10} judged {s.judgements}, "
                   f"revised {s.revisions}")
-        status = Path(camp.root) / ohcamp.STATUS
-        if status.exists():
-            print(status.read_text(encoding="utf-8"))
+        status = ohcamp.read_status(Path(camp.root))
+        if status is not None:
+            print(json.dumps(status, indent=2))
         return EXIT_OK
     if ns.campaign_cmd == "grant":
         ohcamp.grant(camp, ns.milestone, ns.revisions)

@@ -22,7 +22,7 @@ from test_campaign_01_loop import (JUDGE_STEP, PRODUCT_STEP, CampaignCase,
 class TheStatusFileNamesTheServingDashboard(CampaignCase):
 
     def read_status(self) -> dict:
-        return json.loads((self.root / oc.STATUS).read_text(encoding="utf-8"))
+        return oc.read_status(self.root)
 
     def served_url(self, run_dir) -> str:
         record = json.loads((run_dir / "dashboard.json").read_text(

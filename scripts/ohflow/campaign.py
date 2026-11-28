@@ -31,6 +31,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -54,8 +55,10 @@ FROZEN_INPUTS = ("spec.md",)
 CONTRACTS = "contracts.md"
 CAMPAIGN_LOG = "campaign.jsonl"
 STATUS = "campaign-status.json"
+STATUS_TMP = STATUS + ".tmp"
 ESCALATION = "ESCALATION.md"
 PID_FILE = "campaign.pid"
+STATUS_SHARE_WAIT_S = 2.0
 
 #: Exit codes of `ohflow campaign run`.
 EXIT_DELIVERED = 0
@@ -515,10 +518,31 @@ def _changed_paths(root: Path) -> list[str]:
     return paths
 
 
+def _while_shared(action):
+    deadline = time.monotonic() + STATUS_SHARE_WAIT_S
+    while True:
+        try:
+            return action()
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.01)
+
+
+def read_status(root: Path) -> dict | None:
+    path = Path(root) / STATUS
+    try:
+        text = _while_shared(lambda: path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    rec = json.loads(text)
+    return rec if isinstance(rec, dict) else None
+
+
 def ensure_ignores(root: Path) -> None:
     gi = Path(root) / ".gitignore"
     want = [f"milestones/*/{d}/" for d in GENERATED_DIRS] + \
-        [CAMPAIGN_LOG, STATUS, ESCALATION, "campaign.log", PID_FILE,
+        [CAMPAIGN_LOG, STATUS, STATUS_TMP, ESCALATION, "campaign.log", PID_FILE,
          "campaign.log.launch.*", ".watch.*.json", "__pycache__/"]
     have = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
     missing = [w for w in want if w not in have]
@@ -1181,8 +1205,9 @@ class CampaignController:
             url = runstatus.dashboard_url(Path(rd))
             if url:
                 rec["dashboard"] = url
-        (self.root / STATUS).write_text(json.dumps(rec, indent=2),
-                                        encoding="utf-8")
+        tmp = self.root / STATUS_TMP
+        tmp.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+        _while_shared(lambda: os.replace(tmp, self.root / STATUS))
 
     def _dashboard_serves(self, url: str) -> None:
         """Write the status file again, now that a run's dashboard serves.

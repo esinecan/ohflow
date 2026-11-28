@@ -96,10 +96,7 @@ class CampaignHoldsFreshRounds(CampaignCase):
         self.assertFalse(self.captured[0].hold)
 
     def status(self) -> dict:
-        path = self.root / oc.STATUS
-        if not path.exists():
-            return {}
-        return json.loads(path.read_text(encoding="utf-8"))
+        return oc.read_status(self.root) or {}
 
     def test_go_releases_the_round_and_the_status_reads_running(self):
         oc.run_workflow = self.real_run_workflow
@@ -177,10 +174,7 @@ class ARoundAfterAReviseHolds(CampaignCase):
         self.addCleanup(setattr, supervisor, "HOLD_POLL_S", original_poll)
 
     def held_round(self) -> int | None:
-        path = self.root / oc.STATUS
-        if not path.exists():
-            return None
-        status = json.loads(path.read_text(encoding="utf-8"))
+        status = oc.read_status(self.root) or {}
         return status.get("round") if status.get("state") == "held" else None
 
     def test_a_revise_round_holds_and_go_releases_it(self):
